@@ -7,6 +7,8 @@
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
     "migrate": "node migrations/001_init_schema.js",
+    "migrate:logos": "node migrations/002_add_team_logos.js",
+    "seed:logos": "node scripts/seed_team_logos.js",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
   "keywords": [],

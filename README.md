@@ -67,7 +67,10 @@ python scripts/derive_team_stats.py
 # Step 3 – compute rankings (15 categories × 30 teams = 450 rows)
 python scripts/derive_rankings.py
 
-# Step 4 – flush Redis so backend picks up the new data
+# Step 4 – seed team logos from NBA CDN
+cd ../../backend && pnpm run migrate:logos && pnpm run seed:logos
+
+# Step 5 – flush Redis so backend picks up the new data
 redis-cli FLUSHDB
 ```
 
@@ -110,7 +113,7 @@ export DB_HOST=localhost DB_PORT=5432 DB_USER=postgres \
 
 | Table           | Purpose                                                        |
 | --------------- | -------------------------------------------------------------- |
-| `teams`         | Team metadata (id, name)                                       |
+| `teams`         | Team metadata (id, name, logo_url from NBA CDN)                |
 | `games`         | Game log — game_id, date, home/away team IDs, `collected` flag |
 | `game_stats`    | Per-team per-game box score rows                               |
 | `team_stats`    | Season averages derived by `derive_team_stats.py`              |
