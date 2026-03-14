@@ -221,8 +221,36 @@ export function AuditTab({ season }) {
                     <tr key={game.game_id}>
                       <td className="font-mono text-sm">{game.game_id}</td>
                       <td>{new Date(game.game_date).toLocaleDateString()}</td>
-                      <td>{game.home_team_name || '—'}</td>
-                      <td>{game.away_team_name || '—'}</td>
+                      <td>
+                        <div className="flex items-center gap-2">
+                          {game.home_team_logo && (
+                            <img 
+                              src={game.home_team_logo} 
+                              alt={`${game.home_team_name} logo`} 
+                              className="h-6 w-6 object-contain"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                              }}
+                            />
+                          )}
+                          <span>{game.home_team_name || '—'}</span>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="flex items-center gap-2">
+                          {game.away_team_logo && (
+                            <img 
+                              src={game.away_team_logo} 
+                              alt={`${game.away_team_name} logo`} 
+                              className="h-6 w-6 object-contain"
+                              onError={(e) => {
+                                e.target.style.display = 'none';
+                              }}
+                            />
+                          )}
+                          <span>{game.away_team_name || '—'}</span>
+                        </div>
+                      </td>
                       <td>
                         {game.collected ? (
                           <span className="badge badge-success">✓ Collected</span>
