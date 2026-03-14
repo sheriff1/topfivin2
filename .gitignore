@@ -1,0 +1,56 @@
+# Dependencies
+node_modules/
+.pnpm-lock.yaml
+*.lock
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Backend
+backend/node_modules/
+backend/.env
+
+# Frontend
+frontend/node_modules/
+frontend/.env
+frontend/.env.local
+frontend/build/
+frontend/dist/
+frontend/coverage/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+.DS_Store
+
+# Logs
+logs/
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Database
+*.db
+*.sqlite
+
+# Python
+.venv/
+__pycache__/
+*.pyc
+*.pyo
+
+# Data
+backups/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Production
+dist/
+build/
