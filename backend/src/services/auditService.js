@@ -1,12 +1,12 @@
 async function getAuditGames(season, limit, offset, status, date, db) {
-  let whereConditions = ['g.season = $1'];
+  let whereConditions = ["g.season = $1"];
   let params = [season];
   let paramIndex = 2;
 
-  if (status === 'collected') {
-    whereConditions.push('gs.game_id IS NOT NULL');
-  } else if (status === 'missing') {
-    whereConditions.push('gs.game_id IS NULL');
+  if (status === "collected") {
+    whereConditions.push("gs.game_id IS NOT NULL");
+  } else if (status === "missing") {
+    whereConditions.push("gs.game_id IS NULL");
   }
 
   if (date) {
@@ -15,7 +15,7 @@ async function getAuditGames(season, limit, offset, status, date, db) {
     paramIndex++;
   }
 
-  const whereClause = whereConditions.join(' AND ');
+  const whereClause = whereConditions.join(" AND ");
 
   const statsQuery = `
     SELECT

@@ -1,4 +1,4 @@
-const { STAT_CATEGORIES } = require('./statProcessor');
+const { STAT_CATEGORIES } = require("./statProcessor");
 
 function getCategories() {
   return Object.entries(STAT_CATEGORIES).map(([key, value]) => ({

@@ -1,7 +1,8 @@
-import axios from 'axios';
-import { useQuery } from '@tanstack/react-query';
+import axios from "axios";
+import { useQuery } from "@tanstack/react-query";
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001/api';
+const API_BASE_URL =
+  process.env.REACT_APP_API_URL || "http://localhost:5001/api";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -11,9 +12,9 @@ const apiClient = axios.create({
 // Hook for fetching available categories
 export function useCategories() {
   return useQuery({
-    queryKey: ['categories'],
+    queryKey: ["categories"],
     queryFn: async () => {
-      const response = await apiClient.get('/categories');
+      const response = await apiClient.get("/categories");
       return response.data.categories;
     },
     staleTime: 1000 * 60 * 60, // 1 hour
@@ -22,11 +23,11 @@ export function useCategories() {
 }
 
 // Hook for fetching rankings for a specific category
-export function useRankings(category, season = '2025') {
+export function useRankings(category, season = "2025") {
   return useQuery({
-    queryKey: ['rankings', category, season],
+    queryKey: ["rankings", category, season],
     queryFn: async () => {
-      const response = await apiClient.get('/rankings', {
+      const response = await apiClient.get("/rankings", {
         params: { category, season },
       });
       return response.data;
@@ -38,9 +39,9 @@ export function useRankings(category, season = '2025') {
 }
 
 // Hook for fetching team stats
-export function useTeamStats(teamId, season = '2025') {
+export function useTeamStats(teamId, season = "2025") {
   return useQuery({
-    queryKey: ['teamStats', teamId, season],
+    queryKey: ["teamStats", teamId, season],
     queryFn: async () => {
       const response = await apiClient.get(`/team/${teamId}/stats`, {
         params: { season },
@@ -54,9 +55,9 @@ export function useTeamStats(teamId, season = '2025') {
 }
 
 // Hook for fetching team rankings
-export function useTeamRankings(teamId, season = '2025') {
+export function useTeamRankings(teamId, season = "2025") {
   return useQuery({
-    queryKey: ['teamRankings', teamId, season],
+    queryKey: ["teamRankings", teamId, season],
     queryFn: async () => {
       const response = await apiClient.get(`/team/${teamId}/rankings`, {
         params: { season },
@@ -72,9 +73,9 @@ export function useTeamRankings(teamId, season = '2025') {
 // Hook for API health check
 export function useApiHealth() {
   return useQuery({
-    queryKey: ['health'],
+    queryKey: ["health"],
     queryFn: async () => {
-      const healthUrl = `${API_BASE_URL.replace(/\/api$/, '')}/health`;
+      const healthUrl = `${API_BASE_URL.replace(/\/api$/, "")}/health`;
       const response = await apiClient.get(healthUrl);
       return response.data;
     },

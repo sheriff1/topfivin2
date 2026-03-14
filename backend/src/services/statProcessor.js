@@ -4,23 +4,23 @@
  */
 const STAT_CATEGORIES = {
   // Traditional Stats (Available from BoxScoreTraditionalV3)
-  'FG%': { label: 'Field Goal %', index: 'FG_PCT', lower: false },
-  '3P%': { label: '3-Point %', index: '3P_PCT', lower: false },
-  'FT%': { label: 'Free Throw %', index: 'FT_PCT', lower: false },
-  'PPG': { label: 'Points Per Game', index: 'PTS', lower: false },
-  'RPG': { label: 'Rebounds Per Game', index: 'REB', lower: false },
-  'APG': { label: 'Assists Per Game', index: 'AST', lower: false },
-  'SPG': { label: 'Steals Per Game', index: 'STL', lower: false },
-  'BPG': { label: 'Blocks Per Game', index: 'BLK', lower: false },
+  "FG%": { label: "Field Goal %", index: "FG_PCT", lower: false },
+  "3P%": { label: "3-Point %", index: "3P_PCT", lower: false },
+  "FT%": { label: "Free Throw %", index: "FT_PCT", lower: false },
+  PPG: { label: "Points Per Game", index: "PTS", lower: false },
+  RPG: { label: "Rebounds Per Game", index: "REB", lower: false },
+  APG: { label: "Assists Per Game", index: "AST", lower: false },
+  SPG: { label: "Steals Per Game", index: "STL", lower: false },
+  BPG: { label: "Blocks Per Game", index: "BLK", lower: false },
 
   // Advanced Stats (Available from BoxScoreMiscV3)
-  'TS%': { label: 'True Shooting %', index: 'TS_PCT', lower: false },
-  'ORB%': { label: 'Offensive Rebound %', index: 'ORB_PCT', lower: false },
-  'DRB%': { label: 'Defensive Rebound %', index: 'DRB_PCT', lower: false },
-  'TRB%': { label: 'Total Rebound %', index: 'TRB_PCT', lower: false },
-  'AST%': { label: 'Assist %', index: 'AST_PCT', lower: false },
-  'USG%': { label: 'Usage %', index: 'USG_PCT', lower: false },
-  'TOV%': { label: 'Turnover %', index: 'TOV_PCT', lower: true },
+  "TS%": { label: "True Shooting %", index: "TS_PCT", lower: false },
+  "ORB%": { label: "Offensive Rebound %", index: "ORB_PCT", lower: false },
+  "DRB%": { label: "Defensive Rebound %", index: "DRB_PCT", lower: false },
+  "TRB%": { label: "Total Rebound %", index: "TRB_PCT", lower: false },
+  "AST%": { label: "Assist %", index: "AST_PCT", lower: false },
+  "USG%": { label: "Usage %", index: "USG_PCT", lower: false },
+  "TOV%": { label: "Turnover %", index: "TOV_PCT", lower: true },
 };
 
 /**
@@ -30,7 +30,9 @@ const STAT_CATEGORIES = {
  * @returns {number} - Column index or -1 if not found
  */
 function findColumnIndex(headers, columnName) {
-  return headers.findIndex(h => h === columnName || h.toUpperCase() === columnName.toUpperCase());
+  return headers.findIndex(
+    (h) => h === columnName || h.toUpperCase() === columnName.toUpperCase(),
+  );
 }
 
 /**
@@ -53,7 +55,9 @@ function createHeaderMap(headers) {
  */
 function normalizeTeamStats(teamStatsData) {
   // Handle direct array input (from mock data) vs wrapped format
-  let data = Array.isArray(teamStatsData) ? teamStatsData : (teamStatsData.data || []);
+  let data = Array.isArray(teamStatsData)
+    ? teamStatsData
+    : teamStatsData.data || [];
   let headers = teamStatsData.headers || [];
 
   const normalizedData = data.map((row) => {
@@ -62,8 +66,8 @@ function normalizeTeamStats(teamStatsData) {
     if (Array.isArray(row)) {
       // Old NBA.com format - row is an array
       const headerMap = createHeaderMap(headers);
-      teamId = row[headerMap['TEAM_ID']];
-      teamName = row[headerMap['TEAM_NAME']];
+      teamId = row[headerMap["TEAM_ID"]];
+      teamName = row[headerMap["TEAM_NAME"]];
       statsObj = {};
 
       Object.entries(STAT_CATEGORIES).forEach(([key, config]) => {
@@ -77,16 +81,34 @@ function normalizeTeamStats(teamStatsData) {
       // The mock data already has all the required stat fields with short keys
       teamId = row.id || row.teamId || row.team_id;
       teamName = row.name || row.teamName || row.team_name;
-      
+
       statsObj = {
-        'PPG': parseFloat(row.PPG || row.pts || row.pointsPerGame || 0),
-        'RPG': parseFloat(row.RPG || row.reb || row.reboundsPerGame || row.rebounds || 0),
-        'APG': parseFloat(row.APG || row.ast || row.assistsPerGame || row.assists || 0),
-        'FG%': parseFloat(row['FG%'] || row.fgPercent || row.fg_pct || row.fieldGoalPct || 0),
-        '3P%': parseFloat(row['3P%'] || row.threePPercent || row.threeP_pct || row.threePointerPct || 0),
-        'FT%': parseFloat(row['FT%'] || row.ftPercent || row.ft_pct || row.freeThrowPct || 0),
-        'SPG': parseFloat(row.SPG || row.stl || row.stealsPerGame || row.steals || 0),
-        'BPG': parseFloat(row.BPG || row.blk || row.blocksPerGame || row.blocks || 0),
+        PPG: parseFloat(row.PPG || row.pts || row.pointsPerGame || 0),
+        RPG: parseFloat(
+          row.RPG || row.reb || row.reboundsPerGame || row.rebounds || 0,
+        ),
+        APG: parseFloat(
+          row.APG || row.ast || row.assistsPerGame || row.assists || 0,
+        ),
+        "FG%": parseFloat(
+          row["FG%"] || row.fgPercent || row.fg_pct || row.fieldGoalPct || 0,
+        ),
+        "3P%": parseFloat(
+          row["3P%"] ||
+            row.threePPercent ||
+            row.threeP_pct ||
+            row.threePointerPct ||
+            0,
+        ),
+        "FT%": parseFloat(
+          row["FT%"] || row.ftPercent || row.ft_pct || row.freeThrowPct || 0,
+        ),
+        SPG: parseFloat(
+          row.SPG || row.stl || row.stealsPerGame || row.steals || 0,
+        ),
+        BPG: parseFloat(
+          row.BPG || row.blk || row.blocksPerGame || row.blocks || 0,
+        ),
       };
     }
 
@@ -150,7 +172,10 @@ function calculateAllRankings(teamStats) {
     try {
       allRankings[category] = calculateRankings(teamStats, category);
     } catch (error) {
-      console.warn(`Failed to calculate rankings for ${category}:`, error.message);
+      console.warn(
+        `Failed to calculate rankings for ${category}:`,
+        error.message,
+      );
     }
   });
 
@@ -163,7 +188,7 @@ function calculateAllRankings(teamStats) {
  * @returns {object} - Processed rankings and normalized stats
  */
 function processTeamStats(teamStatsData) {
-  console.log('Processing team stats...');
+  console.log("Processing team stats...");
 
   // Normalize the raw data
   const normalizedStats = normalizeTeamStats(teamStatsData);
@@ -171,7 +196,9 @@ function processTeamStats(teamStatsData) {
   // Calculate rankings for all categories
   const rankings = calculateAllRankings(normalizedStats);
 
-  console.log(`Generated rankings for ${Object.keys(rankings).length} stat categories`);
+  console.log(
+    `Generated rankings for ${Object.keys(rankings).length} stat categories`,
+  );
 
   return {
     normalized_stats: normalizedStats,

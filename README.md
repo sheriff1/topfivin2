@@ -26,6 +26,7 @@ PostgreSQL stores all data; Redis caches ranking responses (1-hour TTL).
 ## Quick Start
 
 ### Prerequisites
+
 - Node.js 18+, pnpm
 - Python 3.13 (Homebrew: `/opt/homebrew/bin/python3.13`)
 - PostgreSQL 13+ and Redis 6+ running locally
@@ -73,6 +74,7 @@ redis-cli FLUSHDB
 ## Configuration
 
 ### `backend/.env`
+
 ```env
 PORT=5001
 NODE_ENV=development
@@ -91,12 +93,14 @@ CURRENT_SEASON=2025
 ```
 
 ### `frontend/.env`
+
 ```env
 REACT_APP_API_URL=http://localhost:5001/api
 REACT_APP_CURRENT_SEASON=2025
 ```
 
 ### Python pipeline (reads from shell env, or set explicitly)
+
 ```bash
 export DB_HOST=localhost DB_PORT=5432 DB_USER=postgres \
        DB_PASSWORD="" DB_NAME=nba_stats CURRENT_SEASON=2025
@@ -104,14 +108,14 @@ export DB_HOST=localhost DB_PORT=5432 DB_USER=postgres \
 
 ## Database Schema
 
-| Table | Purpose |
-|-------|---------|
-| `teams` | Team metadata (id, name) |
-| `games` | Game log — game_id, date, home/away team IDs, `collected` flag |
-| `game_stats` | Per-team per-game box score rows |
-| `team_stats` | Season averages derived by `derive_team_stats.py` |
-| `stat_rankings` | Pre-computed rankings — 15 categories × 30 teams = 450 rows |
-| `refresh_logs` | Pipeline run audit trail |
+| Table           | Purpose                                                        |
+| --------------- | -------------------------------------------------------------- |
+| `teams`         | Team metadata (id, name)                                       |
+| `games`         | Game log — game_id, date, home/away team IDs, `collected` flag |
+| `game_stats`    | Per-team per-game box score rows                               |
+| `team_stats`    | Season averages derived by `derive_team_stats.py`              |
+| `stat_rankings` | Pre-computed rankings — 15 categories × 30 teams = 450 rows    |
+| `refresh_logs`  | Pipeline run audit trail                                       |
 
 ### Useful queries
 
@@ -134,16 +138,16 @@ WHERE team_id = 1610612743 ORDER BY stat_category;
 
 ## Stat Categories (15)
 
-| Code | Label | Code | Label |
-|------|-------|------|-------|
-| PPG | Points Per Game | RPG | Rebounds Per Game |
-| APG | Assists Per Game | SPG | Steals Per Game |
-| BPG | Blocks Per Game | FG% | Field Goal % |
-| 3P% | 3-Point % | FT% | Free Throw % |
-| TO | Turnovers Per Game | PF | Personal Fouls Per Game |
-| OREB | Offensive Rebounds | DREB | Defensive Rebounds |
-| PLUS_MINUS | Plus/Minus | FGM | FG Made Per Game |
-| FG3M | 3PM Per Game | | |
+| Code       | Label              | Code | Label                   |
+| ---------- | ------------------ | ---- | ----------------------- |
+| PPG        | Points Per Game    | RPG  | Rebounds Per Game       |
+| APG        | Assists Per Game   | SPG  | Steals Per Game         |
+| BPG        | Blocks Per Game    | FG%  | Field Goal %            |
+| 3P%        | 3-Point %          | FT%  | Free Throw %            |
+| TO         | Turnovers Per Game | PF   | Personal Fouls Per Game |
+| OREB       | Offensive Rebounds | DREB | Defensive Rebounds      |
+| PLUS_MINUS | Plus/Minus         | FGM  | FG Made Per Game        |
+| FG3M       | 3PM Per Game       |      |                         |
 
 See `backend/src/services/statProcessor.js` for the full `STAT_CATEGORIES` config.
 
@@ -151,14 +155,14 @@ See `backend/src/services/statProcessor.js` for the full `STAT_CATEGORIES` confi
 
 All on `http://localhost:5001`.
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/health` | Server health check |
-| GET | `/api/categories` | List all 15 stat categories |
-| GET | `/api/rankings?category=PPG&season=2025` | League rankings for a stat |
-| GET | `/api/team/:teamId/stats?season=2025` | All stats for one team |
-| GET | `/api/team/:teamId/rankings?season=2025` | How a team ranks across all stats |
-| GET | `/api/audit/games?season=2025&limit=10` | Data collection audit |
+| Method | Path                                     | Description                       |
+| ------ | ---------------------------------------- | --------------------------------- |
+| GET    | `/health`                                | Server health check               |
+| GET    | `/api/categories`                        | List all 15 stat categories       |
+| GET    | `/api/rankings?category=PPG&season=2025` | League rankings for a stat        |
+| GET    | `/api/team/:teamId/stats?season=2025`    | All stats for one team            |
+| GET    | `/api/team/:teamId/rankings?season=2025` | How a team ranks across all stats |
+| GET    | `/api/audit/games?season=2025&limit=10`  | Data collection audit             |
 
 ```bash
 curl "http://localhost:5001/api/rankings?category=PPG&season=2025"
@@ -250,11 +254,13 @@ redis-cli FLUSHDB                         # clear cache (run after pipeline)
 ## Troubleshooting
 
 **Dashboard shows no data**
+
 1. Confirm backend running: `curl http://localhost:5001/health`
 2. Confirm rankings populated: `psql -U postgres -d nba_stats -c "SELECT COUNT(*) FROM stat_rankings;"`
 3. Check `.env` files point to port 5001
 
 **PostgreSQL or Redis not running**
+
 ```bash
 brew services start postgresql@16
 brew services start redis
@@ -262,6 +268,7 @@ redis-cli ping   # should return PONG
 ```
 
 **Python script errors**
+
 ```bash
 source .venv/bin/activate
 python -c "import nba_api; print('OK')"
@@ -269,6 +276,7 @@ python -c "import nba_api; print('OK')"
 ```
 
 **Stale data after running pipeline**
+
 ```bash
 redis-cli FLUSHDB   # force cache miss on next request
 ```

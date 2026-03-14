@@ -1,4 +1,4 @@
-const db = require('../src/db/postgresClient');
+const db = require("../src/db/postgresClient");
 
 const schema = `
 -- Teams table (30 unique teams, no season duplication)
@@ -194,21 +194,21 @@ CREATE INDEX IF NOT EXISTS idx_refresh_logs_completed_at ON refresh_logs(complet
 
 async function runMigrations() {
   try {
-    console.log('Running database migrations...');
+    console.log("Running database migrations...");
 
     // Execute the schema creation
     const statements = schema
-      .split(';')
-      .map(s => s.trim())
-      .filter(s => s.length > 0);
+      .split(";")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
 
     for (const statement of statements) {
       await db.query(statement);
     }
 
-    console.log('✓ Database migrations completed successfully');
+    console.log("✓ Database migrations completed successfully");
   } catch (error) {
-    console.error('✗ Database migration failed:', error.message);
+    console.error("✗ Database migration failed:", error.message);
     throw error;
   }
 }
@@ -217,11 +217,11 @@ async function runMigrations() {
 if (require.main === module) {
   runMigrations()
     .then(() => {
-      console.log('Migrations complete. Exiting.');
+      console.log("Migrations complete. Exiting.");
       process.exit(0);
     })
     .catch((error) => {
-      console.error('Migration error:', error);
+      console.error("Migration error:", error);
       process.exit(1);
     });
 }

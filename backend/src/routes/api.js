@@ -1,7 +1,7 @@
-const express = require('express');
-const rankingsRouter = require('./rankings');
-const teamsRouter = require('./teams');
-const auditRouter = require('./audit');
+const express = require("express");
+const rankingsRouter = require("./rankings");
+const teamsRouter = require("./teams");
+const auditRouter = require("./audit");
 
 const router = express.Router();
 
