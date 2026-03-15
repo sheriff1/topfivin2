@@ -226,14 +226,14 @@ export function AuditTab({ season }) {
                           {game.home_team_logo && (
                             <img 
                               src={game.home_team_logo} 
-                              alt={`${game.home_team_name} logo`} 
+                              alt={`${game.home_team_abbreviation} logo`} 
                               className="h-6 w-6 object-contain"
                               onError={(e) => {
                                 e.target.style.display = 'none';
                               }}
                             />
                           )}
-                          <span>{game.home_team_name || '—'}</span>
+                          <span>{game.home_team_abbreviation || '—'}</span>
                         </div>
                       </td>
                       <td>
@@ -241,14 +241,14 @@ export function AuditTab({ season }) {
                           {game.away_team_logo && (
                             <img 
                               src={game.away_team_logo} 
-                              alt={`${game.away_team_name} logo`} 
+                              alt={`${game.away_team_abbreviation} logo`} 
                               className="h-6 w-6 object-contain"
                               onError={(e) => {
                                 e.target.style.display = 'none';
                               }}
                             />
                           )}
-                          <span>{game.away_team_name || '—'}</span>
+                          <span>{game.away_team_abbreviation || '—'}</span>
                         </div>
                       </td>
                       <td>
