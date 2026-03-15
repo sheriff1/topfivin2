@@ -1,3 +1,4 @@
+import { Link } from 'react-router-dom';
 import { useRankings } from '../hooks/useApi';
 
 export function RankingsGrid({ category, season = '2025' }) {
@@ -58,27 +59,29 @@ export function RankingsGrid({ category, season = '2025' }) {
                 </span>
               </td>
               <td className="font-medium">
-                <div className="flex items-center gap-3">
-                  {item.logo_url && (
-                    <img 
-                      src={item.logo_url} 
-                      alt={`${item.team_name} logo`} 
-                      className="h-8 w-8 object-contain"
-                      onError={(e) => {
-                        // Hide image if CDN URL fails to load
-                        e.target.style.display = 'none';
-                      }}
-                    />
-                  )}
-                  <div>
-                    {item.team_name}
-                    {item.games_count > 0 && (
-                      <span className="text-sm text-gray-500 ml-2">
-                        ({item.games_count} game{item.games_count !== 1 ? 's' : ''})
-                      </span>
+                <Link to={`/teams/${item.team_id}`} className="link link-hover">
+                  <div className="flex items-center gap-3">
+                    {item.logo_url && (
+                      <img 
+                        src={item.logo_url} 
+                        alt={`${item.team_name} logo`} 
+                        className="h-8 w-8 object-contain"
+                        onError={(e) => {
+                          // Hide image if CDN URL fails to load
+                          e.target.style.display = 'none';
+                        }}
+                      />
                     )}
+                    <div>
+                      {item.team_name}
+                      {item.games_count > 0 && (
+                        <span className="text-sm text-gray-500 ml-2">
+                          ({item.games_count} game{item.games_count !== 1 ? 's' : ''})
+                        </span>
+                      )}
+                    </div>
                   </div>
-                </div>
+                </Link>
               </td>
               <td className="text-right text-lg font-bold">
                 {typeof item.value === 'number'

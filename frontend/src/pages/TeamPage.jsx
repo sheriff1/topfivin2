@@ -12,12 +12,12 @@ export function TeamPage() {
       try {
         setLoading(true);
         // Fetch team data using team_id query parameter
-        const response = await fetch(`/api/teams?team_id=${teamId}`);
+        const response = await fetch(`http://localhost:5001/api/teams?team_id=${teamId}`);
         if (!response.ok) throw new Error('Failed to fetch team data');
         
-        const data = await response.json();
-        if (data && data.length > 0) {
-          setTeamData(data[0]);
+        const result = await response.json();
+        if (result.success && result.data && result.data.length > 0) {
+          setTeamData(result.data[0]);
         } else {
           setError('Team not found');
         }
