@@ -67,6 +67,20 @@ const GameStatsRow = ({ homeStats, awayStats, isLoading, error, onRetry }) => {
     <tr className="bg-base-200">
       <td colSpan="10" className="p-0">
         <div className="p-6 space-y-1">
+          {/* Team Names */}
+          <StatRow
+            label="Team"
+            homeValue={homeStats.abbreviation || "—"}
+            awayValue={awayStats.abbreviation || "—"}
+          />
+
+          {/* Points */}
+          <StatRow
+            label="Points"
+            homeValue={formatStat(homeStats.pts)}
+            awayValue={formatStat(awayStats.pts)}
+          />
+
           {/* Field Goals */}
           <StatRow
             label="Field goals"
@@ -138,13 +152,6 @@ const GameStatsRow = ({ homeStats, awayStats, isLoading, error, onRetry }) => {
             label="Blocks"
             homeValue={formatStat(homeStats.blk)}
             awayValue={formatStat(awayStats.blk)}
-          />
-
-          {/* Points */}
-          <StatRow
-            label="Points"
-            homeValue={formatStat(homeStats.pts)}
-            awayValue={formatStat(awayStats.pts)}
           />
         </div>
       </td>
