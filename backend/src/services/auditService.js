@@ -90,4 +90,57 @@ async function getAuditGames(season, limit, offset, status, date, db) {
   };
 }
 
-module.exports = { getAuditGames };
+/**
+ * Get aggregated game stats for both teams in a specific game
+ * @param {number} gameId - The game ID
+ * @param {object} db - Database connection
+ * @returns {Promise<object>} - { home, away } teams with aggregated stats
+ */
+async function getGameStats(gameId, db) {
+  const query = `
+    SELECT
+      gs.game_id,
+      g.game_date,
+      t.team_id,
+      t.abbreviation,
+      SUM(gs.pts) as pts,
+      SUM(gs.reb) as reb,
+      SUM(gs.ast) as ast,
+      SUM(gs.stl) as stl,
+      SUM(gs.blk) as blk,
+      ROUND(AVG(gs.fg_pct::numeric), 2) as fg_pct,
+      ROUND(AVG(gs.ft_pct::numeric), 2) as ft_pct,
+      ROUND(AVG(gs.three_p_pct::numeric), 2) as three_p_pct,
+      SUM(gs.fg) as fg,
+      SUM(gs.fga) as fga,
+      SUM(gs.ft) as ft,
+      SUM(gs.fta) as fta,
+      SUM(gs.three_p) as three_p,
+      SUM(gs.three_pa) as three_pa
+    FROM game_stats gs
+    JOIN teams t ON gs.team_id = t.team_id
+    JOIN games g ON gs.game_id = g.game_id
+    WHERE gs.game_id = $1
+    GROUP BY gs.game_id, g.game_date, t.team_id, t.abbreviation
+    ORDER BY t.team_id
+  `;
+
+  const result = await db.query(query, [gameId]);
+  const rows = result.rows;
+
+  if (rows.length === 0) {
+    throw new Error(`No stats found for game ${gameId}`);
+  }
+
+  // Organize by home (lower team_id) and away (higher team_id)
+  const stats = {
+    game_id: rows[0].game_id,
+    game_date: rows[0].game_date,
+    home: rows[0],
+    away: rows[1] || null,
+  };
+
+  return stats;
+}
+
+module.exports = { getAuditGames, getGameStats };
