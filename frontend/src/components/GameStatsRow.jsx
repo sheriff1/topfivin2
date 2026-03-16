@@ -65,8 +65,8 @@ const GameStatsRow = ({ homeStats, awayStats, isLoading, error, onRetry }) => {
 
   return (
     <tr className="bg-base-200">
-      <td colSpan="10" className="p-0">
-        <div className="p-6 space-y-1">
+      <td colSpan="10" className="p-0 flex justify-center w-full">
+        <div className="p-6 space-y-1 w-full max-w-full overflow-x-hidden">
           {/* Team Names with Logos */}
           <div className="grid grid-cols-[1fr_auto_1fr] gap-4 py-2 border-b border-base-300 px-4">
             <div className="text-right font-semibold flex items-center justify-end gap-2">
