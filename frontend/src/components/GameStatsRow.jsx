@@ -4,7 +4,7 @@ import React from "react";
  * GameStatsRow Component
  * Displays aggregated game stats for both teams in a 3-column layout
  * Props:
- *   - homeStats: { abbreviation, pts, reb, ast, stl, blk, fg, fga, fg_pct, ft, fta, ft_pct, three_p, three_pa, three_p_pct }
+ *   - homeStats: { abbreviation, logo_url, pts, reb, ast, stl, blk, fg, fga, fg_pct, ft, fta, ft_pct, three_p, three_pa, three_p_pct }
  *   - awayStats: same structure as homeStats
  *   - isLoading: boolean indicating if stats are being fetched
  *   - error: error message string (if any)
@@ -67,12 +67,36 @@ const GameStatsRow = ({ homeStats, awayStats, isLoading, error, onRetry }) => {
     <tr className="bg-base-200">
       <td colSpan="10" className="p-0">
         <div className="p-6 space-y-1">
-          {/* Team Names */}
-          <StatRow
-            label="Team"
-            homeValue={homeStats.abbreviation || "—"}
-            awayValue={awayStats.abbreviation || "—"}
-          />
+          {/* Team Names with Logos */}
+          <div className="grid grid-cols-[1fr_auto_1fr] gap-4 py-2 border-b border-base-300 px-4">
+            <div className="text-right font-semibold flex items-center justify-end gap-2">
+              {homeStats.logo_url && (
+                <img
+                  src={homeStats.logo_url}
+                  alt={`${homeStats.abbreviation} logo`}
+                  className="h-6 w-6 object-contain"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              )}
+              <span>{homeStats.abbreviation || "—"}</span>
+            </div>
+            <div className="text-center text-sm font-medium min-w-[140px]">Team</div>
+            <div className="text-left font-semibold flex items-center gap-2">
+              <span>{awayStats.abbreviation || "—"}</span>
+              {awayStats.logo_url && (
+                <img
+                  src={awayStats.logo_url}
+                  alt={`${awayStats.abbreviation} logo`}
+                  className="h-6 w-6 object-contain"
+                  onError={(e) => {
+                    e.target.style.display = 'none';
+                  }}
+                />
+              )}
+            </div>
+          </div>
 
           {/* Points */}
           <StatRow

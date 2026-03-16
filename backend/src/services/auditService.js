@@ -103,6 +103,7 @@ async function getGameStats(gameId, db) {
       g.game_date,
       t.team_id,
       t.abbreviation,
+      t.logo_url,
       SUM(gs.pts) as pts,
       SUM(gs.reb) as reb,
       SUM(gs.ast) as ast,
@@ -121,7 +122,7 @@ async function getGameStats(gameId, db) {
     JOIN teams t ON gs.team_id = t.team_id
     JOIN games g ON gs.game_id = g.game_id
     WHERE gs.game_id = $1
-    GROUP BY gs.game_id, g.game_date, t.team_id, t.abbreviation
+    GROUP BY gs.game_id, g.game_date, t.team_id, t.abbreviation, t.logo_url
     ORDER BY t.team_id
   `;
 
