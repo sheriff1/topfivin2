@@ -43,10 +43,10 @@ const GameStatsRow = ({ homeStats, awayStats, isLoading, error, onRetry }) => {
     return null;
   }
 
-  // Helper function to format percentages with 1 decimal
+  // Helper function to format percentages on 0-100 scale with 2 decimal places
   const formatPercent = (value) => {
     if (value === null || value === undefined) return "—";
-    return `${parseFloat(value).toFixed(1)}%`;
+    return `${(parseFloat(value) * 100).toFixed(2)}%`;
   };
 
   // Helper function to format counting stats
