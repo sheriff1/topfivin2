@@ -1,6 +1,6 @@
 const express = require("express");
 const db = require("../db/postgresClient");
-const { getAuditGames } = require("../services/auditService");
+const { getAuditGames, getGameStats } = require("../services/auditService");
 
 const router = express.Router();
 
@@ -29,6 +29,34 @@ router.get("/audit/games", async (req, res) => {
         message: "Failed to fetch audit data",
         error: error.message,
       });
+  }
+});
+
+/**
+ * GET /api/audit/game/:gameId/stats
+ * Returns aggregated team stats for a specific game
+ */
+router.get("/audit/game/:gameId/stats", async (req, res) => {
+  try {
+    const gameId = req.params.gameId;
+
+    if (!gameId || gameId.trim().length === 0) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid game ID",
+      });
+    }
+
+    const stats = await getGameStats(gameId, db);
+
+    res.json({ success: true, data: stats });
+  } catch (error) {
+    console.error(`[API] /audit/game/${req.params.gameId}/stats - Error:`, error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch game stats",
+      error: error.message,
+    });
   }
 });
 

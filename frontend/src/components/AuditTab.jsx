@@ -1,4 +1,5 @@
-import { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
+import GameStatsRow from './GameStatsRow';
 
 export function AuditTab({ season }) {
   // Only 2025-26 season data available
@@ -14,6 +15,12 @@ export function AuditTab({ season }) {
   // Filter states
   const [statusFilter, setStatusFilter] = useState('all'); // all, collected, missing
   const [dateFilter, setDateFilter] = useState('');
+
+  // Expanded row states
+  const [expandedGameId, setExpandedGameId] = useState(null);
+  const [expandedStats, setExpandedStats] = useState(null);
+  const [expandedLoading, setExpandedLoading] = useState(false);
+  const [expandedError, setExpandedError] = useState(null);
 
   const fetchAuditData = useCallback(async () => {
     try {
@@ -79,6 +86,55 @@ export function AuditTab({ season }) {
   const handlePageChange = (newOffset) => {
     setOffset(newOffset);
   };
+
+  const fetchGameStats = useCallback(async (gameId) => {
+    try {
+      setExpandedLoading(true);
+      setExpandedError(null);
+
+      const response = await fetch(`/api/audit/game/${gameId}/stats`);
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.message || 'Failed to fetch game stats');
+      }
+
+      setExpandedStats(data.data);
+    } catch (err) {
+      console.error(`Error fetching game stats for game ${gameId}:`, err);
+      setExpandedError(err.message);
+      setExpandedStats(null);
+    } finally {
+      setExpandedLoading(false);
+    }
+  }, []);
+
+  const handleRowClick = useCallback(
+    (gameId) => {
+      if (expandedGameId === gameId) {
+        // Collapse if clicking the same row
+        setExpandedGameId(null);
+        setExpandedStats(null);
+        setExpandedError(null);
+      } else {
+        // Expand new row
+        setExpandedGameId(gameId);
+        fetchGameStats(gameId);
+      }
+    },
+    [expandedGameId, fetchGameStats]
+  );
+
+  const handleRetry = useCallback(() => {
+    if (expandedGameId) {
+      fetchGameStats(expandedGameId);
+    }
+  }, [expandedGameId, fetchGameStats]);
 
   if (error) {
     return (
@@ -218,47 +274,84 @@ export function AuditTab({ season }) {
                   </tr>
                 ) : (
                   games.map((game) => (
-                    <tr key={game.game_id}>
-                      <td className="font-mono text-sm">{game.game_id}</td>
-                      <td>{new Date(game.game_date).toLocaleDateString()}</td>
-                      <td>
-                        <div className="flex items-center gap-2">
-                          {game.home_team_logo && (
-                            <img 
-                              src={game.home_team_logo} 
-                              alt={`${game.home_team_abbreviation} logo`} 
-                              className="h-6 w-6 object-contain"
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                              }}
-                            />
+                    <React.Fragment key={game.game_id}>
+                      <tr
+                        onClick={() => handleRowClick(game.game_id)}
+                        className={`cursor-pointer hover:bg-base-300 transition-colors ${
+                          expandedGameId === game.game_id ? 'bg-base-300' : ''
+                        }`}
+                      >
+                        <td className="font-mono text-sm">
+                          <div className="flex items-center gap-2">
+                            <svg
+                              className={`w-4 h-4 transition-transform duration-200 ${
+                                expandedGameId === game.game_id ? 'rotate-90' : ''
+                              }`}
+                              fill="none"
+                              stroke="currentColor"
+                              viewBox="0 0 24 24"
+                            >
+                              <path
+                                strokeLinecap="round"
+                                strokeLinejoin="round"
+                                strokeWidth={2}
+                                d="M9 5l7 7-7 7"
+                              />
+                            </svg>
+                            {game.game_id}
+                          </div>
+                        </td>
+                        <td>{new Date(game.game_date).toLocaleDateString()}</td>
+                        <td>
+                          <div className="flex items-center gap-2">
+                            {game.home_team_logo && (
+                              <img 
+                                src={game.home_team_logo} 
+                                alt={`${game.home_team_abbreviation} logo`} 
+                                className="h-6 w-6 object-contain"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                }}
+                              />
+                            )}
+                            <span>{game.home_team_abbreviation || '—'}</span>
+                          </div>
+                        </td>
+                        <td>
+                          <div className="flex items-center gap-2">
+                            {game.away_team_logo && (
+                              <img 
+                                src={game.away_team_logo} 
+                                alt={`${game.away_team_abbreviation} logo`} 
+                                className="h-6 w-6 object-contain"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                }}
+                              />
+                            )}
+                            <span>{game.away_team_abbreviation || '—'}</span>
+                          </div>
+                        </td>
+                        <td>
+                          {game.collected ? (
+                            <span className="badge badge-success">✓ Collected</span>
+                          ) : (
+                            <span className="badge badge-warning">⊘ Missing</span>
                           )}
-                          <span>{game.home_team_abbreviation || '—'}</span>
-                        </div>
-                      </td>
-                      <td>
-                        <div className="flex items-center gap-2">
-                          {game.away_team_logo && (
-                            <img 
-                              src={game.away_team_logo} 
-                              alt={`${game.away_team_abbreviation} logo`} 
-                              className="h-6 w-6 object-contain"
-                              onError={(e) => {
-                                e.target.style.display = 'none';
-                              }}
-                            />
-                          )}
-                          <span>{game.away_team_abbreviation || '—'}</span>
-                        </div>
-                      </td>
-                      <td>
-                        {game.collected ? (
-                          <span className="badge badge-success">✓ Collected</span>
-                        ) : (
-                          <span className="badge badge-warning">⊘ Missing</span>
-                        )}
-                      </td>
-                    </tr>
+                        </td>
+                      </tr>
+                      
+                      {/* Expanded Game Stats Row */}
+                      {expandedGameId === game.game_id && (
+                        <GameStatsRow
+                          homeStats={expandedStats?.home}
+                          awayStats={expandedStats?.away}
+                          isLoading={expandedLoading}
+                          error={expandedError}
+                          onRetry={handleRetry}
+                        />
+                      )}
+                    </React.Fragment>
                   ))
                 )}
               </tbody>
