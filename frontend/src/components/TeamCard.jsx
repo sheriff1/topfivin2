@@ -51,12 +51,12 @@ export function TeamCard({ team }) {
 
   return (
     <Link to={`/team/${abbreviation}`}>
-      <div 
-        className="card shadow-md hover:shadow-lg transition-shadow cursor-pointer h-full"
-        style={{ backgroundColor: getCardColor() }}
-      >
-        {/* 4:3 aspect ratio container */}
-        <div className="aspect-video relative overflow-hidden bg-base-300">
+      <div className="card shadow-md hover:shadow-lg transition-shadow cursor-pointer h-full">
+        {/* 4:3 aspect ratio container with team colors */}
+        <div 
+          className="aspect-video relative overflow-hidden"
+          style={{ backgroundColor: getCardColor() }}
+        >
           {team.logo_url && (
             <img 
               src={team.logo_url} 
@@ -67,14 +67,14 @@ export function TeamCard({ team }) {
         </div>
 
         {/* Card body */}
-        <div className="card-body p-4" style={{ color: 'white' }}>
-          <h2 className="card-title text-lg line-clamp-1 text-white">
+        <div className="card-body p-4 bg-base-200">
+          <h2 className="card-title text-lg line-clamp-1">
             {team.team_name}
           </h2>
           
           <div className="flex items-center gap-1 text-base">
             <span className="text-xl">🏆</span>
-            <span className="font-semibold text-white">×{trophyCount}</span>
+            <span className="font-semibold">×{trophyCount}</span>
           </div>
         </div>
       </div>
