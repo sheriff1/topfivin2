@@ -27,15 +27,15 @@ export function TeamPage() {
   };
 
   // Choose header color: primary if contrast is good, else secondary
-  // Special case: Jazz use secondary color
+  // Special case: Jazz and Rockets use secondary color
   const getHeaderColor = () => {
     if (!team?.team_colors) return '#000000';
     
     const primaryColor = team.team_colors.primary || '#000000';
     const secondaryColor = team.team_colors.secondary || '#FFFFFF';
     
-    // Jazz (team_id 1610612762) always use secondary color
-    if (team.team_id === 1610612762) {
+    // Jazz (1610612762) and Rockets (1610612745) always use secondary color
+    if (team.team_id === 1610612762 || team.team_id === 1610612745) {
       return secondaryColor;
     }
     
