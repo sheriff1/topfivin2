@@ -1,4 +1,5 @@
 import React from "react";
+import { formatStatValue } from "../utils/statFormatter";
 
 /**
  * GameStatsRow Component
@@ -43,13 +44,14 @@ const GameStatsRow = ({ homeStats, awayStats, isLoading, error, onRetry }) => {
     return null;
   }
 
-  // Helper function to format percentages (already on 0-100 scale from backend)
+  // Helper function to format percentages using centralized formatter
   const formatPercent = (value) => {
     if (value === null || value === undefined) return "—";
-    return `${parseFloat(value).toFixed(2)}%`;
+    // Game stats percentages are already on 0-100 scale
+    return formatStatValue(value, "Percentage %");
   };
 
-  // Helper function to format counting stats
+  // Helper function to format counting stats using centralized formatter
   const formatStat = (value) => {
     if (value === null || value === undefined) return "—";
     return value;

@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useRankings } from '../hooks/useApi';
+import { formatStatValue } from '../utils/statFormatter';
 
 const TEAM_ID_TO_ABBR = {
   1610612737: 'ATL', 1610612738: 'BOS', 1610612739: 'CLE', 1610612740: 'NOP',
@@ -95,9 +96,7 @@ export function RankingsGrid({ category, season = '2025' }) {
                 </Link>
               </td>
               <td className="text-right text-lg font-bold">
-                {typeof item.value === 'number'
-                  ? item.value.toFixed(item.stat_category.includes('%') ? 1 : 2)
-                  : item.value}
+                {formatStatValue(item.value, data.label)}
               </td>
             </tr>
           ))}

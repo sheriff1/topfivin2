@@ -1,5 +1,6 @@
 import { useParams } from 'react-router-dom';
 import { useTeamByAbbreviation, useTeamStats, useTeamRankings, useCategories } from '../hooks/useApi';
+import { formatStatValue, formatPercentageStat } from '../utils/statFormatter';
 
 export function TeamPage() {
   const { abbreviation } = useParams();
@@ -68,8 +69,8 @@ export function TeamPage() {
     return acc;
   }, {});
 
-  // Get stat value from stats object
-  const getStatValue = (category) => {
+  // Get stat value from stats object and format it
+  const getFormattedStatValue = (category) => {
     if (!stats) return '-';
     
     const statMap = {
@@ -78,19 +79,24 @@ export function TeamPage() {
       'APG': stats.ast_avg,
       'SPG': stats.stl_avg,
       'BPG': stats.blk_avg,
-      'FG%': stats.fg_pct ? (stats.fg_pct * 100).toFixed(1) : '-',
-      '3P%': stats.three_p_pct ? (stats.three_p_pct * 100).toFixed(1) : '-',
-      'FT%': stats.ft_pct ? (stats.ft_pct * 100).toFixed(1) : '-',
-      'TS%': stats.ts_pct ? (stats.ts_pct * 100).toFixed(1) : '-',
-      'ORB%': stats.orb_pct ? (stats.orb_pct * 100).toFixed(1) : '-',
-      'DRB%': stats.drb_pct ? (stats.drb_pct * 100).toFixed(1) : '-',
-      'TRB%': stats.trb_pct ? (stats.trb_pct * 100).toFixed(1) : '-',
-      'AST%': stats.ast_pct ? (stats.ast_pct * 100).toFixed(1) : '-',
-      'USG%': stats.usg_pct ? (stats.usg_pct * 100).toFixed(1) : '-',
-      'TOV%': stats.tov_pct ? (stats.tov_pct * 100).toFixed(1) : '-',
+      'FG%': stats.fg_pct ? stats.fg_pct * 100 : null,
+      '3P%': stats.three_p_pct ? stats.three_p_pct * 100 : null,
+      'FT%': stats.ft_pct ? stats.ft_pct * 100 : null,
+      'TS%': stats.ts_pct ? stats.ts_pct * 100 : null,
+      'ORB%': stats.orb_pct ? stats.orb_pct * 100 : null,
+      'DRB%': stats.drb_pct ? stats.drb_pct * 100 : null,
+      'TRB%': stats.trb_pct ? stats.trb_pct * 100 : null,
+      'AST%': stats.ast_pct ? stats.ast_pct * 100 : null,
+      'USG%': stats.usg_pct ? stats.usg_pct * 100 : null,
+      'TOV%': stats.tov_pct ? stats.tov_pct * 100 : null,
     };
     
-    return statMap[category] || '-';
+    const value = statMap[category];
+    if (value === null || value === undefined) return '-';
+    
+    // Get the category label to determine if it's a percentage
+    const categoryLabel = categories?.find(c => c.code === category)?.label || category;
+    return formatStatValue(value, categoryLabel);
   };
 
   // Get category label
@@ -176,10 +182,8 @@ export function TeamPage() {
                       </td>
                       <td className="text-right font-semibold">
                         {ranking ? 
-                          (category.code.includes('%') ? 
-                            ranking.value.toFixed(1) : 
-                            ranking.value.toFixed(1))
-                          : getStatValue(category.code)
+                          formatStatValue(ranking.value, category.label)
+                          : getFormattedStatValue(category.code)
                         }
                       </td>
                     </tr>
