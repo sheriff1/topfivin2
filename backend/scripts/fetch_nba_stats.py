@@ -15,7 +15,7 @@ from collections import defaultdict
 import warnings
 
 # Import shared configuration
-from config import TEAM_ABBR_TO_ID
+from team_constants import TEAM_ABBR_TO_ID
 import psycopg2
 from psycopg2.extras import Json
 import requests

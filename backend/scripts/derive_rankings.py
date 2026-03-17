@@ -5,9 +5,11 @@ Phase 6: Derive STAT_RANKINGS from TEAM_STATS
 - Traditional: PPG, RPG, APG, FG%, 3P%, FT%, SPG, BPG
 - Advanced: TS%, ORB%, DRB%, TRB%, AST%, USG%, TOV%
 - Store in STAT_RANKINGS table with rank 1-30
+- Clear Redis cache after rankings are updated
 """
 import os
 import psycopg2
+import redis
 from datetime import datetime
 
 # Define the stat categories to rank (traditional + advanced)
@@ -31,6 +33,21 @@ STAT_CATEGORIES = [
     ('USG%', 'usg_pct', 'DESC'),       # Usage % - higher is better
     ('TOV%', 'tov_pct', 'ASC'),        # Turnover % - lower is better
 ]
+
+def clear_cache():
+    """Clear Redis cache to ensure fresh data is served"""
+    try:
+        r = redis.Redis(
+            host=os.getenv('REDIS_HOST', 'localhost'),
+            port=int(os.getenv('REDIS_PORT', 6379)),
+            db=0,
+            decode_responses=True
+        )
+        r.flushall()
+        print("\n💾 Redis cache cleared successfully")
+    except Exception as e:
+        print(f"\n⚠️  Warning: Could not clear Redis cache: {e}")
+        # Don't raise - cache clearing is non-critical
 
 def derive_rankings():
     """Generate stat rankings for all 8 categories"""
@@ -98,6 +115,9 @@ def derive_rankings():
             print(f"  {rank:2}. {team_name:30} {value:.1f}")
         
         print(f"\n✅ STAT_RANKINGS derivation complete!")
+        
+        # Clear Redis cache so frontend gets fresh data
+        clear_cache()
         
     except Exception as e:
         print(f"\n✗ Error: {e}")

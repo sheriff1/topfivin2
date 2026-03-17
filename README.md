@@ -181,8 +181,7 @@ topfivin2/
 │   ├── scripts/
 │   │   ├── fetch_nba_stats.py       # Game-by-game box score fetcher
 │   │   ├── derive_team_stats.py     # Aggregates game_stats → team_stats
-│   │   ├── derive_rankings.py       # Computes stat_rankings from team_stats
-│   │   └── backup_database.py       # Exports all tables to backups/
+│   │   └── derive_rankings.py       # Computes stat_rankings from team_stats
 │   ├── migrations/
 │   │   └── 001_init_schema.js
 │   ├── src/
@@ -214,7 +213,7 @@ topfivin2/
 │   ├── .env / .env.example
 │   └── package.json
 │
-├── backups/                          # JSON exports from backup_database.py (gitignored)
+├── backups/                          # (reserved for manual database backups)
 ├── .venv/                            # Python virtualenv (gitignored — recreate with requirements.txt)
 ├── requirements.txt                  # Python dependencies
 └── README.md
