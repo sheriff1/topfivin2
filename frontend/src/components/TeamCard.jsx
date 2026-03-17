@@ -7,6 +7,33 @@ export function TeamCard({ team }) {
   // Calculate trophy count (teams with rank <= 5)
   const trophyCount = rankingsData?.rankings?.filter(r => r.rank <= 5).length || 0;
 
+  // Calculate contrast ratio for white text on a given hex color
+  const getContrastRatio = (hexColor) => {
+    // Convert hex to RGB
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    
+    // Calculate relative luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    
+    // Return contrast ratio with white (255, 255, 255)
+    return luminance;
+  };
+
+  // Choose card color: primary if contrast is good, else secondary
+  const getCardColor = () => {
+    if (!team?.team_colors) return '#000000';
+    
+    const primaryColor = team.team_colors.primary || '#000000';
+    const secondaryColor = team.team_colors.secondary || '#FFFFFF';
+    
+    // Luminance < 0.5 is dark enough for white text
+    const contrastRatio = getContrastRatio(primaryColor);
+    return contrastRatio < 0.5 ? primaryColor : secondaryColor;
+  };
+
   // Convert team_id to abbreviation - simple mapping
   // This is a frontend utility that mirrors the backend mapping
   const TEAM_ID_TO_ABBR = {
@@ -24,7 +51,10 @@ export function TeamCard({ team }) {
 
   return (
     <Link to={`/team/${abbreviation}`}>
-      <div className="card bg-base-200 shadow-md hover:shadow-lg transition-shadow cursor-pointer h-full">
+      <div 
+        className="card shadow-md hover:shadow-lg transition-shadow cursor-pointer h-full"
+        style={{ backgroundColor: getCardColor() }}
+      >
         {/* 4:3 aspect ratio container */}
         <div className="aspect-video relative overflow-hidden bg-base-300">
           {team.logo_url && (
@@ -37,14 +67,14 @@ export function TeamCard({ team }) {
         </div>
 
         {/* Card body */}
-        <div className="card-body p-4">
-          <h2 className="card-title text-lg line-clamp-1">
+        <div className="card-body p-4" style={{ color: 'white' }}>
+          <h2 className="card-title text-lg line-clamp-1 text-white">
             {team.team_name}
           </h2>
           
           <div className="flex items-center gap-1 text-base">
             <span className="text-xl">🏆</span>
-            <span className="font-semibold">×{trophyCount}</span>
+            <span className="font-semibold text-white">×{trophyCount}</span>
           </div>
         </div>
       </div>
