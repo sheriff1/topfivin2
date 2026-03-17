@@ -10,6 +10,34 @@ export function TeamPage() {
 
   const isLoading = teamLoading || statsLoading || rankingsLoading;
 
+  // Calculate contrast ratio for white text on a given hex color
+  const getContrastRatio = (hexColor) => {
+    // Convert hex to RGB
+    const hex = hexColor.replace('#', '');
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+    
+    // Calculate relative luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    
+    // Return contrast ratio with white (255, 255, 255)
+    // Higher values mean lighter background (less contrast with white text)
+    return luminance;
+  };
+
+  // Choose header color: primary if contrast is good, else secondary
+  const getHeaderColor = () => {
+    if (!team?.team_colors) return '#000000';
+    
+    const primaryColor = team.team_colors.primary || '#000000';
+    const secondaryColor = team.team_colors.secondary || '#FFFFFF';
+    
+    // Luminance < 0.5 is dark enough for white text (good contrast)
+    const contrastRatio = getContrastRatio(primaryColor);
+    return contrastRatio < 0.5 ? primaryColor : secondaryColor;
+  };
+
   if (isLoading) {
     return (
       <div className="flex justify-center items-center min-h-screen">
@@ -75,7 +103,13 @@ export function TeamPage() {
   return (
     <div className="space-y-6">
       {/* Team Header */}
-      <div className="card bg-base-200 shadow-md">
+      <div 
+        className="card shadow-md"
+        style={{ 
+          backgroundColor: getHeaderColor(),
+          color: 'white'
+        }}
+      >
         <div className="card-body">
           <div className="flex items-start gap-6">
             {team.logo_url && (
@@ -86,8 +120,8 @@ export function TeamPage() {
               />
             )}
             <div className="flex-1">
-              <h1 className="text-4xl font-bold">{team.team_name}</h1>
-              <p className="text-base-content/70 text-lg mt-2">
+              <h1 className="text-4xl font-bold text-white">{team.team_name}</h1>
+              <p className="text-white/70 text-lg mt-2">
                 {stats?.games_played || 0} games played
               </p>
             </div>
