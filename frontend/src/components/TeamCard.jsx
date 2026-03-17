@@ -23,11 +23,17 @@ export function TeamCard({ team }) {
   };
 
   // Choose card color: primary if contrast is good, else secondary
+  // Special case: Jazz use secondary color
   const getCardColor = () => {
     if (!team?.team_colors) return '#000000';
     
     const primaryColor = team.team_colors.primary || '#000000';
     const secondaryColor = team.team_colors.secondary || '#FFFFFF';
+    
+    // Jazz (team_id 1610612762) always use secondary color
+    if (team.team_id === 1610612762) {
+      return secondaryColor;
+    }
     
     // Luminance < 0.5 is dark enough for white text
     const contrastRatio = getContrastRatio(primaryColor);
