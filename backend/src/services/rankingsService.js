@@ -28,7 +28,6 @@ async function getRankings(category, season, db, cache) {
       sr.value,
       t.team_name,
       t.logo_url,
-      t.team_colors,
       COALESCE(ts.games_played, 0) as games_count
     FROM stat_rankings sr
     LEFT JOIN teams t ON sr.team_id = t.team_id

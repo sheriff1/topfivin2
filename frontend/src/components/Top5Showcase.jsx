@@ -1,4 +1,5 @@
 import { Link } from 'react-router-dom';
+import { useAllTeams } from '../hooks/useApi';
 
 // Team ID to abbreviation mapping for routing
 const TEAM_ID_TO_ABBR = {
@@ -13,6 +14,7 @@ const TEAM_ID_TO_ABBR = {
 };
 
 export function Top5Showcase({ rankings, category, shouldAnimate = true }) {
+  const { data: allTeams } = useAllTeams();
   if (!rankings || !rankings.data || rankings.data.length === 0) {
     return null;
   }
@@ -36,10 +38,12 @@ export function Top5Showcase({ rankings, category, shouldAnimate = true }) {
   // Choose card color: primary if contrast is good, else secondary
   // Special case: Jazz and Rockets use secondary color
   const getCardColor = (team) => {
-    if (!team?.team_colors) return '#000000';
+    // Look up team colors from the allTeams data
+    const teamData = allTeams?.find(t => t.team_id === team.team_id);
+    if (!teamData?.team_colors) return '#000000';
     
-    const primaryColor = team.team_colors.primary || '#000000';
-    const secondaryColor = team.team_colors.secondary || '#FFFFFF';
+    const primaryColor = teamData.team_colors.primary || '#000000';
+    const secondaryColor = teamData.team_colors.secondary || '#FFFFFF';
     
     // Jazz (1610612762) and Rockets (1610612745) always use secondary color
     if (team.team_id === 1610612762 || team.team_id === 1610612745) {
