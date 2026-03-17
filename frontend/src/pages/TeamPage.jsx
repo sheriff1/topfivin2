@@ -29,7 +29,7 @@ export function TeamPage() {
   }
 
   // Create a mapping of category code to rank info
-  const rankingsByCategory = (rankings || []).reduce((acc, r) => {
+  const rankingsByCategory = (rankings?.rankings || []).reduce((acc, r) => {
     acc[r.stat_category] = r;
     return acc;
   }, {});
