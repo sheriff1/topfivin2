@@ -70,6 +70,33 @@ export function useTeamRankings(teamId, season = "2025") {
   });
 }
 
+// Hook for fetching all teams
+export function useAllTeams() {
+  return useQuery({
+    queryKey: ["allTeams"],
+    queryFn: async () => {
+      const response = await apiClient.get("/teams");
+      return response.data.data;
+    },
+    staleTime: 1000 * 60 * 60, // 1 hour
+    retry: 3,
+  });
+}
+
+// Hook for fetching team by abbreviation
+export function useTeamByAbbreviation(abbreviation) {
+  return useQuery({
+    queryKey: ["teamByAbbr", abbreviation],
+    queryFn: async () => {
+      const response = await apiClient.get(`/teams/abbr/${abbreviation}`);
+      return response.data.data;
+    },
+    staleTime: 1000 * 60 * 60, // 1 hour
+    retry: 3,
+    enabled: !!abbreviation,
+  });
+}
+
 // Hook for API health check
 export function useApiHealth() {
   return useQuery({

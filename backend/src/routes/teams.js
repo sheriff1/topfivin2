@@ -1,6 +1,7 @@
 const express = require("express");
 const db = require("../db/postgresClient");
 const { getTeamStats, getTeamRankings } = require("../services/teamsService");
+const { TEAM_ABBR_TO_ID } = require("../utils/teamConstants");
 
 const router = express.Router();
 
@@ -30,6 +31,49 @@ router.get("/teams", async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Failed to fetch teams",
+      error: error.message,
+    });
+  }
+});
+
+/**
+ * GET /api/teams/abbr/:abbreviation
+ * Returns team info by team abbreviation (e.g., BOS, LAL)
+ * Used for URL routing with team abbreviations
+ */
+router.get("/teams/abbr/:abbreviation", async (req, res) => {
+  try {
+    const abbr = req.params.abbreviation.toUpperCase();
+
+    // Verify abbreviation is valid
+    if (!TEAM_ABBR_TO_ID[abbr]) {
+      return res.status(400).json({
+        success: false,
+        message: `Invalid team abbreviation: ${abbr}`,
+      });
+    }
+
+    const teamId = TEAM_ABBR_TO_ID[abbr];
+
+    // Query database for team info
+    const result = await db.query(
+      "SELECT id, team_id, team_name, logo_url, team_colors FROM teams WHERE team_id = $1",
+      [teamId]
+    );
+
+    if (result.rows.length === 0) {
+      return res.status(404).json({
+        success: false,
+        message: `Team not found for abbreviation: ${abbr}`,
+      });
+    }
+
+    res.json({ success: true, data: result.rows[0] });
+  } catch (error) {
+    console.error("[API] /teams/abbr/:abbreviation - Error:", error);
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch team by abbreviation",
       error: error.message,
     });
   }

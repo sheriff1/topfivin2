@@ -1,103 +1,155 @@
 import { useParams } from 'react-router-dom';
-import { useEffect, useState } from 'react';
+import { useTeamByAbbreviation, useTeamStats, useTeamRankings, useCategories } from '../hooks/useApi';
 
 export function TeamPage() {
-  const { teamId } = useParams();
-  const [teamData, setTeamData] = useState(null);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const { abbreviation } = useParams();
+  const { data: team, isLoading: teamLoading } = useTeamByAbbreviation(abbreviation);
+  const { data: stats, isLoading: statsLoading } = useTeamStats(team?.team_id, '2025');
+  const { data: rankings, isLoading: rankingsLoading } = useTeamRankings(team?.team_id, '2025');
+  const { data: categories } = useCategories();
 
-  useEffect(() => {
-    const fetchTeamData = async () => {
-      try {
-        setLoading(true);
-        // Fetch team data using team_id query parameter
-        const response = await fetch(`http://localhost:5001/api/teams?team_id=${teamId}`);
-        if (!response.ok) throw new Error('Failed to fetch team data');
-        
-        const result = await response.json();
-        if (result.success && result.data && result.data.length > 0) {
-          setTeamData(result.data[0]);
-        } else {
-          setError('Team not found');
-        }
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
+  const isLoading = teamLoading || statsLoading || rankingsLoading;
+
+  if (isLoading) {
+    return (
+      <div className="flex justify-center items-center min-h-screen">
+        <div className="loading loading-spinner loading-lg"></div>
+      </div>
+    );
+  }
+
+  if (!team) {
+    return (
+      <div className="alert alert-error">
+        <div>
+          <span>Team not found: {abbreviation}</span>
+        </div>
+      </div>
+    );
+  }
+
+  // Create a mapping of category code to rank info
+  const rankingsByCategory = (rankings || []).reduce((acc, r) => {
+    acc[r.stat_category] = r;
+    return acc;
+  }, {});
+
+  // Get stat value from stats object
+  const getStatValue = (category) => {
+    if (!stats) return '-';
+    
+    const statMap = {
+      'PPG': stats.pts_avg,
+      'RPG': stats.reb_avg,
+      'APG': stats.ast_avg,
+      'SPG': stats.stl_avg,
+      'BPG': stats.blk_avg,
+      'FG%': stats.fg_pct ? (stats.fg_pct * 100).toFixed(1) : '-',
+      '3P%': stats.three_p_pct ? (stats.three_p_pct * 100).toFixed(1) : '-',
+      'FT%': stats.ft_pct ? (stats.ft_pct * 100).toFixed(1) : '-',
+      'TS%': stats.ts_pct ? (stats.ts_pct * 100).toFixed(1) : '-',
+      'ORB%': stats.orb_pct ? (stats.orb_pct * 100).toFixed(1) : '-',
+      'DRB%': stats.drb_pct ? (stats.drb_pct * 100).toFixed(1) : '-',
+      'TRB%': stats.trb_pct ? (stats.trb_pct * 100).toFixed(1) : '-',
+      'AST%': stats.ast_pct ? (stats.ast_pct * 100).toFixed(1) : '-',
+      'USG%': stats.usg_pct ? (stats.usg_pct * 100).toFixed(1) : '-',
+      'TOV%': stats.tov_pct ? (stats.tov_pct * 100).toFixed(1) : '-',
     };
+    
+    return statMap[category] || '-';
+  };
 
-    if (teamId) {
-      fetchTeamData();
-    }
-  }, [teamId]);
+  // Get category label
+  const getCategoryLabel = (code) => {
+    const category = categories?.find(c => c.code === code);
+    return category?.label || code;
+  };
 
-  if (loading) {
-    return (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold">Loading...</h1>
-      </div>
-    );
-  }
-
-  if (error || !teamData) {
-    return (
-      <div className="p-8">
-        <h1 className="text-2xl font-bold text-red-600">Error: {error || 'Team not found'}</h1>
-      </div>
-    );
-  }
-
-  const colors = teamData.team_colors || { primary: '#000000', secondary: '#FFFFFF', tertiary: '#808080' };
+  // Get badge styling based on rank
+  const getRankBadgeColor = (rank) => {
+    if (rank <= 5) return 'badge-success'; // Top 5
+    if (rank <= 15) return 'badge-warning'; // Top 15
+    return 'badge-error'; // Beyond top 15
+  };
 
   return (
-    <div className="p-8 max-w-2xl">
-      <h1 className="text-4xl font-bold mb-2">{teamData.team_name}</h1>
-      <p className="text-gray-600 mb-8">Team ID: {teamData.team_id}</p>
-
-      {/* Logo */}
-      {teamData.logo_url && (
-        <div className="mb-8">
-          <img 
-            src={teamData.logo_url} 
-            alt={teamData.team_name}
-            className="h-32 w-auto"
-          />
-        </div>
-      )}
-
-      {/* Color Palette */}
-      <div className="mb-8">
-        <h2 className="text-2xl font-bold mb-4">Color Palette</h2>
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-6">
-          {/* Primary Color */}
-          <div className="text-center">
-            <div 
-              className="w-full h-32 rounded-lg shadow-md border border-gray-300 mb-3"
-              style={{ backgroundColor: colors.primary }}
-              title={colors.primary}
-            />
-            <p className="text-sm text-gray-700 font-semibold">Primary</p>
-            <p className="text-lg font-mono font-bold">{colors.primary}</p>
-            <p className="text-xs text-gray-500 mt-1">
-              {getContrastWithBlack(colors.primary) >= 7.0 
-                ? '✓ AAA compliant' 
-                : getContrastWithWhite(colors.primary) >= 7.0
-                ? '✓ AAA compliant (vs white)'
-                : 'May need adjustment'
-              }
-            </p>
+    <div className="space-y-6">
+      {/* Team Header */}
+      <div className="card bg-base-200 shadow-md">
+        <div className="card-body">
+          <div className="flex items-start gap-6">
+            {team.logo_url && (
+              <img 
+                src={team.logo_url} 
+                alt={team.team_name}
+                className="h-24 w-24 object-contain"
+              />
+            )}
+            <div className="flex-1">
+              <h1 className="text-4xl font-bold">{team.team_name}</h1>
+              <p className="text-base-content/70 text-lg mt-2">
+                {stats?.games_played || 0} games played
+              </p>
+            </div>
           </div>
+        </div>
+      </div>
 
-          {/* Secondary Color */}
-          <div className="text-center">
-            <div 
-              className="w-full h-32 rounded-lg shadow-md border border-gray-300 mb-3"
-              style={{ backgroundColor: colors.secondary }}
-              title={colors.secondary}
-            />
-            <p className="text-sm text-gray-700 font-semibold">Secondary</p>
+      {/* Stats Rankings Table */}
+      <div className="card bg-base-200 shadow-md">
+        <div className="card-body">
+          <h2 className="card-title mb-4">Season Stats & Rankings (2025)</h2>
+          
+          <div className="overflow-x-auto">
+            <table className="table table-zebra w-full">
+              <thead>
+                <tr>
+                  <th className="w-1/3">Stat Category</th>
+                  <th className="text-right">Rank</th>
+                  <th className="text-right">Value</th>
+                </tr>
+              </thead>
+              <tbody>
+                {categories?.map((category) => {
+                  const ranking = rankingsByCategory[category.code];
+                  const isTrophy = ranking?.rank <= 5;
+                  
+                  return (
+                    <tr key={category.code}>
+                      <td>
+                        <div className="flex items-center gap-2">
+                          {category.label}
+                          {isTrophy && <span className="text-xl">🏆</span>}
+                        </div>
+                      </td>
+                      <td className="text-right">
+                        {ranking ? (
+                          <div className={`badge ${getRankBadgeColor(ranking.rank)}`}>
+                            #{ranking.rank}
+                          </div>
+                        ) : (
+                          <span className="text-base-content/50">-</span>
+                        )}
+                      </td>
+                      <td className="text-right font-semibold">
+                        {ranking ? 
+                          (category.code.includes('%') ? 
+                            ranking.value.toFixed(1) : 
+                            ranking.value.toFixed(1))
+                          : getStatValue(category.code)
+                        }
+                      </td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
             <p className="text-lg font-mono font-bold">{colors.secondary}</p>
             <p className="text-xs text-gray-500 mt-1">
               {getContrastWithBlack(colors.secondary) >= 7.0 
