@@ -2,10 +2,10 @@ import { Link } from 'react-router-dom';
 import { useTeamRankings } from '../hooks/useApi';
 
 export function TeamCard({ team }) {
-  const { data: rankings } = useTeamRankings(team.team_id);
+  const { data: rankingsData } = useTeamRankings(team.team_id);
 
   // Calculate trophy count (teams with rank <= 5)
-  const trophyCount = rankings?.filter(r => r.rank <= 5).length || 0;
+  const trophyCount = rankingsData?.rankings?.filter(r => r.rank <= 5).length || 0;
 
   // Convert team_id to abbreviation - simple mapping
   // This is a frontend utility that mirrors the backend mapping
