@@ -101,7 +101,7 @@ export function Top5Showcase({ rankings, category, shouldAnimate = true }) {
               {/* Card body */}
               <div className="card-body p-3 bg-base-200 flex-grow flex flex-col justify-between">
                 <div className="flex items-center justify-between gap-2">
-                  <h2 className="text-base font-semibold line-clamp-2 text-white flex-1">
+                  <h2 className="text-base font-semibold line-clamp-2 flex-1">
                     <Link 
                       to={`/team/${abbreviation}`}
                       className="link link-hover"
@@ -111,7 +111,7 @@ export function Top5Showcase({ rankings, category, shouldAnimate = true }) {
                   </h2>
                   
                   {/* Stat value */}
-                  <div className="text-lg font-bold text-white whitespace-nowrap">
+                  <div className="text-lg font-bold whitespace-nowrap">
                     {formatStatValue(team.value, rankings.label)}
                   </div>
                 </div>
