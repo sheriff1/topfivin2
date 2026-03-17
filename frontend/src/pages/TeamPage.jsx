@@ -117,20 +117,22 @@ export function TeamPage() {
         }}
       >
         <div className="card-body">
-          <div className="flex items-start gap-6">
-            {team.logo_url && (
-              <img 
-                src={team.logo_url} 
-                alt={team.team_name}
-                className="h-24 w-24 object-contain"
-              />
-            )}
-            <div className="flex-1">
-              <h1 className="text-4xl font-bold text-white">{team.team_name}</h1>
-              <div className="flex items-center gap-1 text-2xl mt-2">
-                <span>🏆</span>
-                <span className="font-semibold text-white">×{(rankings?.rankings || []).filter(r => r.rank <= 5).length || 0}</span>
+          <div className="flex items-center justify-between gap-6">
+            <div className="flex items-start gap-6">
+              {team.logo_url && (
+                <img 
+                  src={team.logo_url} 
+                  alt={team.team_name}
+                  className="h-24 w-24 object-contain"
+                />
+              )}
+              <div>
+                <h1 className="text-4xl font-bold text-white">{team.team_name}</h1>
               </div>
+            </div>
+            <div className="flex items-center gap-1 text-2xl">
+              <span>🏆</span>
+              <span className="font-semibold text-white">×{(rankings?.rankings || []).filter(r => r.rank <= 5).length || 0}</span>
             </div>
           </div>
         </div>
