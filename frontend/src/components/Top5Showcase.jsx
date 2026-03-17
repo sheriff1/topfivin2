@@ -84,9 +84,10 @@ export function Top5Showcase({ rankings, category, shouldAnimate = true }) {
                 animationDelay: shouldAnimate ? `${index * 50}ms` : '0ms',
               }}
             >
-              {/* Logo area with team color */}
-              <div 
-                className="aspect-video relative overflow-hidden rounded-t-lg flex items-center justify-center p-4"
+              {/* Logo area with team color - clickable */}
+              <Link
+                to={`/team/${TEAM_ID_TO_ABBR[team.team_id]}`}
+                className="aspect-video relative overflow-hidden rounded-t-lg flex items-center justify-center p-4 hover:opacity-80 transition-opacity"
                 style={{ backgroundColor }}
               >
                 {team.logo_url && (
@@ -96,7 +97,7 @@ export function Top5Showcase({ rankings, category, shouldAnimate = true }) {
                     className="w-full h-full object-contain"
                   />
                 )}
-              </div>
+              </Link>
 
               {/* Rank badge - positioned on top-right */}
               <div className="absolute top-2 right-2">
@@ -107,18 +108,20 @@ export function Top5Showcase({ rankings, category, shouldAnimate = true }) {
 
               {/* Card body */}
               <div className="card-body p-3 bg-base-200 flex-grow flex flex-col justify-between">
-                <h2 className="text-base font-semibold line-clamp-2 text-white">
-                  <Link 
-                    to={`/team/${abbreviation}`}
-                    className="link link-hover"
-                  >
-                    {team.team_name}
-                  </Link>
-                </h2>
-                
-                {/* Stat value */}
-                <div className="text-right text-lg font-bold text-white">
-                  {formatValue(team.value, category)}
+                <div className="flex items-center justify-between gap-2">
+                  <h2 className="text-base font-semibold line-clamp-2 text-white flex-1">
+                    <Link 
+                      to={`/team/${abbreviation}`}
+                      className="link link-hover"
+                    >
+                      {team.team_name}
+                    </Link>
+                  </h2>
+                  
+                  {/* Stat value */}
+                  <div className="text-lg font-bold text-white whitespace-nowrap">
+                    {formatValue(team.value, category)}
+                  </div>
                 </div>
               </div>
             </div>
