@@ -127,9 +127,10 @@ export function TeamPage() {
             )}
             <div className="flex-1">
               <h1 className="text-4xl font-bold text-white">{team.team_name}</h1>
-              <p className="text-white/70 text-lg mt-2">
-                {stats?.games_played || 0} games played
-              </p>
+              <div className="flex items-center gap-1 text-2xl mt-2">
+                <span>🏆</span>
+                <span className="font-semibold text-white">×{(rankings?.rankings || []).filter(r => r.rank <= 5).length || 0}</span>
+              </div>
             </div>
           </div>
         </div>
