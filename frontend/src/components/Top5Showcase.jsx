@@ -1,5 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAllTeams } from '../hooks/useApi';
+import { formatStatValue } from '../utils/statFormatter';
 
 // Team ID to abbreviation mapping for routing
 const TEAM_ID_TO_ABBR = {
@@ -53,15 +54,6 @@ export function Top5Showcase({ rankings, category, shouldAnimate = true }) {
     // Luminance < 0.5 is dark enough for white text
     const contrastRatio = getContrastRatio(primaryColor);
     return contrastRatio < 0.5 ? primaryColor : secondaryColor;
-  };
-
-  // Format stat value
-  const formatValue = (value, category) => {
-    if (typeof value !== 'number') return value;
-    if (category.includes('%')) {
-      return value.toFixed(1);
-    }
-    return value.toFixed(2);
   };
 
   return (
@@ -120,7 +112,7 @@ export function Top5Showcase({ rankings, category, shouldAnimate = true }) {
                   
                   {/* Stat value */}
                   <div className="text-lg font-bold text-white whitespace-nowrap">
-                    {formatValue(team.value, category)}
+                    {formatStatValue(team.value, rankings.label)}
                   </div>
                 </div>
               </div>
