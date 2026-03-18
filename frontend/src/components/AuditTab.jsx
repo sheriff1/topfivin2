@@ -292,7 +292,12 @@ export function AuditTab({ season }) {
                             {game.game_id}
                           </div>
                         </td>
-                        <td>{new Date(game.game_date).toLocaleDateString()}</td>
+                        <td>
+                          {game.game_date ? (() => {
+                            const [year, month, day] = game.game_date.split('-');
+                            return new Date(year, month - 1, day).toLocaleDateString();
+                          })() : '—'}
+                        </td>
                         <td>
                           <div className="flex items-center gap-2">
                             {game.home_team_logo && (
