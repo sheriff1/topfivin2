@@ -79,23 +79,28 @@ export function TeamPage() {
       'APG': stats.ast_avg,
       'SPG': stats.stl_avg,
       'BPG': stats.blk_avg,
-      'FG%': stats.fg_pct ? stats.fg_pct * 100 : null,
-      '3P%': stats.three_p_pct ? stats.three_p_pct * 100 : null,
-      'FT%': stats.ft_pct ? stats.ft_pct * 100 : null,
-      'TS%': stats.ts_pct ? stats.ts_pct * 100 : null,
-      'ORB%': stats.orb_pct ? stats.orb_pct * 100 : null,
-      'DRB%': stats.drb_pct ? stats.drb_pct * 100 : null,
-      'TRB%': stats.trb_pct ? stats.trb_pct * 100 : null,
-      'AST%': stats.ast_pct ? stats.ast_pct * 100 : null,
-      'USG%': stats.usg_pct ? stats.usg_pct * 100 : null,
-      'TOV%': stats.tov_pct ? stats.tov_pct * 100 : null,
+      'FG%': stats.fg_pct,
+      '3P%': stats.three_p_pct,
+      'FT%': stats.ft_pct,
+      'TS%': stats.ts_pct,
+      'ORB%': stats.orb_pct,
+      'DRB%': stats.drb_pct,
+      'TRB%': stats.trb_pct,
+      'AST%': stats.ast_pct,
+      'USG%': stats.usg_pct,
+      'TOV%': stats.tov_pct,
     };
     
     const value = statMap[category];
     if (value === null || value === undefined) return '-';
     
-    // Get the category label to determine if it's a percentage
+    // Get the category label to determine formatting
     const categoryLabel = categories?.find(c => c.code === category)?.label || category;
+    
+    // Use formatPercentageStat for advanced percentages, formatStatValue for others
+    if (["TS%", "ORB%", "DRB%", "TRB%", "AST%", "USG%"].includes(category)) {
+      return formatPercentageStat(value, categoryLabel);
+    }
     return formatStatValue(value, categoryLabel);
   };
 
@@ -181,10 +186,13 @@ export function TeamPage() {
                         )}
                       </td>
                       <td className="text-right font-semibold">
-                        {ranking ? 
-                          formatStatValue(ranking.value, category.label)
-                          : getFormattedStatValue(category.code)
-                        }
+                        {ranking ? (
+                          ["TS%", "ORB%", "DRB%", "TRB%", "AST%", "USG%"].includes(category.code)
+                            ? formatPercentageStat(ranking.value, category.label)
+                            : formatStatValue(ranking.value, category.label)
+                        ) : (
+                          getFormattedStatValue(category.code)
+                        )}
                       </td>
                     </tr>
                   );

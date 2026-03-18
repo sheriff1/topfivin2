@@ -1,9 +1,9 @@
 const { STAT_CATEGORIES } = require("./statProcessor");
 
 function getCategories() {
-  return Object.entries(STAT_CATEGORIES).map(([key, value]) => ({
-    code: key,
-    label: value.label,
+  return Object.entries(STAT_CATEGORIES).map(([code, config]) => ({
+    code,
+    label: config.label,
   }));
 }
 

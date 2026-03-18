@@ -77,13 +77,13 @@ def derive_team_stats():
             ROUND(AVG(COALESCE(stl, 0))::numeric, 1) as stl_avg,
             ROUND(AVG(COALESCE(blk, 0))::numeric, 1) as blk_avg,
             ROUND(AVG(COALESCE(pts, 0))::numeric, 1) as pts_avg,
-            ROUND(AVG(COALESCE(orb_pct, 0))::numeric, 1) as orb_pct,
-            ROUND(AVG(COALESCE(drb_pct, 0))::numeric, 1) as drb_pct,
-            ROUND(AVG(COALESCE(trb_pct, 0))::numeric, 1) as trb_pct,
-            ROUND(AVG(COALESCE(ast_pct, 0))::numeric, 1) as ast_pct,
+            ROUND(AVG(COALESCE(orb_pct, 0))::numeric, 4) as orb_pct,
+            ROUND(AVG(COALESCE(drb_pct, 0))::numeric, 4) as drb_pct,
+            ROUND(AVG(COALESCE(trb_pct, 0))::numeric, 4) as trb_pct,
+            ROUND(AVG(COALESCE(ast_pct, 0))::numeric, 4) as ast_pct,
             ROUND(AVG(COALESCE(tov_pct, 0))::numeric, 1) as tov_pct,
-            ROUND(AVG(COALESCE(usg_pct, 0))::numeric, 1) as usg_pct,
-            ROUND(AVG(COALESCE(ts_pct, 0))::numeric, 1) as ts_pct
+            ROUND(AVG(COALESCE(usg_pct, 0))::numeric, 4) as usg_pct,
+            ROUND(AVG(COALESCE(ts_pct, 0))::numeric, 4) as ts_pct
         FROM game_stats
         GROUP BY team_id, season
         ON CONFLICT (team_id, season) DO UPDATE SET

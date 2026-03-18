@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useAllTeams } from '../hooks/useApi';
-import { formatStatValue } from '../utils/statFormatter';
+import { formatStatValue, formatPercentageStat } from '../utils/statFormatter';
 
 // Team ID to abbreviation mapping for routing
 const TEAM_ID_TO_ABBR = {
@@ -16,12 +16,12 @@ const TEAM_ID_TO_ABBR = {
 
 export function Top5Showcase({ rankings, category, shouldAnimate = true }) {
   const { data: allTeams } = useAllTeams();
-  if (!rankings || !rankings.data || rankings.data.length === 0) {
+  if (!rankings || !rankings.rankings || rankings.rankings.length === 0) {
     return null;
   }
 
   // Get top 5 teams
-  const top5 = rankings.data.slice(0, 5);
+  const top5 = rankings.rankings.slice(0, 5);
 
   // Calculate contrast ratio for white text on a given hex color
   const getContrastRatio = (hexColor) => {
@@ -112,7 +112,10 @@ export function Top5Showcase({ rankings, category, shouldAnimate = true }) {
                   
                   {/* Stat value */}
                   <div className="text-lg font-bold whitespace-nowrap">
-                    {formatStatValue(team.value, rankings.label)}
+                    {["TS%", "ORB%", "DRB%", "TRB%", "AST%", "USG%"].includes(rankings.category)
+                      ? formatPercentageStat(team.value, rankings.label)
+                      : formatStatValue(team.value, rankings.label)
+                    }
                   </div>
                 </div>
               </div>

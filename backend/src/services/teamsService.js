@@ -11,7 +11,8 @@ async function getTeamStats(teamId, season, db) {
       ts.oreb, ts.dreb, ts.reb,
       ts.ast, ts.tov, ts.stl, ts.blk, ts.pf, ts.pts,
       ts.fg_avg, ts.fga_avg, ts.three_p_avg,
-      ts.reb_avg, ts.ast_avg, ts.tov_avg, ts.stl_avg, ts.blk_avg, ts.pts_avg
+      ts.reb_avg, ts.ast_avg, ts.tov_avg, ts.stl_avg, ts.blk_avg, ts.pts_avg,
+      ts.orb_pct, ts.drb_pct, ts.trb_pct, ts.ast_pct, ts.tov_pct, ts.usg_pct, ts.ts_pct
     FROM team_stats ts
     LEFT JOIN teams t ON ts.team_id = t.team_id
     WHERE ts.team_id = $1 AND ts.season = $2
@@ -55,6 +56,13 @@ async function getTeamStats(teamId, season, db) {
       stl_avg: team.stl_avg,
       blk_avg: team.blk_avg,
       pts_avg: team.pts_avg,
+      orb_pct: team.orb_pct,
+      drb_pct: team.drb_pct,
+      trb_pct: team.trb_pct,
+      ast_pct: team.ast_pct,
+      tov_pct: team.tov_pct,
+      usg_pct: team.usg_pct,
+      ts_pct: team.ts_pct,
     },
   };
 }
