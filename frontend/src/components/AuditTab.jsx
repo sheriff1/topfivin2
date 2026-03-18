@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import GameStatsRow from './GameStatsRow';
+import { apiClient } from '../hooks/useApi';
 
 export function AuditTab({ season }) {
   // Only 2025-26 season data available
@@ -42,16 +43,11 @@ export function AuditTab({ season }) {
         params.append('date', dateFilter);
       }
       
-      const url = `/api/audit/games?${params.toString()}`;
+      const url = `/audit/games?${params.toString()}`;
       console.log('Fetching audit data from:', url);
       
-      const response = await fetch(url);
-      
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-      
-      const data = await response.json();
+      const response = await apiClient.get(url);
+      const data = response.data;
       console.log('Audit data received:', data);
       
       if (!data.stats) {
@@ -92,13 +88,8 @@ export function AuditTab({ season }) {
       setExpandedLoading(true);
       setExpandedError(null);
 
-      const response = await fetch(`/api/audit/game/${gameId}/stats`);
-
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-      }
-
-      const data = await response.json();
+      const response = await apiClient.get(`/audit/game/${gameId}/stats`);
+      const data = response.data;
 
       if (!data.success) {
         throw new Error(data.message || 'Failed to fetch game stats');

@@ -37,12 +37,16 @@ STAT_CATEGORIES = [
 def clear_cache():
     """Clear Redis cache to ensure fresh data is served"""
     try:
-        r = redis.Redis(
-            host=os.getenv('REDIS_HOST', 'localhost'),
-            port=int(os.getenv('REDIS_PORT', 6379)),
-            db=0,
-            decode_responses=True
-        )
+        redis_url = os.getenv('REDIS_URL', '')
+        if redis_url:
+            r = redis.from_url(redis_url, decode_responses=True)
+        else:
+            r = redis.Redis(
+                host=os.getenv('REDIS_HOST', 'localhost'),
+                port=int(os.getenv('REDIS_PORT', 6379)),
+                db=0,
+                decode_responses=True
+            )
         r.flushall()
         print("\n💾 Redis cache cleared successfully")
     except Exception as e:
@@ -55,13 +59,17 @@ def derive_rankings():
     print("PHASE 6: DERIVE STAT_RANKINGS FROM TEAM_STATS")
     print("=" * 60)
     
-    conn = psycopg2.connect(
-        host=os.getenv('DB_HOST', 'localhost'),
-        port=int(os.getenv('DB_PORT', 5432)),
-        user=os.getenv('DB_USER', 'postgres'),
-        password=os.getenv('DB_PASSWORD', ''),
-        database=os.getenv('DB_NAME', 'nba_stats'),
-    )
+    database_url = os.getenv('DATABASE_URL', '')
+    if database_url:
+        conn = psycopg2.connect(database_url)
+    else:
+        conn = psycopg2.connect(
+            host=os.getenv('DB_HOST', 'localhost'),
+            port=int(os.getenv('DB_PORT', 5432)),
+            user=os.getenv('DB_USER', 'postgres'),
+            password=os.getenv('DB_PASSWORD', ''),
+            database=os.getenv('DB_NAME', 'nba_stats'),
+        )
     cursor = conn.cursor()
     
     try:

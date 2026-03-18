@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS teams (
   team_name VARCHAR(255) NOT NULL,
   abbreviation VARCHAR(10),
   logo_url VARCHAR(500),
+  team_colors JSONB,
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
 );
@@ -123,6 +124,15 @@ CREATE TABLE IF NOT EXISTS team_stats (
   blk INT DEFAULT 0,
   pf INT DEFAULT 0,
   pts INT DEFAULT 0,
+  
+  -- Advanced stats
+  orb_pct FLOAT DEFAULT 0,
+  drb_pct FLOAT DEFAULT 0,
+  trb_pct FLOAT DEFAULT 0,
+  ast_pct FLOAT DEFAULT 0,
+  tov_pct FLOAT DEFAULT 0,
+  usg_pct FLOAT DEFAULT 0,
+  ts_pct FLOAT DEFAULT 0,
   
   created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
