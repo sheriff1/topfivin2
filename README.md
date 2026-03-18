@@ -31,13 +31,27 @@ PostgreSQL stores all data; Redis caches ranking responses (1-hour TTL).
 - Python 3.13 (Homebrew: `/opt/homebrew/bin/python3.13`)
 - PostgreSQL 13+ and Redis 6+ running locally
 
+### Quick Setup (Single Command)
+
+From the repo root, run:
+
+```bash
+make
+```
+
+This starts both backend (port 5001) and frontend (port 3000) with a single command. See the Makefile for details.
+
+### Step-by-Step Setup
+
+**Environment Files:** Copy `.env.example` to `.env` in both `backend/` and `frontend/`. The defaults work for local development—no changes needed unless you're using different database credentials or ports.
+
 ### 1. Backend
 
 ```bash
 cd backend
-cp .env.example .env      # defaults work for local dev
+cp .env.example .env      # config file (defaults work for local dev)
 pnpm install
-pnpm run migrate          # creates all tables
+pnpm run migrate          # creates all database tables
 node src/index.js         # starts on http://localhost:5001
 ```
 
@@ -45,7 +59,7 @@ node src/index.js         # starts on http://localhost:5001
 
 ```bash
 cd frontend
-cp .env.example .env      # defaults work out of the box
+cp .env.example .env      # config file (REACT_APP_API_URL should point to backend)
 pnpm install
 pnpm start                # opens http://localhost:3000
 ```
@@ -73,6 +87,53 @@ cd ../../backend && pnpm run migrate:logos && pnpm run seed:logos
 # Step 5 – flush Redis so backend picks up the new data
 redis-cli FLUSHDB
 ```
+
+## Contributing
+
+Contributions are welcome! Follow these steps to contribute:
+
+### 1. Create a Feature Branch
+
+Use the naming convention: `feature/{feature-name}-#{issue-number}`
+
+```bash
+git checkout -b feature/your-feature-#123
+```
+
+### 2. Make Changes & Test Locally
+
+- **Backend changes**: Run migrations (`pnpm run migrate`), then test API endpoints with curl
+- **Frontend changes**: Run `pnpm start` in `frontend/`, test your component in the browser
+- **Both**: Always test your changes live in the browser before committing
+
+### 3. Commit & Push
+
+Use atomic commits (one feature = one commit when possible):
+
+```bash
+git add .
+git commit -m "Descriptive message explaining the change"
+git push -u origin feature/your-feature-#123
+```
+
+### 4. Open a Pull Request
+
+On GitHub, add a brief description and use the closing keyword in your PR body to auto-close the issue:
+
+```
+Closes #123
+```
+
+When your PR is merged, GitHub automatically closes the linked issue. See the [PR linking checklist](./README.md#pr-linking-checklist) section of your internal docs for details.
+
+### Code Organization
+
+- **Backend routes**: `backend/src/routes/` — organized by feature (rankings, teams, audit)
+- **Frontend components**: `frontend/src/components/` — reusable UI pieces
+- **Frontend pages**: `frontend/src/pages/` — full page views
+- **Backend services**: `backend/src/services/` — business logic and database queries
+
+Keep files focused on one responsibility and name them descriptively.
 
 ## Configuration
 
@@ -255,11 +316,16 @@ redis-cli FLUSHDB                         # clear cache (run after pipeline)
 
 ## Troubleshooting
 
-**Dashboard shows no data**
+### Setup & Environment
 
-1. Confirm backend running: `curl http://localhost:5001/health`
-2. Confirm rankings populated: `psql -U postgres -d nba_stats -c "SELECT COUNT(*) FROM stat_rankings;"`
-3. Check `.env` files point to port 5001
+**Missing or incorrect `.env` files**
+
+Copy `.env.example` to `.env` in both `backend/` and `frontend/`. The default values work for local development. If you change database credentials, update both files to match.
+
+```bash
+cd backend && cp .env.example .env
+cd ../frontend && cp .env.example .env
+```
 
 **PostgreSQL or Redis not running**
 
@@ -268,6 +334,46 @@ brew services start postgresql@16
 brew services start redis
 redis-cli ping   # should return PONG
 ```
+
+**Port conflicts** (backend on 5001, frontend on 3000)
+
+If either port is already in use, update the `.env` files or stop the conflicting service:
+
+```bash
+lsof -i :5001    # find process using port 5001
+kill -9 <PID>    # terminate it
+```
+
+### Development & Testing
+
+**Backend: Test API endpoints before committing**
+
+After starting the backend, verify it's working:
+
+```bash
+curl http://localhost:5001/health          # should return 200 OK
+curl http://localhost:5001/api/teams       # should return list of teams
+curl http://localhost:5001/api/rankings?category=PPG&season=2025  # should return rankings
+```
+
+**Frontend: Test components in the browser**
+
+Start the frontend and manually test your component in the browser. Check:
+
+- Does it render without errors?
+- Does it respond to user interactions (clicks, input)?
+- Do API calls work (check Network tab in DevTools)?
+
+Always test locally before committing.
+
+**Dashboard shows no data**
+
+1. Confirm backend running: `curl http://localhost:5001/health`
+2. Confirm rankings populated: `psql -U postgres -d nba_stats -c "SELECT COUNT(*) FROM stat_rankings;"`
+3. Check `.env` files point to correct ports (5001 for backend, 3000 for frontend)
+4. Check React console (DevTools) for error messages
+
+### Python Scripts
 
 **Python script errors**
 
