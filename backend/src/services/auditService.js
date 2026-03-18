@@ -61,7 +61,7 @@ async function getAuditGames(season, limit, offset, status, date, db) {
       WHERE ${whereClause}
     )
     SELECT * FROM game_info
-    ORDER BY game_date DESC
+    ORDER BY game_id DESC
     LIMIT $${paramIndex} OFFSET $${paramIndex + 1}
   `;
 
