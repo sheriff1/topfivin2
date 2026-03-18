@@ -102,9 +102,16 @@ CURRENT_SEASON = os.getenv('CURRENT_SEASON', '2025')
 # API pacing configuration (V3 endpoint is more efficient)
 REQUEST_DELAY = 2.0  # 2 second delay to balance speed with rate-limit avoidance
 REQUEST_JITTER = 0.3  # ±300ms random jitter
-RETRY_ATTEMPTS = 2  # V3 is stable, fewer retries needed
+
+# Retry configuration - handles hard IP blocks from stats.nba.com on cloud IPs
+# NOTE: stats.nba.com blocks all cloud hosting providers (AWS/GCP/Azure).
+# Retries help during intermittent blocks or non-peak hours.
+# See: https://github.com/swar/nba_api/issues/176
+RETRY_ATTEMPTS = 3  # General retry attempts for BoxScore V3 endpoints (increased from 2)
+SEASON_RETRY_ATTEMPTS = 4  # More aggressive retries for LeagueGameLog (season fetch) - this endpoint is most vulnerable
 RETRY_DELAY = 5  # seconds between retries
-REQUEST_TIMEOUT = 30  # Standard 30 second timeout works fine with V3
+REQUEST_TIMEOUT = 60  # Increased from 30s to 60s globally for all NBA API endpoints
+                       # Double timeout helps with cloud IP throttling, though retries are primary mitigation
 
 # Connection pooling with advanced retry strategy
 session = requests.Session()
@@ -134,7 +141,7 @@ def apply_request_delay():
 # Configure urllib3 for longer timeouts (nba_api uses this internally)
 import urllib3
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
-# Set default timeout for connection pooling
+# Set default timeout for connection pooling (60s for all endpoints)
 urllib3.util.timeout.Timeout.DEFAULT = urllib3.util.timeout.Timeout(connect=30, read=REQUEST_TIMEOUT)
 
 # All stats we'll track - from traditional and advanced V3 endpoints
@@ -198,37 +205,51 @@ def fetch_season_games(season=CURRENT_SEASON):
     Fetch all games for the season using LeagueGameLog.
     Season is controlled via the CURRENT_SEASON env var (default: '2025').
     Returns list of game details with team info
+    
+    NOTE: This endpoint is most vulnerable to hard IP blocks from stats.nba.com.
+    Implements aggressive retry logic (SEASON_RETRY_ATTEMPTS) with exponential backoff.
+    See: https://github.com/swar/nba_api/issues/176
     """
     print(f"📅 Fetching games for season {season}...")
-    try:
-        game_log = leaguegamelog.LeagueGameLog(season=season, season_type_all_star='Regular Season')
-        games = game_log.get_data_frames()[0]
+    
+    for attempt in range(SEASON_RETRY_ATTEMPTS):
+        try:
+            game_log = leaguegamelog.LeagueGameLog(season=season, season_type_all_star='Regular Season')
+            games = game_log.get_data_frames()[0]
+            
+            # Extract game details with team info
+            game_details = []
+            for _, row in games.iterrows():
+                game_details.append({
+                    'game_id': row['GAME_ID'],
+                    'game_date': row['GAME_DATE'],
+                    'team_id': row['TEAM_ID'],
+                    'matchup': row['MATCHUP']  # Format: "LAL @ BOS" or "LAL vs BOS"
+                })
+            
+            # Get unique games (each game appears twice, once per team)
+            unique_games = {}
+            for game in game_details:
+                if game['game_id'] not in unique_games:
+                    unique_games[game['game_id']] = game
+            
+            game_ids = list(unique_games.keys())
+            print(f"✓ Found {len(game_ids)} games for season {season}")
+            if games['GAME_DATE'].notna().any():
+                print(f"  Date range: {games['GAME_DATE'].min()} to {games['GAME_DATE'].max()}")
+            
+            return game_details, season  # Return game details with team info
         
-        # Extract game details with team info
-        game_details = []
-        for _, row in games.iterrows():
-            game_details.append({
-                'game_id': row['GAME_ID'],
-                'game_date': row['GAME_DATE'],
-                'team_id': row['TEAM_ID'],
-                'matchup': row['MATCHUP']  # Format: "LAL @ BOS" or "LAL vs BOS"
-            })
-        
-        # Get unique games (each game appears twice, once per team)
-        unique_games = {}
-        for game in game_details:
-            if game['game_id'] not in unique_games:
-                unique_games[game['game_id']] = game
-        
-        game_ids = list(unique_games.keys())
-        print(f"✓ Found {len(game_ids)} games for season {season}")
-        if games['GAME_DATE'].notna().any():
-            print(f"  Date range: {games['GAME_DATE'].min()} to {games['GAME_DATE'].max()}")
-        
-        return game_details, season  # Return game details with team info
-    except Exception as e:
-        print(f"❌ Error fetching games: {e}")
-        return [], None
+        except Exception as e:
+            error_msg = str(e)
+            if attempt < SEASON_RETRY_ATTEMPTS - 1:
+                wait_time = RETRY_DELAY * (2 ** attempt)  # Exponential backoff: 5s, 10s, 20s, 40s
+                print(f"  ⚠ Attempt {attempt + 1} failed: {error_msg}")
+                print(f"  ⏳ Waiting {wait_time}s before retry...")
+                time.sleep(wait_time)
+            else:
+                print(f"❌ Error fetching games after {SEASON_RETRY_ATTEMPTS} attempts: {error_msg}")
+                return [], None
 
 def extract_team_stats(game_id, game_date, team_mapping):
     """
@@ -236,7 +257,10 @@ def extract_team_stats(game_id, game_date, team_mapping):
     - BoxScoreTraditionalV3: Traditional box score stats
     - BoxScoreAdvancedV3: Advanced statistics (TS%, ORB%, etc.)
     
-    Implements retry logic with exponential backoff.
+    Implements retry logic with exponential backoff (RETRY_ATTEMPTS, increased to 3).
+    Handles hard IP blocks from stats.nba.com on cloud IPs.
+    See: https://github.com/swar/nba_api/issues/176
+    
     Returns dict of team_id -> stats for the game
     """
     game_stats = defaultdict(dict)
