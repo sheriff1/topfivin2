@@ -9,6 +9,7 @@ import os
 import json
 import sys
 import time
+import re
 import random
 from datetime import datetime
 from collections import defaultdict
@@ -181,8 +182,13 @@ def connect_db():
     """Connect to PostgreSQL database"""
     try:
         if DATABASE_URL:
+            # Debug: Print database host being used
+            match = re.search(r'@([^:/]+)', DATABASE_URL)
+            db_host = match.group(1) if match else 'unknown'
+            print(f"  🔌 Connecting to database: {db_host}")
             conn = psycopg2.connect(DATABASE_URL)
         else:
+            print(f"  🔌 Connecting to database: {DB_HOST}")
             conn = psycopg2.connect(
                 host=DB_HOST,
                 port=DB_PORT,
