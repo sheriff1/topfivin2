@@ -6,6 +6,7 @@ Phase 5: Derive TEAM_STATS from GAME_STATS
 - Populate TEAM_STATS table
 """
 import os
+import re
 import psycopg2
 from datetime import datetime
 
@@ -27,6 +28,12 @@ def derive_team_stats():
             database=os.getenv('DB_NAME', 'nba_stats'),
         )
     cursor = conn.cursor()
+    
+    # Debug: Print database host being used
+    if database_url:
+        match = re.search(r'@([^:/]+)', database_url)
+        db_host = match.group(1) if match else 'unknown'
+        print(f"  🔌 Connecting to database: {db_host}")
     
     try:
         print("\n🔄 Deriving team stats from game stats...")
