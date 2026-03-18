@@ -1,8 +1,7 @@
 import axios from "axios";
 import { useQuery } from "@tanstack/react-query";
 
-const API_BASE_URL =
-  process.env.REACT_APP_API_URL || "http://localhost:5001/api";
+const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -104,8 +103,7 @@ export function useApiHealth() {
   return useQuery({
     queryKey: ["health"],
     queryFn: async () => {
-      const healthUrl = `${API_BASE_URL.replace(/\/api$/, "")}/health`;
-      const response = await apiClient.get(healthUrl);
+      const response = await axios.get("/health");
       return response.data;
     },
     staleTime: 1000 * 60 * 5, // 5 minutes

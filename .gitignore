@@ -54,3 +54,4 @@ Thumbs.db
 # Production
 dist/
 build/
+nba_stats.dump
