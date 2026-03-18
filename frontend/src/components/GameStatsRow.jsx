@@ -60,7 +60,9 @@ const GameStatsRow = ({ homeStats, awayStats, isLoading, error, onRetry }) => {
   const StatRow = ({ label, homeValue, awayValue }) => (
     <div className="grid grid-cols-[1fr_auto_1fr] gap-4 py-2 border-b border-base-300 last:border-0 px-4">
       <div className="text-right font-semibold">{homeValue}</div>
-      <div className="text-center text-sm font-medium min-w-[140px]">{label}</div>
+      <div className="text-center text-sm font-medium min-w-[140px]">
+        {label}
+      </div>
       <div className="text-left font-semibold">{awayValue}</div>
     </div>
   );
@@ -78,13 +80,15 @@ const GameStatsRow = ({ homeStats, awayStats, isLoading, error, onRetry }) => {
                   alt={`${homeStats.abbreviation} logo`}
                   className="h-6 w-6 object-contain"
                   onError={(e) => {
-                    e.target.style.display = 'none';
+                    e.target.style.display = "none";
                   }}
                 />
               )}
               <span>{homeStats.abbreviation || "—"}</span>
             </div>
-            <div className="text-center text-sm font-medium min-w-[140px]">Team</div>
+            <div className="text-center text-sm font-medium min-w-[140px]">
+              Team
+            </div>
             <div className="text-left font-semibold flex items-center gap-2">
               <span>{awayStats.abbreviation || "—"}</span>
               {awayStats.logo_url && (
@@ -93,7 +97,7 @@ const GameStatsRow = ({ homeStats, awayStats, isLoading, error, onRetry }) => {
                   alt={`${awayStats.abbreviation} logo`}
                   className="h-6 w-6 object-contain"
                   onError={(e) => {
-                    e.target.style.display = 'none';
+                    e.target.style.display = "none";
                   }}
                 />
               )}

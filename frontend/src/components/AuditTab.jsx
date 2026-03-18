@@ -1,10 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import GameStatsRow from './GameStatsRow';
-import { apiClient } from '../hooks/useApi';
+import React, { useState, useEffect, useCallback } from "react";
+import GameStatsRow from "./GameStatsRow";
+import { apiClient } from "../hooks/useApi";
 
 export function AuditTab({ season }) {
   // Only 2025-26 season data available
-  const auditSeason = '2025';
+  const auditSeason = "2025";
   const [stats, setStats] = useState(null);
   const [games, setGames] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -12,10 +12,10 @@ export function AuditTab({ season }) {
   const [error, setError] = useState(null);
   const [limit, setLimit] = useState(50);
   const [offset, setOffset] = useState(0);
-  
+
   // Filter states
-  const [statusFilter, setStatusFilter] = useState('all'); // all, collected, missing
-  const [dateFilter, setDateFilter] = useState('');
+  const [statusFilter, setStatusFilter] = useState("all"); // all, collected, missing
+  const [dateFilter, setDateFilter] = useState("");
 
   // Expanded row states
   const [expandedGameId, setExpandedGameId] = useState(null);
@@ -27,45 +27,45 @@ export function AuditTab({ season }) {
     try {
       setIsLoading(true);
       setError(null);
-      
+
       // Build query parameters
       const params = new URLSearchParams({
         season: auditSeason,
         limit,
         offset,
       });
-      
-      if (statusFilter !== 'all') {
-        params.append('status', statusFilter);
+
+      if (statusFilter !== "all") {
+        params.append("status", statusFilter);
       }
-      
+
       if (dateFilter) {
-        params.append('date', dateFilter);
+        params.append("date", dateFilter);
       }
-      
+
       const url = `/audit/games?${params.toString()}`;
-      console.log('Fetching audit data from:', url);
-      
+      console.log("Fetching audit data from:", url);
+
       const response = await apiClient.get(url);
       const data = response.data;
-      console.log('Audit data received:', data);
-      
+      console.log("Audit data received:", data);
+
       if (!data.stats) {
-        throw new Error('No stats in response');
+        throw new Error("No stats in response");
       }
-      
+
       // Convert string values to numbers
       const processedStats = {
         ...data.stats,
         total_games: parseInt(data.stats.total_games),
         collected_games: parseInt(data.stats.collected_games),
-        collection_percentage: parseFloat(data.stats.collection_percentage)
+        collection_percentage: parseFloat(data.stats.collection_percentage),
       };
       setStats(processedStats);
       setGames(Array.isArray(data.games) ? data.games : []);
       setPagination(data.pagination);
     } catch (err) {
-      console.error('Audit fetch error:', err);
+      console.error("Audit fetch error:", err);
       setError(err.message);
       setStats(null);
       setGames([]);
@@ -92,7 +92,7 @@ export function AuditTab({ season }) {
       const data = response.data;
 
       if (!data.success) {
-        throw new Error(data.message || 'Failed to fetch game stats');
+        throw new Error(data.message || "Failed to fetch game stats");
       }
 
       setExpandedStats(data.data);
@@ -118,7 +118,7 @@ export function AuditTab({ season }) {
         fetchGameStats(gameId);
       }
     },
-    [expandedGameId, fetchGameStats]
+    [expandedGameId, fetchGameStats],
   );
 
   const handleRetry = useCallback(() => {
@@ -132,14 +132,20 @@ export function AuditTab({ season }) {
       <div className="alert alert-error shadow-lg">
         <div>
           <span>Error loading audit data: {error}</span>
-          <button className="btn btn-sm" onClick={fetchAuditData}>Retry</button>
+          <button className="btn btn-sm" onClick={fetchAuditData}>
+            Retry
+          </button>
         </div>
       </div>
     );
   }
 
   if (isLoading) {
-    return <div className="flex justify-center p-8"><span className="loading loading-spinner loading-lg"></span></div>;
+    return (
+      <div className="flex justify-center p-8">
+        <span className="loading loading-spinner loading-lg"></span>
+      </div>
+    );
   }
 
   if (!stats) {
@@ -163,7 +169,7 @@ export function AuditTab({ season }) {
               <label className="label">
                 <span className="label-text">Status</span>
               </label>
-              <select 
+              <select
                 className="select select-bordered"
                 value={statusFilter}
                 onChange={(e) => {
@@ -176,12 +182,12 @@ export function AuditTab({ season }) {
                 <option value="missing">Missing Only</option>
               </select>
             </div>
-            
+
             <div className="form-control">
               <label className="label">
                 <span className="label-text">Date</span>
               </label>
-              <input 
+              <input
                 type="date"
                 className="input input-bordered"
                 value={dateFilter}
@@ -191,13 +197,13 @@ export function AuditTab({ season }) {
                 }}
               />
             </div>
-            
+
             <div className="form-control flex flex-row items-end">
-              <button 
+              <button
                 className="btn btn-outline btn-sm"
                 onClick={() => {
-                  setStatusFilter('all');
-                  setDateFilter('');
+                  setStatusFilter("all");
+                  setDateFilter("");
                   setOffset(0);
                 }}
               >
@@ -217,20 +223,24 @@ export function AuditTab({ season }) {
               <p className="text-3xl font-bold">{stats.total_games}</p>
             </div>
           </div>
-          
+
           <div className="card bg-base-200 shadow-xl">
             <div className="card-body">
               <h3 className="card-title text-lg">Collected</h3>
-              <p className="text-3xl font-bold text-success">{stats.collected_games}</p>
+              <p className="text-3xl font-bold text-success">
+                {stats.collected_games}
+              </p>
             </div>
           </div>
-          
+
           <div className="card bg-base-200 shadow-xl">
             <div className="card-body">
               <h3 className="card-title text-lg">Collection Rate</h3>
-              <p className="text-3xl font-bold text-info">{stats.collection_percentage}%</p>
+              <p className="text-3xl font-bold text-info">
+                {stats.collection_percentage}%
+              </p>
               <div className="progress progress-info mt-2">
-                <div 
+                <div
                   className="progress-value"
                   style={{ width: `${stats.collection_percentage}%` }}
                 />
@@ -244,7 +254,7 @@ export function AuditTab({ season }) {
       <div className="card bg-base-200 shadow-xl">
         <div className="card-body">
           <h3 className="card-title text-lg">Game Collection Details</h3>
-          
+
           <div className="overflow-x-auto">
             <table className="table table-compact table-fixed w-full">
               <thead>
@@ -269,14 +279,16 @@ export function AuditTab({ season }) {
                       <tr
                         onClick={() => handleRowClick(game.game_id)}
                         className={`cursor-pointer hover:bg-base-300 transition-colors ${
-                          expandedGameId === game.game_id ? 'bg-base-300' : ''
+                          expandedGameId === game.game_id ? "bg-base-300" : ""
                         }`}
                       >
                         <td className="font-mono text-sm">
                           <div className="flex items-center gap-2">
                             <svg
                               className={`w-4 h-4 transition-transform duration-200 ${
-                                expandedGameId === game.game_id ? 'rotate-90' : ''
+                                expandedGameId === game.game_id
+                                  ? "rotate-90"
+                                  : ""
                               }`}
                               fill="none"
                               stroke="currentColor"
@@ -293,50 +305,61 @@ export function AuditTab({ season }) {
                           </div>
                         </td>
                         <td>
-                          {game.game_date ? (() => {
-                            const [year, month, day] = game.game_date.split('-');
-                            return new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).toLocaleDateString();
-                          })() : '—'}
+                          {game.game_date
+                            ? (() => {
+                                const [year, month, day] =
+                                  game.game_date.split("-");
+                                return new Date(
+                                  parseInt(year),
+                                  parseInt(month) - 1,
+                                  parseInt(day),
+                                ).toLocaleDateString();
+                              })()
+                            : "—"}
                         </td>
                         <td>
                           <div className="flex items-center gap-2">
                             {game.home_team_logo && (
-                              <img 
-                                src={game.home_team_logo} 
-                                alt={`${game.home_team_abbreviation} logo`} 
+                              <img
+                                src={game.home_team_logo}
+                                alt={`${game.home_team_abbreviation} logo`}
                                 className="h-6 w-6 object-contain"
                                 onError={(e) => {
-                                  e.target.style.display = 'none';
+                                  e.target.style.display = "none";
                                 }}
                               />
                             )}
-                            <span>{game.home_team_abbreviation || '—'}</span>
+                            <span>{game.home_team_abbreviation || "—"}</span>
                           </div>
                         </td>
                         <td>
                           <div className="flex items-center gap-2">
                             {game.away_team_logo && (
-                              <img 
-                                src={game.away_team_logo} 
-                                alt={`${game.away_team_abbreviation} logo`} 
+                              <img
+                                src={game.away_team_logo}
+                                alt={`${game.away_team_abbreviation} logo`}
                                 className="h-6 w-6 object-contain"
                                 onError={(e) => {
-                                  e.target.style.display = 'none';
+                                  e.target.style.display = "none";
                                 }}
                               />
                             )}
-                            <span>{game.away_team_abbreviation || '—'}</span>
+                            <span>{game.away_team_abbreviation || "—"}</span>
                           </div>
                         </td>
                         <td>
                           {game.collected ? (
-                            <span className="badge badge-success">✓ Collected</span>
+                            <span className="badge badge-success">
+                              ✓ Collected
+                            </span>
                           ) : (
-                            <span className="badge badge-warning">⊘ Missing</span>
+                            <span className="badge badge-warning">
+                              ⊘ Missing
+                            </span>
                           )}
                         </td>
                       </tr>
-                      
+
                       {/* Expanded Game Stats Row */}
                       {expandedGameId === game.game_id && (
                         <GameStatsRow
@@ -358,9 +381,11 @@ export function AuditTab({ season }) {
           {pagination && pagination.total > 0 && (
             <div className="flex items-center justify-between mt-6">
               <div className="text-sm">
-                Showing {offset + 1} to {Math.min(offset + limit, pagination.total)} of {pagination.total} games
+                Showing {offset + 1} to{" "}
+                {Math.min(offset + limit, pagination.total)} of{" "}
+                {pagination.total} games
               </div>
-              
+
               <div className="join">
                 <button
                   className="join-item btn"
@@ -369,11 +394,11 @@ export function AuditTab({ season }) {
                 >
                   ← Previous
                 </button>
-                
+
                 <button className="join-item btn btn-disabled">
                   Page {Math.floor(offset / limit) + 1}
                 </button>
-                
+
                 <button
                   className="join-item btn"
                   disabled={offset + limit >= pagination.total}
@@ -404,8 +429,9 @@ export function AuditTab({ season }) {
       <div className="alert alert-info shadow-lg">
         <div>
           <span>
-            💡 This audit shows which games have been successfully processed from the NBA API. 
-            Missing games indicate API collection failures and may affect stat accuracy for those dates.
+            💡 This audit shows which games have been successfully processed
+            from the NBA API. Missing games indicate API collection failures and
+            may affect stat accuracy for those dates.
           </span>
         </div>
       </div>
