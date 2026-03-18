@@ -295,7 +295,7 @@ export function AuditTab({ season }) {
                         <td>
                           {game.game_date ? (() => {
                             const [year, month, day] = game.game_date.split('-');
-                            return new Date(year, month - 1, day).toLocaleDateString();
+                            return new Date(parseInt(year), parseInt(month) - 1, parseInt(day)).toLocaleDateString();
                           })() : '—'}
                         </td>
                         <td>
