@@ -255,7 +255,7 @@ export function AuditTab({ season }) {
           <h3 className="card-title text-lg">Game Collection Details</h3>
           
           <div className="overflow-x-auto">
-            <table className="table table-compact w-full">
+            <table className="table table-compact table-fixed w-full">
               <thead>
                 <tr>
                   <th>Game ID</th>
