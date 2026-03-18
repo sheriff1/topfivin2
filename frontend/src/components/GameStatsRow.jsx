@@ -60,9 +60,7 @@ const GameStatsRow = ({ homeStats, awayStats, isLoading, error, onRetry }) => {
   const StatRow = ({ label, homeValue, awayValue }) => (
     <div className="grid grid-cols-[1fr_auto_1fr] gap-4 py-2 border-b border-base-300 last:border-0 px-4">
       <div className="text-right font-semibold">{homeValue}</div>
-      <div className="text-center text-sm font-medium min-w-[140px]">
-        {label}
-      </div>
+      <div className="text-center text-sm font-medium min-w-35">{label}</div>
       <div className="text-left font-semibold">{awayValue}</div>
     </div>
   );
@@ -86,9 +84,7 @@ const GameStatsRow = ({ homeStats, awayStats, isLoading, error, onRetry }) => {
               )}
               <span>{homeStats.abbreviation || "—"}</span>
             </div>
-            <div className="text-center text-sm font-medium min-w-[140px]">
-              Team
-            </div>
+            <div className="text-center text-sm font-medium min-w-35">Team</div>
             <div className="text-left font-semibold flex items-center gap-2">
               <span>{awayStats.abbreviation || "—"}</span>
               {awayStats.logo_url && (
