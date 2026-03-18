@@ -149,9 +149,6 @@ const GameStatsRow = ({ homeStats, awayStats, isLoading, error, onRetry }) => {
             awayValue={formatPercent(awayStats.ft_pct)}
           />
 
-          {/* Separator */}
-          <div className="my-4 border-t border-base-300"></div>
-
           {/* Rebounds */}
           <StatRow
             label="Rebounds"
