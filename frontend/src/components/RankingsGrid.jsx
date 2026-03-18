@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { useRankings } from '../hooks/useApi';
-import { formatStatValue } from '../utils/statFormatter';
+import { formatStatValue, formatPercentageStat } from '../utils/statFormatter';
 
 const TEAM_ID_TO_ABBR = {
   1610612737: 'ATL', 1610612738: 'BOS', 1610612739: 'CLE', 1610612740: 'NOP',
@@ -35,7 +35,7 @@ export function RankingsGrid({ category, season = '2025' }) {
     );
   }
 
-  if (!data || !data.data || data.data.length === 0) {
+  if (!data || !data.rankings || data.rankings.length === 0) {
     return (
       <div className="alert alert-info">
         <svg xmlns="http://www.w3.org/2000/svg" className="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
@@ -63,7 +63,7 @@ export function RankingsGrid({ category, season = '2025' }) {
           </tr>
         </thead>
         <tbody>
-          {data.data.map((item) => (
+          {data.rankings.map((item) => (
             <tr key={`${item.team_id}-${item.stat_category}`}>
               <td>
                 <span className={`badge badge-lg ${getRankColor(item.rank)}`}>
@@ -96,7 +96,10 @@ export function RankingsGrid({ category, season = '2025' }) {
                 </Link>
               </td>
               <td className="text-right text-lg font-bold">
-                {formatStatValue(item.value, data.label)}
+                {["TS%", "ORB%", "DRB%", "TRB%", "AST%", "USG%"].includes(data.category)
+                  ? formatPercentageStat(item.value, data.label)
+                  : formatStatValue(item.value, data.label)
+                }
               </td>
             </tr>
           ))}

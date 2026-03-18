@@ -299,7 +299,7 @@ def extract_team_stats(game_id, game_date, team_mapping):
                             'reboundPercentage': 'TRB_PCT',
                             'assistPercentage': 'AST_PCT',
                             'estimatedTeamTurnoverPercentage': 'TOV_PCT',
-                            'usagePercentage': 'USG_PCT',
+                            'estimatedUsagePercentage': 'USG_PCT',  # Changed from 'usagePercentage' (always 1.0) to 'estimatedUsagePercentage' (actual values)
                             'trueShootingPercentage': 'TS_PCT',
                         }
                         
@@ -567,9 +567,6 @@ def main():
         print("❌ No games found")
         conn.close()
         return
-    
-    # Clear old season data for fresh load
-    clear_season_data(conn, season)
     
     # Record all games for audit trail (uses real API data from LeagueGameLog)
     record_games(conn, game_details, season)

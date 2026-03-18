@@ -70,7 +70,7 @@ router.get("/rankings", async (req, res) => {
 
     res.json({
       success: true,
-      data: result.rows,
+      rankings: result.rows,
       category,
       label: result.label,
       cached: result.cached,

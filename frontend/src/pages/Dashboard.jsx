@@ -95,22 +95,6 @@ export function Dashboard() {
                 />
               </div>
             </div>
-
-            {/* Quick Stats Cards */}
-            <div className="mt-6">
-              <h2 className="text-2xl font-bold mb-4">Popular Stats</h2>
-              <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                {categories?.slice(0, 4).map((stat) => (
-                  <button
-                    key={stat.code}
-                    onClick={() => setSelectedCategory(stat.code)}
-                    className={`btn btn-outline ${selectedCategory === stat.code ? 'btn-active' : ''}`}
-                  >
-                    {stat.code}
-                  </button>
-                ))}
-              </div>
-            </div>
           </>
         )}
 
