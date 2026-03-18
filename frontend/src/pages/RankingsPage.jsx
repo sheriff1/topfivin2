@@ -6,7 +6,7 @@ import { Top5Showcase } from '../components/Top5Showcase';
 export function RankingsPage() {
   const [selectedCategory, setSelectedCategory] = useState('PPG');
   const [shouldAnimate, setShouldAnimate] = useState(true);
-  const season = process.env.REACT_APP_CURRENT_SEASON || '2025';
+  const season = import.meta.env.VITE_CURRENT_SEASON || '2025';
   const { data: categories, isLoading: categoriesLoading } = useCategories();
   const { data: rankings } = useRankings(selectedCategory, season);
   
