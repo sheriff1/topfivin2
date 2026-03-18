@@ -15,7 +15,7 @@ const GameStatsRow = ({ homeStats, awayStats, isLoading, error, onRetry }) => {
   if (isLoading) {
     return (
       <tr className="bg-base-200">
-        <td colSpan="10" className="text-center py-8">
+        <td colSpan="5" className="text-center py-8">
           <span className="loading loading-spinner loading-lg"></span>
         </td>
       </tr>
@@ -25,7 +25,7 @@ const GameStatsRow = ({ homeStats, awayStats, isLoading, error, onRetry }) => {
   if (error) {
     return (
       <tr className="bg-base-200">
-        <td colSpan="10">
+        <td colSpan="5">
           <div className="p-6 text-center">
             <p className="text-error mb-4">{error}</p>
             <button
@@ -67,8 +67,8 @@ const GameStatsRow = ({ homeStats, awayStats, isLoading, error, onRetry }) => {
 
   return (
     <tr className="bg-base-200">
-      <td colSpan="10" className="p-0 flex justify-center w-full">
-        <div className="p-6 space-y-1 w-full max-w-full overflow-x-hidden">
+      <td colSpan="5" className="p-0">
+        <div className="p-6 space-y-1 max-w-lg mx-auto">
           {/* Team Names with Logos */}
           <div className="grid grid-cols-[1fr_auto_1fr] gap-4 py-2 border-b border-base-300 px-4">
             <div className="text-right font-semibold flex items-center justify-end gap-2">
