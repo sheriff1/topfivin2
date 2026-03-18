@@ -19,7 +19,7 @@ frontend:
 
 fetch:
 	source .venv/bin/activate && \
-	source backend/.env && \
+	set -a && source backend/.env && set +a && \
 	cd backend && \
 	python scripts/fetch_nba_stats.py
 	@echo "✅ Fetch complete"
