@@ -1,13 +1,14 @@
-name: NBA Data Pipeline
+name: NBA Data Pipeline (Derive & Rank)
 
 on:
   workflow_dispatch:
   schedule:
-    # Run daily at 10:00 AM UTC (5:00 AM ET) to capture previous night's games
+    # Run daily at 10:00 AM UTC (after local fetch completes)
+    # NOTE: Fetch now runs locally via cron — this job only derives & ranks pre-fetched data
     - cron: '0 10 * * *'
 
 jobs:
-  run-pipeline:
+  derive-and-rank:
     runs-on: ubuntu-latest
 
     steps:
@@ -22,15 +23,11 @@ jobs:
       - name: Install dependencies
         run: pip install -r requirements.txt
 
-      - name: Fetch NBA stats
-        working-directory: backend
-        env:
-          DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          REDIS_URL: ${{ secrets.REDIS_URL }}
-          CURRENT_SEASON: ${{ secrets.CURRENT_SEASON }}
-        run: python scripts/fetch_nba_stats.py
+      # REMOVED: "Fetch NBA stats" step
+      # Fetch now runs locally on residential IP via macOS cron to bypass hard IP blocks from stats.nba.com
+      # See: https://github.com/sheriff1/topfivin2/issues/33
 
-      - name: Derive team stats
+      - name: Derive team stats (uses pre-fetched data)
         working-directory: backend
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}

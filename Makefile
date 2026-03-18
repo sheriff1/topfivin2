@@ -13,14 +13,35 @@ frontend:
 	cd frontend && pnpm dev
 
 # ── Data pipeline ─────────────────────────────────────────────────────────────
+# Note: fetch now runs locally via cron to bypass NBA IP blocks
+# Use 'make fetch' for manual NBA data fetch only
+# Use 'make derive' for derive+rank steps (runs automatically in CI/CD)
+
+fetch:
+	source .venv/bin/activate && \
+	source backend/.env && \
+	cd backend && \
+	python scripts/fetch_nba_stats.py
+	@echo "✅ Fetch complete"
+
+derive:
+	source .venv/bin/activate && \
+	source backend/.env && \
+	cd backend && \
+	python scripts/derive_team_stats.py && \
+	python scripts/derive_rankings.py && \
+	redis-cli FLUSHDB
+	@echo "✅ Derive + Rankings complete"
+
 pipeline:
 	source .venv/bin/activate && \
+	source backend/.env && \
 	cd backend && \
 	python scripts/fetch_nba_stats.py && \
 	python scripts/derive_team_stats.py && \
 	python scripts/derive_rankings.py && \
 	redis-cli FLUSHDB
-	@echo "✅ Pipeline complete — rankings updated"
+	@echo "✅ Full pipeline complete — rankings updated"
 
 # ── Teardown ──────────────────────────────────────────────────────────────────
 stop:
