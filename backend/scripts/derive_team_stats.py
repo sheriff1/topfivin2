@@ -15,13 +15,17 @@ def derive_team_stats():
     print("PHASE 5: DERIVE TEAM_STATS FROM GAME_STATS")
     print("=" * 60)
     
-    conn = psycopg2.connect(
-        host=os.getenv('DB_HOST', 'localhost'),
-        port=int(os.getenv('DB_PORT', 5432)),
-        user=os.getenv('DB_USER', 'postgres'),
-        password=os.getenv('DB_PASSWORD', ''),
-        database=os.getenv('DB_NAME', 'nba_stats'),
-    )
+    database_url = os.getenv('DATABASE_URL', '')
+    if database_url:
+        conn = psycopg2.connect(database_url)
+    else:
+        conn = psycopg2.connect(
+            host=os.getenv('DB_HOST', 'localhost'),
+            port=int(os.getenv('DB_PORT', 5432)),
+            user=os.getenv('DB_USER', 'postgres'),
+            password=os.getenv('DB_PASSWORD', ''),
+            database=os.getenv('DB_NAME', 'nba_stats'),
+        )
     cursor = conn.cursor()
     
     try:

@@ -9,6 +9,8 @@ const apiClient = axios.create({
   timeout: 10000,
 });
 
+export { apiClient, API_BASE_URL };
+
 // Hook for fetching available categories
 export function useCategories() {
   return useQuery({

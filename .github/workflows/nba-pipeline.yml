@@ -1,0 +1,47 @@
+name: NBA Data Pipeline
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Run daily at 10:00 AM UTC (5:00 AM ET) to capture previous night's games
+    - cron: '0 10 * * *'
+
+jobs:
+  run-pipeline:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
+          cache: 'pip'
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Fetch NBA stats
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          CURRENT_SEASON: ${{ secrets.CURRENT_SEASON }}
+        run: python scripts/fetch_nba_stats.py
+
+      - name: Derive team stats
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CURRENT_SEASON: ${{ secrets.CURRENT_SEASON }}
+        run: python scripts/derive_team_stats.py
+
+      - name: Derive rankings and clear cache
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
+          CURRENT_SEASON: ${{ secrets.CURRENT_SEASON }}
+        run: python scripts/derive_rankings.py

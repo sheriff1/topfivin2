@@ -91,6 +91,7 @@ from nba_api.stats.endpoints import leaguegamelog
 
 
 # Database configuration from environment variables
+DATABASE_URL = os.getenv('DATABASE_URL', '')
 DB_HOST = os.getenv('DB_HOST', 'localhost')
 DB_PORT = int(os.getenv('DB_PORT', 5432))
 DB_USER = os.getenv('DB_USER', 'postgres')
@@ -172,13 +173,16 @@ STAT_CATEGORIES = {
 def connect_db():
     """Connect to PostgreSQL database"""
     try:
-        conn = psycopg2.connect(
-            host=DB_HOST,
-            port=DB_PORT,
-            user=DB_USER,
-            password=DB_PASSWORD,
-            database=DB_NAME
-        )
+        if DATABASE_URL:
+            conn = psycopg2.connect(DATABASE_URL)
+        else:
+            conn = psycopg2.connect(
+                host=DB_HOST,
+                port=DB_PORT,
+                user=DB_USER,
+                password=DB_PASSWORD,
+                database=DB_NAME
+            )
         return conn
     except psycopg2.Error as e:
         print(f"❌ Database connection error: {e}")
