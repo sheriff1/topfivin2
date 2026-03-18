@@ -5,7 +5,7 @@ on:
   schedule:
     # Run daily at 10:00 AM UTC (after local fetch completes)
     # NOTE: Fetch now runs locally via cron — this job only derives & ranks pre-fetched data
-    - cron: '0 10 * * *'
+    - cron: "0 10 * * *"
 
 jobs:
   derive-and-rank:
@@ -18,7 +18,7 @@ jobs:
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
-          python-version: '3.13'
+          python-version: "3.13"
 
       - name: Install dependencies
         run: pip install -r requirements.txt
@@ -31,6 +31,7 @@ jobs:
         working-directory: backend
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          REDIS_URL: ${{ secrets.REDIS_URL }}
           CURRENT_SEASON: ${{ secrets.CURRENT_SEASON }}
         run: python scripts/derive_team_stats.py
 

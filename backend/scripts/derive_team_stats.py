@@ -137,6 +137,11 @@ def derive_team_stats():
         count = cursor.fetchone()[0]
         print(f"  ✓ Created/updated {count} team_stats records")
         
+        # Count games in database
+        cursor.execute("SELECT COUNT(*) FROM games")
+        games_count = cursor.fetchone()[0]
+        print(f"  📊 Total games in database: {games_count}")
+        
         # Show sample
         print(f"\n📋 Sample TEAM_STATS (top 5 by PPG):")
         cursor.execute("""
