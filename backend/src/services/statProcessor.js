@@ -30,9 +30,7 @@ const STAT_CATEGORIES = {
  * @returns {number} - Column index or -1 if not found
  */
 function findColumnIndex(headers, columnName) {
-  return headers.findIndex(
-    (h) => h === columnName || h.toUpperCase() === columnName.toUpperCase(),
-  );
+  return headers.findIndex((h) => h === columnName || h.toUpperCase() === columnName.toUpperCase());
 }
 
 /**
@@ -55,10 +53,8 @@ function createHeaderMap(headers) {
  */
 function normalizeTeamStats(teamStatsData) {
   // Handle direct array input (from mock data) vs wrapped format
-  let data = Array.isArray(teamStatsData)
-    ? teamStatsData
-    : teamStatsData.data || [];
-  let headers = teamStatsData.headers || [];
+  const data = Array.isArray(teamStatsData) ? teamStatsData : teamStatsData.data || [];
+  const headers = teamStatsData.headers || [];
 
   const normalizedData = data.map((row) => {
     let teamId, teamName, statsObj;
@@ -84,31 +80,15 @@ function normalizeTeamStats(teamStatsData) {
 
       statsObj = {
         PPG: parseFloat(row.PPG || row.pts || row.pointsPerGame || 0),
-        RPG: parseFloat(
-          row.RPG || row.reb || row.reboundsPerGame || row.rebounds || 0,
-        ),
-        APG: parseFloat(
-          row.APG || row.ast || row.assistsPerGame || row.assists || 0,
-        ),
-        "FG%": parseFloat(
-          row["FG%"] || row.fgPercent || row.fg_pct || row.fieldGoalPct || 0,
-        ),
+        RPG: parseFloat(row.RPG || row.reb || row.reboundsPerGame || row.rebounds || 0),
+        APG: parseFloat(row.APG || row.ast || row.assistsPerGame || row.assists || 0),
+        "FG%": parseFloat(row["FG%"] || row.fgPercent || row.fg_pct || row.fieldGoalPct || 0),
         "3P%": parseFloat(
-          row["3P%"] ||
-            row.threePPercent ||
-            row.threeP_pct ||
-            row.threePointerPct ||
-            0,
+          row["3P%"] || row.threePPercent || row.threeP_pct || row.threePointerPct || 0
         ),
-        "FT%": parseFloat(
-          row["FT%"] || row.ftPercent || row.ft_pct || row.freeThrowPct || 0,
-        ),
-        SPG: parseFloat(
-          row.SPG || row.stl || row.stealsPerGame || row.steals || 0,
-        ),
-        BPG: parseFloat(
-          row.BPG || row.blk || row.blocksPerGame || row.blocks || 0,
-        ),
+        "FT%": parseFloat(row["FT%"] || row.ftPercent || row.ft_pct || row.freeThrowPct || 0),
+        SPG: parseFloat(row.SPG || row.stl || row.stealsPerGame || row.steals || 0),
+        BPG: parseFloat(row.BPG || row.blk || row.blocksPerGame || row.blocks || 0),
       };
     }
 
@@ -172,10 +152,7 @@ function calculateAllRankings(teamStats) {
     try {
       allRankings[category] = calculateRankings(teamStats, category);
     } catch (error) {
-      console.warn(
-        `Failed to calculate rankings for ${category}:`,
-        error.message,
-      );
+      console.warn(`Failed to calculate rankings for ${category}:`, error.message);
     }
   });
 
@@ -196,9 +173,7 @@ function processTeamStats(teamStatsData) {
   // Calculate rankings for all categories
   const rankings = calculateAllRankings(normalizedStats);
 
-  console.log(
-    `Generated rankings for ${Object.keys(rankings).length} stat categories`,
-  );
+  console.log(`Generated rankings for ${Object.keys(rankings).length} stat categories`);
 
   return {
     normalized_stats: normalizedStats,

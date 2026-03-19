@@ -1,6 +1,6 @@
 async function getAuditGames(season, limit, offset, status, date, db) {
-  let whereConditions = ["g.season = $1"];
-  let params = [season];
+  const whereConditions = ["g.season = $1"];
+  const params = [season];
   let paramIndex = 2;
 
   if (status === "collected") {

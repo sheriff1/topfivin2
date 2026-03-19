@@ -12,11 +12,11 @@
 export function formatStatValue(value, categoryLabel) {
   // Handle null/undefined values
   if (value === null || value === undefined || isNaN(value)) {
-    return '—';
+    return "—";
   }
 
   // Detect if this is a percentage-based stat by checking if label contains "%"
-  const isPercentage = categoryLabel && categoryLabel.includes('%');
+  const isPercentage = categoryLabel && categoryLabel.includes("%");
 
   if (isPercentage) {
     // Format as percentage with 2 decimal places and % symbol
@@ -37,7 +37,7 @@ export function formatStatValue(value, categoryLabel) {
 export function formatPercentageStat(value, categoryLabel) {
   // Handle null/undefined values
   if (value === null || value === undefined || isNaN(value)) {
-    return '—';
+    return "—";
   }
 
   // Convert 0-1 range to 0-100 range

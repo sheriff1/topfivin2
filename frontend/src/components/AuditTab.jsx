@@ -118,7 +118,7 @@ export function AuditTab({ season }) {
         fetchGameStats(gameId);
       }
     },
-    [expandedGameId, fetchGameStats],
+    [expandedGameId, fetchGameStats]
   );
 
   const handleRetry = useCallback(() => {
@@ -227,18 +227,14 @@ export function AuditTab({ season }) {
           <div className="card bg-base-200 shadow-xl">
             <div className="card-body">
               <h3 className="card-title text-lg">Collected</h3>
-              <p className="text-3xl font-bold text-success">
-                {stats.collected_games}
-              </p>
+              <p className="text-3xl font-bold text-success">{stats.collected_games}</p>
             </div>
           </div>
 
           <div className="card bg-base-200 shadow-xl">
             <div className="card-body">
               <h3 className="card-title text-lg">Collection Rate</h3>
-              <p className="text-3xl font-bold text-info">
-                {stats.collection_percentage}%
-              </p>
+              <p className="text-3xl font-bold text-info">{stats.collection_percentage}%</p>
               <div className="progress progress-info mt-2">
                 <div
                   className="progress-value"
@@ -286,9 +282,7 @@ export function AuditTab({ season }) {
                           <div className="flex items-center gap-2">
                             <svg
                               className={`w-4 h-4 transition-transform duration-200 ${
-                                expandedGameId === game.game_id
-                                  ? "rotate-90"
-                                  : ""
+                                expandedGameId === game.game_id ? "rotate-90" : ""
                               }`}
                               fill="none"
                               stroke="currentColor"
@@ -307,12 +301,11 @@ export function AuditTab({ season }) {
                         <td>
                           {game.game_date
                             ? (() => {
-                                const [year, month, day] =
-                                  game.game_date.split("-");
+                                const [year, month, day] = game.game_date.split("-");
                                 return new Date(
                                   parseInt(year),
                                   parseInt(month) - 1,
-                                  parseInt(day),
+                                  parseInt(day)
                                 ).toLocaleDateString();
                               })()
                             : "—"}
@@ -349,13 +342,9 @@ export function AuditTab({ season }) {
                         </td>
                         <td>
                           {game.collected ? (
-                            <span className="badge badge-success">
-                              ✓ Collected
-                            </span>
+                            <span className="badge badge-success">✓ Collected</span>
                           ) : (
-                            <span className="badge badge-warning">
-                              ⊘ Missing
-                            </span>
+                            <span className="badge badge-warning">⊘ Missing</span>
                           )}
                         </td>
                       </tr>
@@ -381,8 +370,7 @@ export function AuditTab({ season }) {
           {pagination && pagination.total > 0 && (
             <div className="flex items-center justify-between mt-6">
               <div className="text-sm">
-                Showing {offset + 1} to{" "}
-                {Math.min(offset + limit, pagination.total)} of{" "}
+                Showing {offset + 1} to {Math.min(offset + limit, pagination.total)} of{" "}
                 {pagination.total} games
               </div>
 
@@ -429,9 +417,9 @@ export function AuditTab({ season }) {
       <div className="alert alert-info shadow-lg">
         <div>
           <span>
-            💡 This audit shows which games have been successfully processed
-            from the NBA API. Missing games indicate API collection failures and
-            may affect stat accuracy for those dates.
+            💡 This audit shows which games have been successfully processed from the NBA API.
+            Missing games indicate API collection failures and may affect stat accuracy for those
+            dates.
           </span>
         </div>
       </div>

@@ -34,7 +34,7 @@ class MockCache {
     this.store.set(key, value);
     // In a real Redis implementation, ttl would expire the key
     // For testing, we just store it indefinitely unless reset
-    return 'OK';
+    return "OK";
   }
 
   /**

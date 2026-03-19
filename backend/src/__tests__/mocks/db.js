@@ -49,10 +49,7 @@ class MockDatabase {
    * @returns {string} - Normalized query
    */
   _normalizeQuery(query) {
-    return query
-      .trim()
-      .replace(/\s+/g, ' ')
-      .toUpperCase();
+    return query.trim().replace(/\s+/g, " ").toUpperCase();
   }
 
   /**

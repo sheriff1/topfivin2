@@ -28,10 +28,7 @@ const GameStatsRow = ({ homeStats, awayStats, isLoading, error, onRetry }) => {
         <td colSpan="5">
           <div className="p-6 text-center">
             <p className="text-error mb-4">{error}</p>
-            <button
-              onClick={onRetry}
-              className="btn btn-sm btn-outline btn-error"
-            >
+            <button onClick={onRetry} className="btn btn-sm btn-outline btn-error">
               Retry
             </button>
           </div>

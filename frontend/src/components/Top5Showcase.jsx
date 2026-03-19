@@ -117,28 +117,21 @@ export function Top5Showcase({ rankings, category, shouldAnimate = true }) {
 
               {/* Rank badge - positioned on top-right */}
               <div className="absolute top-2 right-2">
-                <span className="badge badge-success font-bold text-sm">
-                  #{team.rank}
-                </span>
+                <span className="badge badge-success font-bold text-sm">#{team.rank}</span>
               </div>
 
               {/* Card body */}
               <div className="card-body p-3 bg-base-200 grow flex flex-col justify-between">
                 <div className="flex items-center justify-between gap-2">
                   <h2 className="text-base font-semibold line-clamp-2 flex-1">
-                    <Link
-                      to={`/team/${abbreviation}`}
-                      className="link link-hover"
-                    >
+                    <Link to={`/team/${abbreviation}`} className="link link-hover">
                       {team.team_name}
                     </Link>
                   </h2>
 
                   {/* Stat value */}
                   <div className="text-lg font-bold whitespace-nowrap">
-                    {["TS%", "ORB%", "DRB%", "TRB%", "AST%", "USG%"].includes(
-                      rankings.category,
-                    )
+                    {["TS%", "ORB%", "DRB%", "TRB%", "AST%", "USG%"].includes(rankings.category)
                       ? formatPercentageStat(team.value, rankings.label)
                       : formatStatValue(team.value, rankings.label)}
                   </div>

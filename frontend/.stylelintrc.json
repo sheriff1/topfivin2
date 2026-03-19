@@ -3,14 +3,7 @@
     "at-rule-no-unknown": [
       true,
       {
-        "ignoreAtRules": [
-          "apply",
-          "layer",
-          "plugin",
-          "import",
-          "tailwind",
-          "screen"
-        ]
+        "ignoreAtRules": ["apply", "layer", "plugin", "import", "tailwind", "screen"]
       }
     ]
   }
