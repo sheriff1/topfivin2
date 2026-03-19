@@ -30,7 +30,8 @@
     "helmet": "^8.1.0",
     "ioredis": "^5.10.0",
     "node-cron": "^4.2.1",
-    "pg": "^8.20.0"
+    "pg": "^8.20.0",
+    "winston": "^3.19.0"
   },
   "devDependencies": {
     "eslint": "^10.0.3",

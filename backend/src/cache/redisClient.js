@@ -1,4 +1,5 @@
 const Redis = require("ioredis");
+const logger = require("../utils/logger");
 
 const redisConfig = process.env.REDIS_URL
   ? process.env.REDIS_URL
@@ -16,15 +17,15 @@ const redisConfig = process.env.REDIS_URL
 const redis = new Redis(redisConfig);
 
 redis.on("connect", () => {
-  console.log("Redis connected");
+  logger.info("Redis connected");
 });
 
 redis.on("error", (err) => {
-  console.error("Redis error:", err);
+  logger.error("Redis error:", { message: err.message, stack: err.stack });
 });
 
 redis.on("reconnecting", () => {
-  console.log("Redis reconnecting...");
+  logger.debug("Redis reconnecting...");
 });
 
 /**
@@ -36,7 +37,7 @@ async function get(key) {
   try {
     const value = await redis.get(key);
     if (value) {
-      console.log("Cache hit:", key);
+      logger.debug("Cache hit:", { key });
       return JSON.parse(value);
     }
     console.log("Cache miss:", key);
