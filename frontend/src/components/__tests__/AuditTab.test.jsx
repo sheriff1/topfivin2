@@ -171,9 +171,7 @@ describe("AuditTab Component", () => {
     fireEvent.change(statusSelect, { target: { value: "collected" } });
 
     await waitFor(() => {
-      expect(apiClient.get).toHaveBeenCalledWith(
-        expect.stringContaining("status=collected")
-      );
+      expect(apiClient.get).toHaveBeenCalledWith(expect.stringContaining("status=collected"));
     });
   });
 
@@ -191,7 +189,7 @@ describe("AuditTab Component", () => {
     await waitFor(() => {
       // Look for table headers specifically
       const columnHeaders = screen.getAllByRole("columnheader");
-      const headerTexts = columnHeaders.map(h => h.textContent).join(" ");
+      const headerTexts = columnHeaders.map((h) => h.textContent).join(" ");
       expect(headerTexts).toContain("Game ID");
       expect(headerTexts).toContain("Date");
       expect(headerTexts).toContain("Home Team");
@@ -239,9 +237,7 @@ describe("AuditTab Component", () => {
   it("should make API call with correct season", () => {
     render(<AuditTab season="2024" />);
 
-    expect(apiClient.get).toHaveBeenCalledWith(
-      expect.stringContaining("season=2025")
-    );
+    expect(apiClient.get).toHaveBeenCalledWith(expect.stringContaining("season=2025"));
   });
 
   it("should have progress bar for collection rate", async () => {

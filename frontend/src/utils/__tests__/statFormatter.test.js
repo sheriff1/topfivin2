@@ -198,9 +198,9 @@ describe("statFormatter Utility", () => {
     it("should work with actual NBA stat percentages", () => {
       // Common NBA stat percentages in 0-1 range
       const stats = [
-        { name: "FG% (league avg)", value: 0.4640, expected: "46.40%" },
-        { name: "3P% (league avg)", value: 0.3650, expected: "36.50%" },
-        { name: "FT% (league avg)", value: 0.7790, expected: "77.90%" },
+        { name: "FG% (league avg)", value: 0.464, expected: "46.40%" },
+        { name: "3P% (league avg)", value: 0.365, expected: "36.50%" },
+        { name: "FT% (league avg)", value: 0.779, expected: "77.90%" },
       ];
 
       stats.forEach(({ value, expected }) => {
@@ -261,23 +261,19 @@ describe("statFormatter Utility", () => {
         { category: "APG", value: 28.5 },
       ];
 
-      const formatted = statsData.map((stat) =>
-        formatStatValue(stat.value, stat.category)
-      );
+      const formatted = statsData.map((stat) => formatStatValue(stat.value, stat.category));
 
       expect(formatted).toEqual(["115.40", "44.20", "28.50"]);
     });
 
     it("should work for rendering percentage stats in tables", () => {
       const statsData = [
-        { category: "FG%", value: 0.4640 },
-        { category: "3P%", value: 0.3650 },
-        { category: "FT%", value: 0.7790 },
+        { category: "FG%", value: 0.464 },
+        { category: "3P%", value: 0.365 },
+        { category: "FT%", value: 0.779 },
       ];
 
-      const formatted = statsData.map((stat) =>
-        formatPercentageStat(stat.value, stat.category)
-      );
+      const formatted = statsData.map((stat) => formatPercentageStat(stat.value, stat.category));
 
       expect(formatted).toEqual(["46.40%", "36.50%", "77.90%"]);
     });

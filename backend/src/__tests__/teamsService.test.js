@@ -102,7 +102,10 @@ describe("teamsService", () => {
     const SEASON = 2024;
 
     beforeEach(() => {
-      mockDb.setMockData("SELECT sr.stat_category, sr.rank, sr.value, t.team_name", MOCK_DB_RESULT.rankings);
+      mockDb.setMockData(
+        "SELECT sr.stat_category, sr.rank, sr.value, t.team_name",
+        MOCK_DB_RESULT.rankings
+      );
     });
 
     it("should retrieve rankings for a specific team", async () => {
@@ -117,7 +120,10 @@ describe("teamsService", () => {
     });
 
     it("should return empty array when team has no rankings", async () => {
-      mockDb.setMockData("SELECT sr.stat_category, sr.rank, sr.value, t.team_name", { rows: [], rowCount: 0 });
+      mockDb.setMockData("SELECT sr.stat_category, sr.rank, sr.value, t.team_name", {
+        rows: [],
+        rowCount: 0,
+      });
 
       const result = await getTeamRankings(TEAM_ID, SEASON, mockDb);
 

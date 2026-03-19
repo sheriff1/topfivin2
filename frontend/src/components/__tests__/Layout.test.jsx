@@ -88,11 +88,11 @@ describe("Layout Component", () => {
 
     // Find navigation links (exclude logo link)
     const allLinks = screen.getAllByRole("link");
-    const navLinks = allLinks.filter(link => link.className.includes("tab"));
+    const navLinks = allLinks.filter((link) => link.className.includes("tab"));
     expect(navLinks.length).toBeGreaterThanOrEqual(3);
-    expect(navLinks.some(link => link.textContent.includes("Rankings"))).toBe(true);
-    expect(navLinks.some(link => link.textContent.includes("Teams"))).toBe(true);
-    expect(navLinks.some(link => link.textContent.includes("Audit"))).toBe(true);
+    expect(navLinks.some((link) => link.textContent.includes("Rankings"))).toBe(true);
+    expect(navLinks.some((link) => link.textContent.includes("Teams"))).toBe(true);
+    expect(navLinks.some((link) => link.textContent.includes("Audit"))).toBe(true);
   });
 
   it("should have tab-active class on current route", () => {
@@ -103,8 +103,8 @@ describe("Layout Component", () => {
     );
 
     const allLinks = screen.getAllByRole("link");
-    const navLinks = allLinks.filter(link => link.className.includes("tab"));
-    const rankingsTab = navLinks.find(link => link.textContent.includes("Rankings"));
+    const navLinks = allLinks.filter((link) => link.className.includes("tab"));
+    const rankingsTab = navLinks.find((link) => link.textContent.includes("Rankings"));
     expect(rankingsTab.className).toContain("tab-active");
   });
 
@@ -320,15 +320,15 @@ describe("Layout Component", () => {
     );
 
     const allLinks = screen.getAllByRole("link");
-    const navLinks = allLinks.filter(link => link.className.includes("tab"));
-    
-    const rankingsLink = navLinks.find(link => link.textContent.includes("Rankings"));
+    const navLinks = allLinks.filter((link) => link.className.includes("tab"));
+
+    const rankingsLink = navLinks.find((link) => link.textContent.includes("Rankings"));
     expect(rankingsLink.href).toContain("/");
 
-    const teamsLink = navLinks.find(link => link.textContent.includes("Teams"));
+    const teamsLink = navLinks.find((link) => link.textContent.includes("Teams"));
     expect(teamsLink.href).toContain("/teams");
 
-    const auditLink = navLinks.find(link => link.textContent.includes("Audit"));
+    const auditLink = navLinks.find((link) => link.textContent.includes("Audit"));
     expect(auditLink.href).toContain("/audit");
   });
 });

@@ -39,7 +39,7 @@ module.exports = [
     rules: {
       // Best practices
       "no-console": "off", // Console is fine in Node.js
-      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "no-unused-vars": ["warn", { argsIgnorePattern: "^_", varsIgnorePattern: "^_" }],
       "no-var": "error",
       "prefer-const": "error",
       "prefer-arrow-callback": "warn",

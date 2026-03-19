@@ -26,16 +26,6 @@ const STAT_CATEGORIES = {
 };
 
 /**
- * Find index of column in headers array
- * @param {array} headers - Array of column headers
- * @param {string} columnName - Name of column to find
- * @returns {number} - Column index or -1 if not found
- */
-function findColumnIndex(headers, columnName) {
-  return headers.findIndex((h) => h === columnName || h.toUpperCase() === columnName.toUpperCase());
-}
-
-/**
  * Create a mapping object from headers array
  * @param {array} headers - Array of column headers/names
  * @returns {object} - Mapping of column name to index

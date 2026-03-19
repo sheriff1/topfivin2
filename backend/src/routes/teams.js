@@ -53,53 +53,50 @@ router.get(
   validateTeamByAbbr,
   validationMiddleware,
   async (req, res) => {
-  try {
-    const abbr = req.params.abbreviation.toUpperCase();
+    try {
+      const abbr = req.params.abbreviation.toUpperCase();
 
-    // Verify abbreviation is valid
-    if (!TEAM_ABBR_TO_ID[abbr]) {
-      return res.status(400).json({
+      // Verify abbreviation is valid
+      if (!TEAM_ABBR_TO_ID[abbr]) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid team abbreviation: ${abbr}`,
+        });
+      }
+
+      const teamId = TEAM_ABBR_TO_ID[abbr];
+
+      // Query database for team info
+      const result = await db.query(
+        "SELECT id, team_id, team_name, logo_url, team_colors FROM teams WHERE team_id = $1",
+        [teamId]
+      );
+
+      if (result.rows.length === 0) {
+        return res.status(404).json({
+          success: false,
+          message: `Team not found for abbreviation: ${abbr}`,
+        });
+      }
+
+      res.json({ success: true, data: result.rows[0] });
+    } catch (error) {
+      console.error("[API] /teams/abbr/:abbreviation - Error:", error);
+      res.status(500).json({
         success: false,
-        message: `Invalid team abbreviation: ${abbr}`,
+        message: "Failed to fetch team by abbreviation",
+        error: error.message,
       });
     }
-
-    const teamId = TEAM_ABBR_TO_ID[abbr];
-
-    // Query database for team info
-    const result = await db.query(
-      "SELECT id, team_id, team_name, logo_url, team_colors FROM teams WHERE team_id = $1",
-      [teamId]
-    );
-
-    if (result.rows.length === 0) {
-      return res.status(404).json({
-        success: false,
-        message: `Team not found for abbreviation: ${abbr}`,
-      });
-    }
-
-    res.json({ success: true, data: result.rows[0] });
-  } catch (error) {
-    console.error("[API] /teams/abbr/:abbreviation - Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch team by abbreviation",
-      error: error.message,
-    });
   }
-});
+);
 
 /**
  * GET /api/team/:teamId/stats
  * Returns all stats for a specific team
  * Query params: ?season=2025
  */
-router.get(
-  "/team/:teamId/stats",
-  validateTeamStats,
-  validationMiddleware,
-  async (req, res) => {
+router.get("/team/:teamId/stats", validateTeamStats, validationMiddleware, async (req, res) => {
   try {
     const { teamId } = req.params;
     const season = req.query.season || process.env.CURRENT_SEASON || "2025";
@@ -131,28 +128,29 @@ router.get(
   validateTeamRankings,
   validationMiddleware,
   async (req, res) => {
-  try {
-    const { teamId } = req.params;
-    const season = req.query.season || process.env.CURRENT_SEASON || "2025";
+    try {
+      const { teamId } = req.params;
+      const season = req.query.season || process.env.CURRENT_SEASON || "2025";
 
-    const data = await getTeamRankings(teamId, season, db);
+      const data = await getTeamRankings(teamId, season, db);
 
-    if (!data) {
-      return res.status(404).json({
+      if (!data) {
+        return res.status(404).json({
+          success: false,
+          message: `No rankings found for team ${teamId}`,
+        });
+      }
+
+      res.json({ success: true, data });
+    } catch (error) {
+      console.error("[API] /team/:teamId/rankings - Error:", error);
+      res.status(500).json({
         success: false,
-        message: `No rankings found for team ${teamId}`,
+        message: "Failed to fetch team rankings",
+        error: error.message,
       });
     }
-
-    res.json({ success: true, data });
-  } catch (error) {
-    console.error("[API] /team/:teamId/rankings - Error:", error);
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch team rankings",
-      error: error.message,
-    });
   }
-});
+);
 
 module.exports = router;
