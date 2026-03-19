@@ -34,7 +34,7 @@ export function formatStatValue(value, categoryLabel) {
  * @param {string} categoryLabel - The category label (e.g., "Field Goal %")
  * @returns {string} Formatted percentage value
  */
-export function formatPercentageStat(value, categoryLabel) {
+export function formatPercentageStat(value, _categoryLabel) {
   // Handle null/undefined values
   if (value === null || value === undefined || isNaN(value)) {
     return "—";

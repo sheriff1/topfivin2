@@ -109,12 +109,6 @@ export function TeamPage() {
     return formatStatValue(value, categoryLabel);
   };
 
-  // Get category label
-  const getCategoryLabel = (code) => {
-    const category = categories?.find((c) => c.code === code);
-    return category?.label || code;
-  };
-
   // Get badge styling based on rank
   const getRankBadgeColor = (rank) => {
     if (rank <= 5) return "badge-success"; // Top 5

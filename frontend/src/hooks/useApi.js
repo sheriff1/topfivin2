@@ -35,7 +35,7 @@ export function useRankings(category, season = "2025") {
     },
     staleTime: 1000 * 60 * 10, // 10 minutes
     retry: 3,
-    enabled: !!category,
+    enabled: Boolean(category),
   });
 }
 
@@ -51,7 +51,7 @@ export function useTeamStats(teamId, season = "2025") {
     },
     staleTime: 1000 * 60 * 10, // 10 minutes
     retry: 3,
-    enabled: !!teamId,
+    enabled: Boolean(teamId),
   });
 }
 
@@ -67,7 +67,7 @@ export function useTeamRankings(teamId, season = "2025") {
     },
     staleTime: 1000 * 60 * 10, // 10 minutes
     retry: 3,
-    enabled: !!teamId,
+    enabled: Boolean(teamId),
   });
 }
 
@@ -94,7 +94,7 @@ export function useTeamByAbbreviation(abbreviation) {
     },
     staleTime: 1000 * 60 * 60, // 1 hour
     retry: 3,
-    enabled: !!abbreviation,
+    enabled: Boolean(abbreviation),
   });
 }
 
