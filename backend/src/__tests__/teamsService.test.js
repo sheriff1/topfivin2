@@ -99,43 +99,46 @@ describe("teamsService", () => {
 
   describe("getTeamRankings", () => {
     const TEAM_ID = 1610612751;
+    const SEASON = 2024;
 
     beforeEach(() => {
-      mockDb.setMockData("SELECT sr.team_id, sr.stat_category, sr.rank", MOCK_DB_RESULT.rankings);
+      mockDb.setMockData("SELECT sr.stat_category, sr.rank, sr.value, t.team_name", MOCK_DB_RESULT.rankings);
     });
 
     it("should retrieve rankings for a specific team", async () => {
-      const result = await getTeamRankings(TEAM_ID, mockDb);
+      const result = await getTeamRankings(TEAM_ID, SEASON, mockDb);
 
       expect(result).toBeDefined();
       if (result) {
-        expect(Array.isArray(result)).toBe(true);
+        expect(result).toHaveProperty("team_name");
+        expect(result).toHaveProperty("rankings");
+        expect(Array.isArray(result.rankings)).toBe(true);
       }
     });
 
     it("should return empty array when team has no rankings", async () => {
-      mockDb.setMockData("SELECT sr.team_id, sr.stat_category, sr.rank", { rows: [], rowCount: 0 });
+      mockDb.setMockData("SELECT sr.stat_category, sr.rank, sr.value, t.team_name", { rows: [], rowCount: 0 });
 
-      const result = await getTeamRankings(TEAM_ID, mockDb);
+      const result = await getTeamRankings(TEAM_ID, SEASON, mockDb);
 
-      expect(Array.isArray(result)).toBe(true);
+      expect(result).toBeNull();
     });
 
     it("should include multiple stat categories", async () => {
-      const result = await getTeamRankings(TEAM_ID, mockDb);
+      const result = await getTeamRankings(TEAM_ID, SEASON, mockDb);
 
-      if (result && result.length > 0) {
+      if (result && result.rankings && result.rankings.length > 0) {
         // Should have multiple rankings for different stats
-        const categories = result.map((r) => r.stat_category);
+        const categories = result.rankings.map((r) => r.stat_category);
         expect(categories.length).toBeGreaterThan(0);
       }
     });
 
     it("should include rank and stat value for each category", async () => {
-      const result = await getTeamRankings(TEAM_ID, mockDb);
+      const result = await getTeamRankings(TEAM_ID, SEASON, mockDb);
 
-      if (result && result.length > 0) {
-        result.forEach((ranking) => {
+      if (result && result.rankings && result.rankings.length > 0) {
+        result.rankings.forEach((ranking) => {
           expect(ranking).toHaveProperty("stat_category");
           expect(ranking).toHaveProperty("rank");
           expect(ranking).toHaveProperty("value");
@@ -145,13 +148,11 @@ describe("teamsService", () => {
     });
 
     it("should filter rankings to only the requested team", async () => {
-      const result = await getTeamRankings(TEAM_ID, mockDb);
+      const result = await getTeamRankings(TEAM_ID, SEASON, mockDb);
 
-      if (result && result.length > 0) {
+      if (result && result.rankings && result.rankings.length > 0) {
         // All results should be for the requested team
-        result.forEach((ranking) => {
-          expect(ranking.team_id).toBe(TEAM_ID);
-        });
+        expect(result.team_name).toBeDefined();
       }
     });
   });

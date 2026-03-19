@@ -7,6 +7,37 @@ const { getAuditGames, getGameStats } = require("../services/auditService");
 const MockDatabase = require("./mocks/db");
 const { MOCK_DB_RESULT } = require("./mocks/testData");
 
+// Complete query key from getGameStats service - must match exactly for mock lookup
+// This includes the full SELECT, FROM, JOIN, WHERE, GROUP BY, and ORDER BY clauses
+const GAME_STATS_QUERY = `
+    SELECT
+      gs.game_id,
+      g.game_date,
+      t.team_id,
+      t.abbreviation,
+      t.logo_url,
+      SUM(gs.pts) as pts,
+      SUM(gs.reb) as reb,
+      SUM(gs.ast) as ast,
+      SUM(gs.stl) as stl,
+      SUM(gs.blk) as blk,
+      CASE WHEN SUM(gs.fga) > 0 THEN ROUND(100.0 * SUM(gs.fg)::numeric / SUM(gs.fga)::numeric, 2) ELSE 0 END as fg_pct,
+      CASE WHEN SUM(gs.fta) > 0 THEN ROUND(100.0 * SUM(gs.ft)::numeric / SUM(gs.fta)::numeric, 2) ELSE 0 END as ft_pct,
+      CASE WHEN SUM(gs.three_pa) > 0 THEN ROUND(100.0 * SUM(gs.three_p)::numeric / SUM(gs.three_pa)::numeric, 2) ELSE 0 END as three_p_pct,
+      SUM(gs.fg) as fg,
+      SUM(gs.fga) as fga,
+      SUM(gs.ft) as ft,
+      SUM(gs.fta) as fta,
+      SUM(gs.three_p) as three_p,
+      SUM(gs.three_pa) as three_pa
+    FROM game_stats gs
+    JOIN teams t ON gs.team_id = t.team_id
+    JOIN games g ON gs.game_id = g.game_id
+    WHERE gs.game_id = $1
+    GROUP BY gs.game_id, g.game_date, t.team_id, t.abbreviation, t.logo_url
+    ORDER BY t.team_id
+  `;
+
 describe("auditService", () => {
   let mockDb;
 
@@ -129,7 +160,7 @@ describe("auditService", () => {
     it("should retrieve stats for game data", async () => {
       const gameId = "test_game_123";
 
-      mockDb.setMockData("SELECT gs.game_id, g.game_date, t.team_id", {
+      mockDb.setMockData(GAME_STATS_QUERY, {
         rows: [
           {
             game_id: gameId,
@@ -140,6 +171,17 @@ describe("auditService", () => {
             pts: 110,
             reb: 45,
             ast: 28,
+            stl: 7,
+            blk: 5,
+            fg_pct: 46.8,
+            ft_pct: 78.3,
+            three_p_pct: 37.2,
+            fg: 47,
+            fga: 100,
+            ft: 18,
+            fta: 23,
+            three_p: 12,
+            three_pa: 32,
           },
           {
             game_id: gameId,
@@ -150,6 +192,17 @@ describe("auditService", () => {
             pts: 115,
             reb: 48,
             ast: 30,
+            stl: 8,
+            blk: 6,
+            fg_pct: 48.5,
+            ft_pct: 79.1,
+            three_p_pct: 38.9,
+            fg: 49,
+            fga: 101,
+            ft: 19,
+            fta: 24,
+            three_p: 13,
+            three_pa: 33,
           },
         ],
         rowCount: 2,
@@ -164,7 +217,7 @@ describe("auditService", () => {
     });
 
     it("should throw error when game has no stats", async () => {
-      mockDb.setMockData("SELECT gs.game_id, gs.game_date", { rows: [], rowCount: 0 });
+      mockDb.setMockData(GAME_STATS_QUERY, { rows: [], rowCount: 0 });
 
       await expect(getGameStats("nonexistent", mockDb)).rejects.toThrow("No stats found for game");
     });
@@ -172,7 +225,7 @@ describe("auditService", () => {
     it("should include both home and away team stats", async () => {
       const gameId = "g1";
 
-      mockDb.setMockData("SELECT gs.game_id, g.game_date, t.team_id", {
+      mockDb.setMockData(GAME_STATS_QUERY, {
         rows: [
           {
             game_id: gameId,
@@ -183,6 +236,17 @@ describe("auditService", () => {
             pts: 110,
             reb: 45,
             ast: 28,
+            stl: 7,
+            blk: 5,
+            fg_pct: 46.8,
+            ft_pct: 78.3,
+            three_p_pct: 37.2,
+            fg: 47,
+            fga: 100,
+            ft: 18,
+            fta: 23,
+            three_p: 12,
+            three_pa: 32,
           },
           {
             game_id: gameId,
@@ -193,6 +257,17 @@ describe("auditService", () => {
             pts: 115,
             reb: 48,
             ast: 30,
+            stl: 8,
+            blk: 6,
+            fg_pct: 48.5,
+            ft_pct: 79.1,
+            three_p_pct: 38.9,
+            fg: 49,
+            fga: 101,
+            ft: 19,
+            fta: 24,
+            three_p: 13,
+            three_pa: 33,
           },
         ],
         rowCount: 2,
@@ -208,7 +283,7 @@ describe("auditService", () => {
     it("should organize stats by home (lower team_id) and away (higher team_id)", async () => {
       const gameId = "g1";
 
-      mockDb.setMockData("SELECT gs.game_id, g.game_date, t.team_id", {
+      mockDb.setMockData(GAME_STATS_QUERY, {
         rows: [
           {
             game_id: gameId,
@@ -219,6 +294,17 @@ describe("auditService", () => {
             pts: 110,
             reb: 45,
             ast: 28,
+            stl: 7,
+            blk: 5,
+            fg_pct: 46.8,
+            ft_pct: 78.3,
+            three_p_pct: 37.2,
+            fg: 47,
+            fga: 100,
+            ft: 18,
+            fta: 23,
+            three_p: 12,
+            three_pa: 32,
           },
           {
             game_id: gameId,
@@ -229,6 +315,17 @@ describe("auditService", () => {
             pts: 115,
             reb: 48,
             ast: 30,
+            stl: 8,
+            blk: 6,
+            fg_pct: 48.5,
+            ft_pct: 79.1,
+            three_p_pct: 38.9,
+            fg: 49,
+            fga: 101,
+            ft: 19,
+            fta: 24,
+            three_p: 13,
+            three_pa: 33,
           },
         ],
         rowCount: 2,
