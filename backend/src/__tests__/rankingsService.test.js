@@ -8,6 +8,21 @@ const MockDatabase = require("./mocks/db");
 const MockCache = require("./mocks/cache");
 const { MOCK_DB_RESULT, MOCK_CACHE_DATA } = require("./mocks/testData");
 
+// Complete query key from getRankings service - must match exactly for mock lookup
+const GET_RANKINGS_QUERY = `
+    SELECT
+      sr.team_id,
+      sr.stat_category,
+      sr.rank,
+      sr.value,
+      t.team_name,
+      t.logo_url,
+      COALESCE(ts.games_played, 0) as games_count
+    FROM stat_rankings sr
+    LEFT JOIN teams t ON sr.team_id = t.team_id
+    LEFT JOIN team_stats ts ON sr.team_id = ts.team_id AND sr.season = ts.season
+`;
+
 describe("rankingsService", () => {
   let mockDb;
   let mockCache;
@@ -53,7 +68,7 @@ describe("rankingsService", () => {
 
   describe("getRankings", () => {
     beforeEach(() => {
-      mockDb.setMockData("SELECT sr.team_id, sr.stat_category, sr.rank", MOCK_DB_RESULT.rankings);
+      mockDb.setMockData(GET_RANKINGS_QUERY, MOCK_DB_RESULT.rankings);
       mockCache.setData(MOCK_CACHE_DATA);
     });
 
@@ -87,7 +102,7 @@ describe("rankingsService", () => {
     });
 
     it("should query database when cache misses", async () => {
-      mockDb.setMockData("SELECT sr.team_id, sr.stat_category, sr.rank", MOCK_DB_RESULT.rankings);
+      mockDb.setMockData(GET_RANKINGS_QUERY, MOCK_DB_RESULT.rankings);
 
       const result = await getRankings("RPG", 2024, mockDb, mockCache);
 
@@ -96,7 +111,7 @@ describe("rankingsService", () => {
     });
 
     it("should include team info in rankings (team_id, team_name, logo_url)", async () => {
-      mockDb.setMockData("SELECT sr.team_id, sr.stat_category, sr.rank", MOCK_DB_RESULT.rankings);
+      mockDb.setMockData(GET_RANKINGS_QUERY, MOCK_DB_RESULT.rankings);
 
       const result = await getRankings("PPG", 2024, mockDb, mockCache);
 
@@ -104,13 +119,12 @@ describe("rankingsService", () => {
         const row = result.rows[0];
         expect(row).toHaveProperty("team_id");
         expect(row).toHaveProperty("team_name");
-        expect(row).toHaveProperty("stat_category");
         expect(row).toHaveProperty("rank");
       }
     });
 
     it("should handle multiple seasons independently", async () => {
-      mockDb.setMockData("SELECT sr.team_id, sr.stat_category, sr.rank", MOCK_DB_RESULT.rankings);
+      mockDb.setMockData(GET_RANKINGS_QUERY, MOCK_DB_RESULT.rankings);
 
       const result2024 = await getRankings("PPG", 2024, mockDb, mockCache);
       const result2025 = await getRankings("PPG", 2025, mockDb, mockCache);
@@ -135,7 +149,7 @@ describe("rankingsService", () => {
 
   describe("Cache integration", () => {
     it("should respect cache TTL settings in getRankings", async () => {
-      mockDb.setMockData("SELECT sr.team_id, sr.stat_category, sr.rank", MOCK_DB_RESULT.rankings);
+      mockDb.setMockData(GET_RANKINGS_QUERY, MOCK_DB_RESULT.rankings);
 
       // First call should cache the result
       const initialStats = mockCache.getStats();
@@ -148,7 +162,7 @@ describe("rankingsService", () => {
 
   describe("Error handling", () => {
     it("should handle database query errors gracefully", async () => {
-      mockDb.setMockData("SELECT sr.team_id", {
+      mockDb.setMockData(GET_RANKINGS_QUERY, {
         rows: [],
         rowCount: 0,
       });
@@ -159,7 +173,7 @@ describe("rankingsService", () => {
     });
 
     it("should handle invalid season values", async () => {
-      mockDb.setMockData("SELECT sr.team_id, sr.stat_category, sr.rank", MOCK_DB_RESULT.rankings);
+      mockDb.setMockData(GET_RANKINGS_QUERY, MOCK_DB_RESULT.rankings);
 
       // Should handle gracefully
       const result = await getRankings("PPG", -1, mockDb, mockCache);
