@@ -1,10 +1,10 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout";
-import { RankingsPage } from "./pages/RankingsPage";
 import { AuditPage } from "./pages/AuditPage";
-import { TeamsPage } from "./pages/TeamsPage";
+import { RankingsPage } from "./pages/RankingsPage";
 import { TeamPage } from "./pages/TeamPage";
+import { TeamsPage } from "./pages/TeamsPage";
 import "./App.css";
 
 const queryClient = new QueryClient({
