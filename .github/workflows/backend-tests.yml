@@ -25,5 +25,8 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Audit dependencies for vulnerabilities
+        run: pnpm audit --audit-level=moderate
+
       - name: Run backend tests
         run: pnpm --filter backend test
