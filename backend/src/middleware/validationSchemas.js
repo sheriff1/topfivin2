@@ -1,4 +1,4 @@
-const { query, param, validationResult } = require("express-validator");
+const { query, param } = require("express-validator");
 
 /**
  * RANKINGS VALIDATION SCHEMAS
@@ -36,10 +36,7 @@ const validateRankings = [
 
 // GET /api/teams
 const validateTeams = [
-  query("team_id")
-    .optional()
-    .isInt({ min: 1 })
-    .withMessage("Team ID must be a positive integer"),
+  query("team_id").optional().isInt({ min: 1 }).withMessage("Team ID must be a positive integer"),
 ];
 
 // GET /api/teams/abbr/:abbreviation
@@ -111,19 +108,12 @@ const validateAuditGames = [
     .trim()
     .isIn(["collected", "missing"])
     .withMessage("Status must be either 'collected' or 'missing'"),
-  query("date")
-    .optional()
-    .trim()
-    .isISO8601()
-    .withMessage("Date must be in YYYY-MM-DD format"),
+  query("date").optional().trim().isISO8601().withMessage("Date must be in YYYY-MM-DD format"),
   query("limit")
     .optional()
     .isInt({ min: 1, max: 500 })
     .withMessage("Limit must be between 1 and 500"),
-  query("offset")
-    .optional()
-    .isInt({ min: 0 })
-    .withMessage("Offset must be a non-negative integer"),
+  query("offset").optional().isInt({ min: 0 }).withMessage("Offset must be a non-negative integer"),
 ];
 
 // GET /api/audit/game/:gameId/stats

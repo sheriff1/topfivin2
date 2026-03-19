@@ -146,7 +146,7 @@ describe("useApi Hooks", () => {
     it("should have consistent configuration across test runs", () => {
       const baseURL1 = apiClient.defaults.baseURL;
       const timeout1 = apiClient.defaults.timeout;
-      
+
       const baseURL2 = apiClient.defaults.baseURL;
       const timeout2 = apiClient.defaults.timeout;
 
@@ -156,7 +156,7 @@ describe("useApi Hooks", () => {
 
     it("should support all standard HTTP methods", () => {
       const httpMethods = ["get", "post", "put", "patch", "delete", "head"];
-      httpMethods.forEach(method => {
+      httpMethods.forEach((method) => {
         expect(typeof apiClient[method]).toBe("function");
       });
     });

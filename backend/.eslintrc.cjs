@@ -8,6 +8,11 @@ const prettier = require("eslint-config-prettier");
 const prettierPlugin = require("eslint-plugin-prettier");
 
 module.exports = [
+  // Don't lint these directories
+  {
+    ignores: ["node_modules/**", "dist/**", "build/**", ".pnpm-store/**", "coverage/**", ".env*"],
+  },
+
   // ESLint base configuration
   js.configs.recommended,
 
@@ -24,9 +29,10 @@ module.exports = [
     },
   },
 
-  // Backend-specific rules
+  // Backend-specific rules (all JavaScript files EXCEPT tests)
   {
     files: ["**/*.js"],
+    ignores: ["**/__tests__/**/*.js", "**/*.test.js"],
     languageOptions: {
       ecmaVersion: 2021,
       sourceType: "commonjs",
@@ -39,14 +45,20 @@ module.exports = [
     rules: {
       // Best practices
       "no-console": "off", // Console is fine in Node.js
-      "no-unused-vars": ["error", { argsIgnorePattern: "^_" }],
+      "no-unused-vars": [
+        "warn",
+        {
+          argsIgnorePattern: "^_",
+          varsIgnorePattern: "^_",
+        },
+      ],
       "no-var": "error",
       "prefer-const": "error",
       "prefer-arrow-callback": "warn",
       eqeqeq: ["error", "always"],
 
       // Code quality
-      "consistent-return": "warn",
+      "consistent-return": "off", // Too many false positives with Express handlers
       "no-implicit-coercion": "error",
       "no-param-reassign": "warn",
       "no-shadow": ["error", { builtinGlobals: false, hoist: "functions" }],
@@ -56,16 +68,16 @@ module.exports = [
     },
   },
 
-  // Don't lint these directories
+  // Test file specific rules - more lenient (specify AFTER general rules to override)
   {
-    ignores: [
-      "node_modules/**",
-      "dist/**",
-      "build/**",
-      ".pnpm-store/**",
-      "__tests__/**/*.test.js",
-      "coverage/**",
-      ".env*",
-    ],
+    files: ["**/__tests__/**/*.js", "**/*.test.js"],
+    languageOptions: {
+      ecmaVersion: 2021,
+      sourceType: "commonjs",
+    },
+    rules: {
+      "no-unused-vars": "off",
+      "consistent-return": "off",
+    },
   },
 ];

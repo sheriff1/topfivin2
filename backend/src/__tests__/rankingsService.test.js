@@ -104,7 +104,7 @@ describe("rankingsService", () => {
     it("should query database when cache misses", async () => {
       mockDb.setMockData(GET_RANKINGS_QUERY, MOCK_DB_RESULT.rankings);
 
-      const result = await getRankings("RPG", 2024, mockDb, mockCache);
+      await getRankings("RPG", 2024, mockDb, mockCache);
 
       const history = mockDb.getQueryHistory();
       expect(history.count).toBeGreaterThan(0);

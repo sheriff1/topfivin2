@@ -80,8 +80,8 @@ describe("teamsService", () => {
     it("should handle multiple seasons independently", async () => {
       mockDb.setMockData("SELECT t.team_id, t.team_name, ts.season", MOCK_DB_RESULT.team_stats);
 
-      const result2024 = await getTeamStats(TEAM_ID, 2024, mockDb);
-      const result2023 = await getTeamStats(TEAM_ID, 2023, mockDb);
+      await getTeamStats(TEAM_ID, 2024, mockDb);
+      await getTeamStats(TEAM_ID, 2023, mockDb);
 
       // Both calls should work independently
       expect(mockDb.getQueryHistory().count).toBe(2);
@@ -102,7 +102,10 @@ describe("teamsService", () => {
     const SEASON = 2024;
 
     beforeEach(() => {
-      mockDb.setMockData("SELECT sr.stat_category, sr.rank, sr.value, t.team_name", MOCK_DB_RESULT.rankings);
+      mockDb.setMockData(
+        "SELECT sr.stat_category, sr.rank, sr.value, t.team_name",
+        MOCK_DB_RESULT.rankings
+      );
     });
 
     it("should retrieve rankings for a specific team", async () => {
@@ -117,7 +120,10 @@ describe("teamsService", () => {
     });
 
     it("should return empty array when team has no rankings", async () => {
-      mockDb.setMockData("SELECT sr.stat_category, sr.rank, sr.value, t.team_name", { rows: [], rowCount: 0 });
+      mockDb.setMockData("SELECT sr.stat_category, sr.rank, sr.value, t.team_name", {
+        rows: [],
+        rowCount: 0,
+      });
 
       const result = await getTeamRankings(TEAM_ID, SEASON, mockDb);
 

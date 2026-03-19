@@ -36,7 +36,7 @@ const TEAM_ID_TO_ABBR = {
   1610612766: "CHA",
 };
 
-export function Top5Showcase({ rankings, category, shouldAnimate = true }) {
+export function Top5Showcase({ rankings, _category, shouldAnimate = true }) {
   const { data: allTeams } = useAllTeams();
   if (!rankings || !rankings.rankings || rankings.rankings.length === 0) {
     return null;

@@ -55,9 +55,7 @@ if (process.env.NODE_ENV !== "production") {
       format: winston.format.combine(
         winston.format.colorize({ colors: customLevels.colors }),
         winston.format.printf(({ timestamp, level, message, ...meta }) => {
-          const metaStr = Object.keys(meta).length
-            ? ` ${JSON.stringify(meta)}`
-            : "";
+          const metaStr = Object.keys(meta).length ? ` ${JSON.stringify(meta)}` : "";
           return `${timestamp} [${level}]: ${message}${metaStr}`;
         })
       ),

@@ -5,6 +5,7 @@
 
 const { getAuditGames, getGameStats } = require("../services/auditService");
 const MockDatabase = require("./mocks/db");
+// eslint-disable-next-line no-unused-vars
 const { MOCK_DB_RESULT } = require("./mocks/testData");
 
 // Complete query key from getGameStats service - must match exactly for mock lookup
@@ -105,6 +106,7 @@ describe("auditService", () => {
         rowCount: 1,
       });
 
+      // eslint-disable-next-line no-unused-vars
       const result = await getAuditGames(SEASON, LIMIT, OFFSET, "collected", null, mockDb);
 
       // Should include collected status in query history
@@ -113,7 +115,7 @@ describe("auditService", () => {
     });
 
     it("should filter by collection status (missing)", async () => {
-      const result = await getAuditGames(SEASON, LIMIT, OFFSET, "missing", null, mockDb);
+      await getAuditGames(SEASON, LIMIT, OFFSET, "missing", null, mockDb);
 
       // Should have executed query
       const history = mockDb.getQueryHistory();
@@ -122,7 +124,7 @@ describe("auditService", () => {
 
     it("should filter by date when provided", async () => {
       const date = "2024-01-15";
-      const result = await getAuditGames(SEASON, LIMIT, OFFSET, null, date, mockDb);
+      await getAuditGames(SEASON, LIMIT, OFFSET, null, date, mockDb);
 
       const history = mockDb.getQueryHistory();
       if (date) {
@@ -131,7 +133,7 @@ describe("auditService", () => {
     });
 
     it("should respect LIMIT for pagination", async () => {
-      const result = await getAuditGames(SEASON, 5, OFFSET, null, null, mockDb);
+      await getAuditGames(SEASON, 5, OFFSET, null, null, mockDb);
 
       // Should include limit in query
       const history = mockDb.getQueryHistory();
@@ -139,7 +141,7 @@ describe("auditService", () => {
     });
 
     it("should handle OFFSET for pagination", async () => {
-      const result = await getAuditGames(SEASON, LIMIT, 20, null, null, mockDb);
+      await getAuditGames(SEASON, LIMIT, 20, null, null, mockDb);
 
       // Should include offset in query
       const history = mockDb.getQueryHistory();

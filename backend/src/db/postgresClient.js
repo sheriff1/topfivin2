@@ -1,4 +1,5 @@
 const { Pool } = require("pg");
+const logger = require("../utils/logger");
 
 const poolConfig = process.env.DATABASE_URL
   ? {
@@ -35,6 +36,7 @@ async function query(text, values) {
   try {
     const result = await pool.query(text, values);
     const duration = Date.now() - start;
+    logger.debug(`Query executed in ${duration}ms`, { duration });
     return result;
   } catch (error) {
     console.error("Database query error:", error);

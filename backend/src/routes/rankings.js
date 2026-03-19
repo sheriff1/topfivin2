@@ -2,10 +2,7 @@ const express = require("express");
 const db = require("../db/postgresClient");
 const cache = require("../cache/redisClient");
 const { getCategories, getRankings, STAT_CATEGORIES } = require("../services/rankingsService");
-const {
-  validateCategories,
-  validateRankings,
-} = require("../middleware/validationSchemas");
+const { validateCategories, validateRankings } = require("../middleware/validationSchemas");
 const { validationMiddleware } = require("../middleware/validation");
 
 const router = express.Router();
@@ -33,11 +30,7 @@ router.get("/categories", validateCategories, validationMiddleware, (req, res) =
  * Returns rankings for a specific stat category
  * Query params: ?category=PPG&season=2025
  */
-router.get(
-  "/rankings",
-  validateRankings,
-  validationMiddleware,
-  async (req, res) => {
+router.get("/rankings", validateRankings, validationMiddleware, async (req, res) => {
   try {
     const category = req.query.category;
     const season = req.query.season || process.env.CURRENT_SEASON || "2025";
