@@ -1,0 +1,10 @@
+{
+  "name": "topfivin2",
+  "version": "1.0.0",
+  "description": "TopFivin2 - NBA Stats & Rankings Platform",
+  "private": true,
+  "workspaces": [
+    "backend",
+    "frontend"
+  ]
+}
