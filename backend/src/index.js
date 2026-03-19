@@ -17,6 +17,7 @@ const db = require("./db/postgresClient");
 const cache = require("./cache/redisClient");
 const { runMigrations } = require("../migrations/001_init_schema");
 const apiRoutes = require("./routes/api");
+const { apiLimiter } = require("./middleware/rateLimiter");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -52,8 +53,9 @@ app.get("/health", (req, res) => {
   });
 });
 
-// API Routes
-app.use("/api", apiRoutes);
+// API Routes with rate limiting
+// Apply general rate limiter to all API endpoints
+app.use("/api", apiLimiter, apiRoutes);
 
 /**
  * Error handler for URL decoding errors
