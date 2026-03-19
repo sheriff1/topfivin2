@@ -29,7 +29,7 @@ class MockCache {
    * @param {number} ttl - Time to live in seconds (optional)
    * @returns {Promise<string>} - 'OK'
    */
-  async set(key, value, ttl = null) {
+  async set(key, value, _ttl = null) {
     this.setCount++;
     this.store.set(key, value);
     // In a real Redis implementation, ttl would expire the key

@@ -125,7 +125,6 @@ describe("statProcessor", () => {
       const allRankings = calculateAllRankings(normalizedStats);
 
       // Should have entries for all categories
-      const categoryKeys = Object.keys(STAT_CATEGORIES);
       expect(Object.keys(allRankings).length).toBeGreaterThan(0);
     });
 

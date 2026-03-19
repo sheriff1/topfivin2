@@ -80,8 +80,8 @@ describe("teamsService", () => {
     it("should handle multiple seasons independently", async () => {
       mockDb.setMockData("SELECT t.team_id, t.team_name, ts.season", MOCK_DB_RESULT.team_stats);
 
-      const result2024 = await getTeamStats(TEAM_ID, 2024, mockDb);
-      const result2023 = await getTeamStats(TEAM_ID, 2023, mockDb);
+      await getTeamStats(TEAM_ID, 2024, mockDb);
+      await getTeamStats(TEAM_ID, 2023, mockDb);
 
       // Both calls should work independently
       expect(mockDb.getQueryHistory().count).toBe(2);

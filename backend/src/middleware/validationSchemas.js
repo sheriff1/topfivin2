@@ -1,4 +1,4 @@
-const { query, param, validationResult } = require("express-validator");
+const { query, param } = require("express-validator");
 
 /**
  * RANKINGS VALIDATION SCHEMAS
