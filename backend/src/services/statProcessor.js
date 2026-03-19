@@ -1,3 +1,5 @@
+const logger = require("../utils/logger");
+
 /**
  * Advanced NBA stats categories with their column indices
  * These correspond to the headers returned by the leaguedashteamstats endpoint
