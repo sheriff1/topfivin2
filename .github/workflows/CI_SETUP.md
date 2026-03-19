@@ -1,51 +1,46 @@
-# CI/CD Setup - Issue #56
+# CI/CD Setup - Issue #61
 
 ## Overview
 
-This project uses GitHub Actions to automate test execution as a quality gate. Tests must pass on all branches and PRs before merge to main.
+This project uses a single unified GitHub Actions workflow (`ci.yml`) to run all quality checks in parallel as a gate before merge to main. All jobs must pass on PRs targeting main.
 
-## Configured Workflows
+## Configured Workflow
 
-### 1. **Backend Tests** (`backend-tests.yml`)
-- **Triggers**: Runs on all branch pushes and pull requests to main
+### **Unified CI** (`ci.yml`)
+
+All four jobs run in parallel on every push and PR to main.
+
+| Job              | Name             | What it does                                                           |
+| ---------------- | ---------------- | ---------------------------------------------------------------------- |
+| `audit`          | Dependency Audit | `pnpm audit --audit-level=moderate` — blocks moderate+ vulnerabilities |
+| `lint`           | Lint & Format    | Prettier format check + ESLint for both backend and frontend           |
+| `backend-tests`  | Backend Tests    | Jest test suite for the backend                                        |
+| `frontend-tests` | Frontend Tests   | Vitest test suite + Vite production build for the frontend             |
+
 - **Node Version**: 20 LTS
 - **Package Manager**: pnpm 10.30.3
-- **Steps**:
-  1. Install dependencies (`pnpm install --frozen-lockfile`)
-  2. Audit dependencies for vulnerabilities (`pnpm audit --audit-level=moderate`) 
-  3. Run backend tests (`pnpm --filter backend test`)
-  
-**Status Check**: `Backend Tests`
-
-### 2. **Frontend Tests** (`frontend-tests.yml`)
-- **Triggers**: Runs on all branch pushes and pull requests to main
-- **Node Version**: 20 LTS
-- **Package Manager**: pnpm 10.30.3
-- **Steps**:
-  1. Install dependencies (`pnpm install --frozen-lockfile`)
-  2. Audit dependencies for vulnerabilities (`pnpm audit --audit-level=moderate`)
-  3. Run frontend tests (`pnpm --filter frontend test`)
-
-**Status Check**: `Frontend Tests`
+- **Install**: `pnpm install --frozen-lockfile` (each job installs independently)
 
 ## Trigger Events
 
 ```yaml
 on:
   push:
-    branches: [main, "**"]        # All branches
+    branches: [main, "**"] # All branches
   pull_request:
-    branches: [main]              # PRs targeting main only
+    branches: [main] # PRs targeting main only
 ```
 
 ## Protecting Main Branch
 
-To enforce that all tests pass before PR merge:
+To enforce that all checks pass before PR merge:
 
 1. Go to **Settings** → **Branches**
 2. Create/Edit the **main** branch protection rule
 3. Enable **Require status checks to pass before merging**
 4. Add required status checks:
+   - `Dependency Audit`
+   - `Lint & Format`
    - `Backend Tests`
    - `Frontend Tests`
 5. Enable **Require branches to be up to date before merging**
@@ -54,58 +49,75 @@ To enforce that all tests pass before PR merge:
 ## Monitoring CI Results
 
 ### View Workflow Runs
+
 - Visit: `https://github.com/sheriff1/topfivin2/actions`
-- Filter by workflow name or branch
+- Filter by workflow name (`CI`) or branch
 
 ### In Pull Requests
-- GitHub automatically shows CI status at bottom of PR
-- Red X = failure (checks must pass before merge button enables)
+
+- GitHub automatically shows all four job statuses at the bottom of the PR
+- Red X = failure (all checks must pass before merge button enables)
 - Green checkmark = all checks passed
 
 ### Local Development
-Before pushing, run tests locally to catch failures early:
 
-**Backend tests:**
-```bash
-cd backend
-npm test
-```
+Before pushing, run checks locally to catch failures early:
 
-**Frontend tests:**
 ```bash
-cd frontend
-npm test
+# Dependency audit
+pnpm audit --audit-level=moderate
+
+# Lint & format
+pnpm --filter backend format:check && pnpm --filter frontend format:check
+pnpm --filter backend lint && pnpm --filter frontend lint
+
+# Tests
+pnpm --filter backend test
+pnpm --filter frontend test
+
+# Frontend build
+pnpm --filter frontend build
 ```
 
 ## Troubleshooting Failed Checks
 
+### Dependency Audit Failing
+
+- Run: `pnpm audit` to see vulnerabilities
+- Fix by updating vulnerable package: `pnpm up package-name`
+- Audit level set to `moderate` — blocks moderate, high, and critical vulnerabilities
+
+### Lint & Format Failing
+
+- Run: `pnpm --filter backend format:check && pnpm --filter frontend format:check`
+- Auto-fix formatting: `pnpm --filter backend format && pnpm --filter frontend format`
+- Run: `pnpm --filter backend lint && pnpm --filter frontend lint`
+- Auto-fix lint: `pnpm --filter backend lint:fix && pnpm --filter frontend lint:fix`
+
 ### Backend Tests Failing
-1. Run locally: `cd backend && npm test`
+
+1. Run locally: `pnpm --filter backend test`
 2. Check for:
-   - Missing test files
    - Failed assertions
-   - Environmental issues (Redis, PostgreSQL)
+   - Environmental issues (Redis, PostgreSQL mocks)
    - Node version mismatch
 
 ### Frontend Tests Failing
-1. Run locally: `cd frontend && npm test`
+
+1. Run locally: `pnpm --filter frontend test`
 2. Check for:
-   - Missing test files
    - Failed test suites
    - Component rendering issues
    - Mock setup problems
 
-### Dependency Audit Failing
-- Run: `pnpm audit` to see vulnerabilities
-- Fix by updating vulnerable package: `pnpm up package-name`
-- Or update all: `pnpm up`
-- Audit level set to `moderate` — blocks moderate, high, and critical vulnerabilities
+### Frontend Build Failing
+
+1. Run locally: `pnpm --filter frontend build`
+2. Check for TypeScript/import errors in the Vite output
 
 ## Future Enhancements
 
 - [ ] Add code coverage reporting
 - [ ] Add E2E test workflow (#46)
-- [ ] Add linting/formatting checks (#57)
-- [ ] Parallel job execution for faster feedback (#61)
-- [ ] Build verification for frontend (#59)
 - [ ] Integration test workflow (#43)
+- [ ] Staging deployment on merge to main (#63)
