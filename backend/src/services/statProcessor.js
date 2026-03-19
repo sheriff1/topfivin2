@@ -1,3 +1,5 @@
+const logger = require("../utils/logger");
+
 /**
  * Advanced NBA stats categories with their column indices
  * These correspond to the headers returned by the leaguedashteamstats endpoint
@@ -152,7 +154,7 @@ function calculateAllRankings(teamStats) {
     try {
       allRankings[category] = calculateRankings(teamStats, category);
     } catch (error) {
-      console.warn(`Failed to calculate rankings for ${category}:`, error.message);
+      logger.warn(`Failed to calculate rankings for ${category}:`, { message: error.message });
     }
   });
 
@@ -165,7 +167,7 @@ function calculateAllRankings(teamStats) {
  * @returns {object} - Processed rankings and normalized stats
  */
 function processTeamStats(teamStatsData) {
-  console.log("Processing team stats...");
+  logger.debug("Processing team stats...");
 
   // Normalize the raw data
   const normalizedStats = normalizeTeamStats(teamStatsData);
@@ -173,7 +175,7 @@ function processTeamStats(teamStatsData) {
   // Calculate rankings for all categories
   const rankings = calculateAllRankings(normalizedStats);
 
-  console.log(`Generated rankings for ${Object.keys(rankings).length} stat categories`);
+  logger.info(`Generated rankings for ${Object.keys(rankings).length} stat categories`);
 
   return {
     normalized_stats: normalizedStats,

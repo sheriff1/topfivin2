@@ -1,11 +1,14 @@
 require("dotenv").config();
 
+const logger = require("./utils/logger");
+
 // Validate environment variables early, before any services initialize
 const { validateEnvironment } = require("./config/envValidation");
 try {
   validateEnvironment();
+  logger.info("✅ Environment variables validated successfully");
 } catch (error) {
-  console.error(error.message);
+  logger.error(error.message);
   process.exit(1);
 }
 
@@ -78,15 +81,15 @@ app.use((err, req, res, next) => {
  */
 async function initialize() {
   try {
-    console.log("🚀 Initializing NBA Stats Server...\n");
+    logger.info("🚀 Initializing NBA Stats Server...");
 
     // Step 1: Run database migrations
-    console.log("📊 Setting up database schema...");
+    logger.info("📊 Setting up database schema...");
     await runMigrations();
 
-    console.log("\n");
+    logger.info("✓ Database migrations completed successfully");
   } catch (error) {
-    console.error("❌ Initialization failed:", error.message);
+    logger.error("❌ Initialization failed:", { message: error.message, stack: error.stack });
     process.exit(1);
   }
 }
@@ -97,17 +100,16 @@ async function start() {
     await initialize();
 
     app.listen(PORT, () => {
-      console.log(`\n✅ Server running on http://localhost:${PORT}`);
-      console.log(`📖 API Documentation:`);
-      console.log(`  GET /health - Health check`);
-      console.log(`  GET /api/categories - List stat categories`);
-      console.log(`  GET /api/rankings/:category - Get rankings for a stat`);
-      console.log(`  GET /api/team/:teamId/stats - Get team stats`);
-      console.log(`  GET /api/team/:teamId/rankings - Get team rankings`);
-      console.log("\n");
+      logger.info(`✅ Server running on http://localhost:${PORT}`);
+      logger.info("📖 API Documentation:");
+      logger.info("  GET /health - Health check");
+      logger.info("  GET /api/categories - List stat categories");
+      logger.info("  GET /api/rankings/:category - Get rankings for a stat");
+      logger.info("  GET /api/team/:teamId/stats - Get team stats");
+      logger.info("  GET /api/team/:teamId/rankings - Get team rankings");
     });
   } catch (error) {
-    console.error("Failed to start server:", error);
+    logger.error("Failed to start server:", { message: error.message, stack: error.stack });
     process.exit(1);
   }
 }
@@ -120,7 +122,7 @@ process.on("SIGINT", async () => {
     await cache.redis.quit();
     process.exit(0);
   } catch (error) {
-    console.error("Error during shutdown:", error);
+    logger.error("Error during shutdown:", { message: error.message, stack: error.stack });
     process.exit(1);
   }
 });
