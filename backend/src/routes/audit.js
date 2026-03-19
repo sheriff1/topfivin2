@@ -1,6 +1,11 @@
 const express = require("express");
 const db = require("../db/postgresClient");
 const { getAuditGames, getGameStats } = require("../services/auditService");
+const {
+  validateAuditGames,
+  validateGameStats,
+} = require("../middleware/validationSchemas");
+const { validationMiddleware } = require("../middleware/validation");
 
 const router = express.Router();
 
@@ -9,7 +14,11 @@ const router = express.Router();
  * Returns game collection audit data
  * Query params: ?season=2025&status=collected|missing&date=2026-03-12&limit=100&offset=0
  */
-router.get("/audit/games", async (req, res) => {
+router.get(
+  "/audit/games",
+  validateAuditGames,
+  validationMiddleware,
+  async (req, res) => {
   try {
     const season = req.query.season || process.env.CURRENT_SEASON || "2025";
     const limit = parseInt(req.query.limit) || 100;
@@ -34,7 +43,11 @@ router.get("/audit/games", async (req, res) => {
  * GET /api/audit/game/:gameId/stats
  * Returns aggregated team stats for a specific game
  */
-router.get("/audit/game/:gameId/stats", async (req, res) => {
+router.get(
+  "/audit/game/:gameId/stats",
+  validateGameStats,
+  validationMiddleware,
+  async (req, res) => {
   try {
     const gameId = req.params.gameId;
 
