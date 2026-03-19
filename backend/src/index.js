@@ -1,5 +1,14 @@
 require("dotenv").config();
 
+// Validate environment variables early, before any services initialize
+const { validateEnvironment } = require("./config/envValidation");
+try {
+  validateEnvironment();
+} catch (error) {
+  console.error(error.message);
+  process.exit(1);
+}
+
 const express = require("express");
 const cors = require("cors");
 
