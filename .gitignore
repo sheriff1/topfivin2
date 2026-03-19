@@ -2,6 +2,8 @@
 node_modules/
 .pnpm-lock.yaml
 *.lock
+package-lock.json
+package.json
 
 # Environment
 .env
