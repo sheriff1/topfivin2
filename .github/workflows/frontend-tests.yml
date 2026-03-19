@@ -30,3 +30,6 @@ jobs:
 
       - name: Run frontend tests
         run: pnpm --filter frontend test
+
+      - name: Build frontend for production
+        run: pnpm --filter frontend build
