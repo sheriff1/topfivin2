@@ -6,5 +6,23 @@
   "workspaces": [
     "backend",
     "frontend"
-  ]
+  ],
+  "scripts": {
+    "prepare": "husky"
+  },
+  "lint-staged": {
+    "backend/**/*.{js,cjs}": [
+      "prettier --write",
+      "backend/node_modules/.bin/eslint --fix"
+    ],
+    "frontend/**/*.{js,jsx}": [
+      "prettier --write",
+      "frontend/node_modules/.bin/eslint --fix --config frontend/eslint.config.cjs"
+    ],
+    "*.{json,md,yml,yaml}": "prettier --write"
+  },
+  "devDependencies": {
+    "husky": "^9.1.7",
+    "lint-staged": "^16.4.0"
+  }
 }
