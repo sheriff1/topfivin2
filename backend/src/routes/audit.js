@@ -22,13 +22,11 @@ router.get("/audit/games", async (req, res) => {
     res.json({ success: true, ...result });
   } catch (error) {
     console.error("[API] /audit/games - Error:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Failed to fetch audit data",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch audit data",
+      error: error.message,
+    });
   }
 });
 

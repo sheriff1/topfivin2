@@ -1,9 +1,9 @@
-const Redis = require('ioredis');
+const Redis = require("ioredis");
 
 const redisConfig = process.env.REDIS_URL
   ? process.env.REDIS_URL
   : {
-      host: process.env.REDIS_HOST || 'localhost',
+      host: process.env.REDIS_HOST || "localhost",
       port: process.env.REDIS_PORT || 6379,
       password: process.env.REDIS_PASSWORD || undefined,
       retryStrategy: (times) => {
@@ -15,16 +15,16 @@ const redisConfig = process.env.REDIS_URL
 
 const redis = new Redis(redisConfig);
 
-redis.on('connect', () => {
-  console.log('Redis connected');
+redis.on("connect", () => {
+  console.log("Redis connected");
 });
 
-redis.on('error', (err) => {
-  console.error('Redis error:', err);
+redis.on("error", (err) => {
+  console.error("Redis error:", err);
 });
 
-redis.on('reconnecting', () => {
-  console.log('Redis reconnecting...');
+redis.on("reconnecting", () => {
+  console.log("Redis reconnecting...");
 });
 
 /**
@@ -36,13 +36,13 @@ async function get(key) {
   try {
     const value = await redis.get(key);
     if (value) {
-      console.log('Cache hit:', key);
+      console.log("Cache hit:", key);
       return JSON.parse(value);
     }
-    console.log('Cache miss:', key);
+    console.log("Cache miss:", key);
     return null;
   } catch (error) {
-    console.error('Redis get error:', error);
+    console.error("Redis get error:", error);
     return null;
   }
 }
@@ -57,10 +57,10 @@ async function get(key) {
 async function set(key, value, ttl = 3600) {
   try {
     const result = await redis.setex(key, ttl, JSON.stringify(value));
-    console.log('Cache set:', key, 'TTL:', ttl);
+    console.log("Cache set:", key, "TTL:", ttl);
     return result;
   } catch (error) {
-    console.error('Redis set error:', error);
+    console.error("Redis set error:", error);
     return null;
   }
 }
@@ -73,10 +73,10 @@ async function set(key, value, ttl = 3600) {
 async function del(key) {
   try {
     const result = await redis.del(key);
-    console.log('Cache deleted:', key);
+    console.log("Cache deleted:", key);
     return result;
   } catch (error) {
-    console.error('Redis delete error:', error);
+    console.error("Redis delete error:", error);
     return null;
   }
 }
@@ -94,7 +94,7 @@ async function deleteByPattern(pattern) {
     console.log(`Deleted ${result} keys matching pattern: ${pattern}`);
     return result;
   } catch (error) {
-    console.error('Redis pattern delete error:', error);
+    console.error("Redis pattern delete error:", error);
     return null;
   }
 }
@@ -108,7 +108,7 @@ async function isConnected() {
     await redis.ping();
     return true;
   } catch (error) {
-    console.error('Redis connection check failed:', error);
+    console.error("Redis connection check failed:", error);
     return false;
   }
 }

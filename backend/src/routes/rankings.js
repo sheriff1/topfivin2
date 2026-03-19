@@ -1,11 +1,7 @@
 const express = require("express");
 const db = require("../db/postgresClient");
 const cache = require("../cache/redisClient");
-const {
-  getCategories,
-  getRankings,
-  STAT_CATEGORIES,
-} = require("../services/rankingsService");
+const { getCategories, getRankings, STAT_CATEGORIES } = require("../services/rankingsService");
 
 const router = express.Router();
 
@@ -19,13 +15,11 @@ router.get("/categories", (req, res) => {
     res.json({ success: true, categories });
   } catch (error) {
     console.error("[API] /categories - Error:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Failed to fetch categories",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch categories",
+      error: error.message,
+    });
   }
 });
 
@@ -40,32 +34,26 @@ router.get("/rankings", async (req, res) => {
     const season = req.query.season || process.env.CURRENT_SEASON || "2025";
 
     if (!category) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: "Missing required query parameter: category",
-        });
+      return res.status(400).json({
+        success: false,
+        message: "Missing required query parameter: category",
+      });
     }
 
     if (!STAT_CATEGORIES[category]) {
-      return res
-        .status(400)
-        .json({
-          success: false,
-          message: `Invalid stat category: ${category}`,
-        });
+      return res.status(400).json({
+        success: false,
+        message: `Invalid stat category: ${category}`,
+      });
     }
 
     const result = await getRankings(category, season, db, cache);
 
     if (result.rows && result.rows.length === 0) {
-      return res
-        .status(404)
-        .json({
-          success: false,
-          message: `No rankings found for category: ${category}`,
-        });
+      return res.status(404).json({
+        success: false,
+        message: `No rankings found for category: ${category}`,
+      });
     }
 
     res.json({
@@ -80,13 +68,11 @@ router.get("/rankings", async (req, res) => {
     });
   } catch (error) {
     console.error("[API] /rankings - Error:", error);
-    res
-      .status(500)
-      .json({
-        success: false,
-        message: "Failed to fetch rankings",
-        error: error.message,
-      });
+    res.status(500).json({
+      success: false,
+      message: "Failed to fetch rankings",
+      error: error.message,
+    });
   }
 });
 

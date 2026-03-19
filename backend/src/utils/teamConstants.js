@@ -37,12 +37,9 @@ const TEAM_ABBR_TO_ID = {
 };
 
 // Reverse mapping: team_id to abbreviation
-const ID_TO_TEAM_ABBR = Object.entries(TEAM_ABBR_TO_ID).reduce(
-  (acc, [abbr, id]) => {
-    acc[id] = abbr;
-    return acc;
-  },
-  {}
-);
+const ID_TO_TEAM_ABBR = Object.entries(TEAM_ABBR_TO_ID).reduce((acc, [abbr, id]) => {
+  acc[id] = abbr;
+  return acc;
+}, {});
 
 module.exports = { TEAM_ABBR_TO_ID, ID_TO_TEAM_ABBR };
