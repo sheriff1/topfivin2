@@ -6,6 +6,11 @@ const prettier = require("eslint-config-prettier");
 const prettierPlugin = require("eslint-plugin-prettier");
 
 module.exports = [
+  // Global ignores
+  {
+    ignores: ["node_modules/**", "dist/**", "build/**", ".pnpm-store/**", "coverage/**"],
+  },
+
   // ESLint base configuration
   js.configs.recommended,
 
@@ -13,6 +18,11 @@ module.exports = [
   {
     files: ["**/*.jsx", "**/*.js"],
     ...react.configs.flat.recommended,
+    settings: {
+      react: {
+        version: "19",
+      },
+    },
     languageOptions: {
       parserOptions: {
         ecmaVersion: 2021,
@@ -37,8 +47,10 @@ module.exports = [
         "warn",
         {
           groups: ["builtin", "external", "internal", "parent", "sibling", "index"],
-          alphabeticalOrder: true,
-          caseInsensitive: true,
+          alphabetize: {
+            order: "asc",
+            caseInsensitive: true,
+          },
         },
       ],
     },
@@ -92,6 +104,26 @@ module.exports = [
       // Imports
       "import/no-unresolved": "error",
       "import/no-cycle": "warn",
+    },
+  },
+
+  // Test file configuration
+  {
+    files: ["src/**/*.test.jsx", "src/**/*.test.js", "src/__tests__/**/*.js"],
+    languageOptions: {
+      globals: {
+        describe: "readonly",
+        it: "readonly",
+        test: "readonly",
+        expect: "readonly",
+        vi: "readonly",
+        beforeEach: "readonly",
+        afterEach: "readonly",
+      },
+    },
+    rules: {
+      "no-undef": "off",
+      "no-unused-vars": "off",
     },
   },
 
