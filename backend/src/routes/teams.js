@@ -2,6 +2,13 @@ const express = require("express");
 const db = require("../db/postgresClient");
 const { getTeamStats, getTeamRankings } = require("../services/teamsService");
 const { TEAM_ABBR_TO_ID } = require("../utils/teamConstants");
+const {
+  validateTeams,
+  validateTeamByAbbr,
+  validateTeamStats,
+  validateTeamRankings,
+} = require("../middleware/validationSchemas");
+const { validationMiddleware } = require("../middleware/validation");
 
 const router = express.Router();
 
@@ -10,7 +17,7 @@ const router = express.Router();
  * Returns team info (name, colors, logo)
  * Query params: ?team_id=1610612738
  */
-router.get("/teams", async (req, res) => {
+router.get("/teams", validateTeams, validationMiddleware, async (req, res) => {
   try {
     const { team_id } = req.query;
 
@@ -41,7 +48,11 @@ router.get("/teams", async (req, res) => {
  * Returns team info by team abbreviation (e.g., BOS, LAL)
  * Used for URL routing with team abbreviations
  */
-router.get("/teams/abbr/:abbreviation", async (req, res) => {
+router.get(
+  "/teams/abbr/:abbreviation",
+  validateTeamByAbbr,
+  validationMiddleware,
+  async (req, res) => {
   try {
     const abbr = req.params.abbreviation.toUpperCase();
 
@@ -84,7 +95,11 @@ router.get("/teams/abbr/:abbreviation", async (req, res) => {
  * Returns all stats for a specific team
  * Query params: ?season=2025
  */
-router.get("/team/:teamId/stats", async (req, res) => {
+router.get(
+  "/team/:teamId/stats",
+  validateTeamStats,
+  validationMiddleware,
+  async (req, res) => {
   try {
     const { teamId } = req.params;
     const season = req.query.season || process.env.CURRENT_SEASON || "2025";
@@ -111,7 +126,11 @@ router.get("/team/:teamId/stats", async (req, res) => {
  * Returns all rankings for a specific team across all categories
  * Query params: ?season=2025
  */
-router.get("/team/:teamId/rankings", async (req, res) => {
+router.get(
+  "/team/:teamId/rankings",
+  validateTeamRankings,
+  validationMiddleware,
+  async (req, res) => {
   try {
     const { teamId } = req.params;
     const season = req.query.season || process.env.CURRENT_SEASON || "2025";
