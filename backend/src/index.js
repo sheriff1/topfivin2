@@ -11,6 +11,7 @@ try {
 
 const express = require("express");
 const cors = require("cors");
+const helmet = require("helmet");
 
 const db = require("./db/postgresClient");
 const cache = require("./cache/redisClient");
@@ -27,6 +28,11 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
+// Security headers with Helmet
+// Protects against XSS, clickjacking, MIME sniffing, and other attacks
+app.use(helmet());
+
+// CORS configuration
 app.use(
   cors({
     origin: allowedOrigins,
