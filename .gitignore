@@ -12,6 +12,7 @@ package-lock.json
 # Backend
 backend/node_modules/
 backend/.env
+backend/.env.production
 
 # Frontend
 frontend/node_modules/
