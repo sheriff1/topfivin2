@@ -3,6 +3,7 @@ const db = require("../db/postgresClient");
 const { getAuditGames, getGameStats } = require("../services/auditService");
 const { validateAuditGames, validateGameStats } = require("../middleware/validationSchemas");
 const { validationMiddleware } = require("../middleware/validation");
+const logger = require("../utils/logger");
 
 const router = express.Router();
 
@@ -23,11 +24,10 @@ router.get("/audit/games", validateAuditGames, validationMiddleware, async (req,
 
     res.json({ success: true, ...result });
   } catch (error) {
-    console.error("[API] /audit/games - Error:", error);
+    logger.error("[API] /audit/games - Error:", { message: error.message, stack: error.stack });
     res.status(500).json({
       success: false,
       message: "Failed to fetch audit data",
-      error: error.message,
     });
   }
 });
@@ -55,11 +55,14 @@ router.get(
 
       res.json({ success: true, data: stats });
     } catch (error) {
-      console.error(`[API] /audit/game/${req.params.gameId}/stats - Error:`, error);
+      logger.error("[API] /audit/game/:gameId/stats - Error:", {
+        message: error.message,
+        stack: error.stack,
+        gameId: req.params.gameId,
+      });
       res.status(500).json({
         success: false,
         message: "Failed to fetch game stats",
-        error: error.message,
       });
     }
   }

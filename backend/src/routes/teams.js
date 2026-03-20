@@ -9,6 +9,7 @@ const {
   validateTeamRankings,
 } = require("../middleware/validationSchemas");
 const { validationMiddleware } = require("../middleware/validation");
+const logger = require("../utils/logger");
 
 const router = express.Router();
 
@@ -34,11 +35,10 @@ router.get("/teams", validateTeams, validationMiddleware, async (req, res) => {
     const result = await db.query(query, params);
     res.json({ success: true, data: result.rows });
   } catch (error) {
-    console.error("[API] /teams - Error:", error);
+    logger.error("[API] /teams - Error:", { message: error.message, stack: error.stack });
     res.status(500).json({
       success: false,
       message: "Failed to fetch teams",
-      error: error.message,
     });
   }
 });
@@ -81,11 +81,13 @@ router.get(
 
       res.json({ success: true, data: result.rows[0] });
     } catch (error) {
-      console.error("[API] /teams/abbr/:abbreviation - Error:", error);
+      logger.error("[API] /teams/abbr/:abbreviation - Error:", {
+        message: error.message,
+        stack: error.stack,
+      });
       res.status(500).json({
         success: false,
         message: "Failed to fetch team by abbreviation",
-        error: error.message,
       });
     }
   }
@@ -109,11 +111,13 @@ router.get("/team/:teamId/stats", validateTeamStats, validationMiddleware, async
 
     res.json({ success: true, data });
   } catch (error) {
-    console.error("[API] /team/:teamId/stats - Error:", error);
+    logger.error("[API] /team/:teamId/stats - Error:", {
+      message: error.message,
+      stack: error.stack,
+    });
     res.status(500).json({
       success: false,
       message: "Failed to fetch team stats",
-      error: error.message,
     });
   }
 });
@@ -143,11 +147,13 @@ router.get(
 
       res.json({ success: true, data });
     } catch (error) {
-      console.error("[API] /team/:teamId/rankings - Error:", error);
+      logger.error("[API] /team/:teamId/rankings - Error:", {
+        message: error.message,
+        stack: error.stack,
+      });
       res.status(500).json({
         success: false,
         message: "Failed to fetch team rankings",
-        error: error.message,
       });
     }
   }
