@@ -36,12 +36,9 @@ function validateEnvironment() {
   // Validate Database Configuration
   // Support both DATABASE_URL format and individual DB_* variables
   const hasDatabaseUrl = Boolean(process.env.DATABASE_URL);
+  // DB_PASSWORD intentionally excluded — local Homebrew postgres has no password
   const hasIndividualDbVars = Boolean(
-    process.env.DB_HOST &&
-    process.env.DB_PORT &&
-    process.env.DB_USER &&
-    process.env.DB_PASSWORD &&
-    process.env.DB_NAME
+    process.env.DB_HOST && process.env.DB_PORT && process.env.DB_USER && process.env.DB_NAME
   );
 
   if (!hasDatabaseUrl && !hasIndividualDbVars) {

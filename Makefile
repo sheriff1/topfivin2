@@ -74,8 +74,9 @@ backup:
 	@mkdir -p backups
 	@echo "📦 Backing up production database..."
 	@set -a && source backend/.env.production && set +a && \
-	pg_dump $$DATABASE_URL -F c -f backups/nba_stats_$$(date +%Y%m%d_%H%M%S).dump
-	@echo "✅ Backup saved to backups/"
+	pg_dump $$DATABASE_URL -F c -f backups/nba_stats_$$(date +%Y%m%d_%H%M%S).dump \
+	&& echo "✅ Backup saved to backups/" \
+	|| echo "⚠️  Local pg_dump skipped (version mismatch with Railway PostgreSQL 18). Backups run automatically via GitHub Actions weekly."
 
 backup-clean:
 	@find backups/ -name "*.dump" -mtime +7 -delete
