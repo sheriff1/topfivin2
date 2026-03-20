@@ -1,143 +1,112 @@
 # NBA Stats Ranking Dashboard
 
-A full-stack application that fetches NBA team statistics from the official NBA.com API (via the `nba_api` Python library), calculates rankings across 15 stat categories, and displays them in a web dashboard. Stats are collected by running Python pipeline scripts manually; rankings and stats are served via a Node.js/Express API backed by PostgreSQL and Redis.
+A full-stack web app that fetches NBA team statistics from the official NBA.com API, computes rankings across 15 stat categories, and displays them in an interactive dashboard. Data is fetched locally via Python scripts and served through a Node.js/Express API backed by PostgreSQL and Redis.
+
+---
+
+## Tech Stack
+
+| Layer              | Technologies                                                                   |
+| ------------------ | ------------------------------------------------------------------------------ |
+| **Frontend**       | React 19, React Router 7, TanStack Query 5, Tailwind CSS 4, DaisyUI 5, Vite 6  |
+| **Backend**        | Node.js 20, Express 5, PostgreSQL (pg), Redis (ioredis), Helmet, Winston, Jest |
+| **Data Pipeline**  | Python 3.13, nba_api, psycopg2                                                 |
+| **Infrastructure** | Railway (production DB + Redis), GitHub Actions CI/CD                          |
+
+---
 
 ## Architecture
 
 ```
-nba_api (Python)
+nba_api (Python — run locally)
   └─ fetch_nba_stats.py       → games + game_stats tables
        └─ derive_team_stats.py    → team_stats table
             └─ derive_rankings.py     → stat_rankings table
                                             │
-                                Node.js / Express (port 5001)
+                                Node.js / Express  (port 5001)
                                 GET /api/categories
                                 GET /api/rankings
+                                GET /api/teams
+                                GET /api/teams/abbr/:abbreviation
                                 GET /api/team/:id/stats
                                 GET /api/team/:id/rankings
                                 GET /api/audit/games
+                                GET /api/audit/game/:gameId/stats
                                             │
-                                React Frontend (port 3000)
-                                daisyUI + Tailwind + React Query
+                                React Frontend  (port 3000)
+                                Tailwind + DaisyUI + TanStack Query
 ```
 
-PostgreSQL stores all data; Redis caches ranking responses (1-hour TTL).
+PostgreSQL stores all data. Redis caches ranking responses (1-hour TTL).
 
-## Quick Start
+> **Note:** `fetch_nba_stats.py` must run **locally** — nba.com actively blocks GitHub Actions IP ranges. All other pipeline steps (derive + rank) run automatically daily via GitHub Actions.
+
+---
+
+## Local Setup
 
 ### Prerequisites
 
-- Node.js 18+, pnpm
-- Python 3.13 (Homebrew: `/opt/homebrew/bin/python3.13`)
-- PostgreSQL 13+ and Redis 6+ running locally
+- Node.js 20+, pnpm
+- Python 3.13
+- PostgreSQL 16+ and Redis running locally (`make services` starts both via Homebrew)
 
-### Quick Setup (Single Command)
-
-From the repo root, run:
+### 1. Clone and install dependencies
 
 ```bash
-make
+git clone https://github.com/sheriff1/topfivin2.git
+cd topfivin2
+
+cd backend && pnpm install && cd ..
+cd frontend && pnpm install && cd ..
 ```
 
-This starts both backend (port 5001) and frontend (port 3000) with a single command. See the Makefile for details.
-
-### Step-by-Step Setup
-
-**Environment Files:** Copy `.env.example` to `.env` in both `backend/` and `frontend/`. The defaults work for local development—no changes needed unless you're using different database credentials or ports.
-
-### 1. Backend
+### 2. Configure environment
 
 ```bash
-cd backend
-cp .env.example .env      # config file (defaults work for local dev)
-pnpm install
-pnpm run migrate          # creates all database tables
-node src/index.js         # starts on http://localhost:5001
+cp backend/.env.example backend/.env
 ```
 
-### 2. Frontend
+Open `backend/.env` and set **`DB_USER`** to your system username:
 
 ```bash
-cd frontend
-cp .env.example .env      # config file (REACT_APP_API_URL should point to backend)
-pnpm install
-pnpm start                # opens http://localhost:3000
+whoami   # copy this value into DB_USER
 ```
 
-### 3. Populate Data (Python pipeline)
+> **macOS Homebrew:** PostgreSQL creates a role matching your system username, not `postgres`.
+
+### 3. Start services and run migrations
 
 ```bash
-# From repo root — create and activate the Python virtual environment
+make services              # start PostgreSQL + Redis
+cd backend && pnpm run migrate && cd ..
+```
+
+### 4. Set up Python and fetch data
+
+> **Required first-time step** — takes ~15–20 min on first run (skips already-collected games on re-runs).
+
+```bash
 python3.13 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 
-# Step 1 – fetch all season games (~15-20 min, skips already-collected games on re-run)
-cd backend && python scripts/fetch_nba_stats.py
-
-# Step 2 – derive team season averages from collected games
-python scripts/derive_team_stats.py
-
-# Step 3 – compute rankings (15 categories × 30 teams = 450 rows)
-python scripts/derive_rankings.py
-
-# Step 4 – seed team logos from NBA CDN
-cd ../../backend && pnpm run migrate:logos && pnpm run seed:logos
-
-# Step 5 – flush Redis so backend picks up the new data
-redis-cli FLUSHDB
+make pipeline   # fetch → derive team stats → compute rankings → flush cache
 ```
 
-## Contributing
-
-Contributions are welcome! Follow these steps to contribute:
-
-### 1. Create a Feature Branch
-
-Use the naming convention: `feature/{feature-name}-#{issue-number}`
+### 5. Start the app
 
 ```bash
-git checkout -b feature/your-feature-#123
+make   # starts backend (port 5001) + frontend (port 3000)
 ```
 
-### 2. Make Changes & Test Locally
+---
 
-- **Backend changes**: Run migrations (`pnpm run migrate`), then test API endpoints with curl
-- **Frontend changes**: Run `pnpm start` in `frontend/`, test your component in the browser
-- **Both**: Always test your changes live in the browser before committing
+## Environment Variables
 
-### 3. Commit & Push
+### Local development — `backend/.env`
 
-Use atomic commits (one feature = one commit when possible):
-
-```bash
-git add .
-git commit -m "Descriptive message explaining the change"
-git push -u origin feature/your-feature-#123
-```
-
-### 4. Open a Pull Request
-
-On GitHub, add a brief description and use the closing keyword in your PR body to auto-close the issue:
-
-```
-Closes #123
-```
-
-When your PR is merged, GitHub automatically closes the linked issue. See the [PR linking checklist](./README.md#pr-linking-checklist) section of your internal docs for details.
-
-### Code Organization
-
-- **Backend routes**: `backend/src/routes/` — organized by feature (rankings, teams, audit)
-- **Frontend components**: `frontend/src/components/` — reusable UI pieces
-- **Frontend pages**: `frontend/src/pages/` — full page views
-- **Backend services**: `backend/src/services/` — business logic and database queries
-
-Keep files focused on one responsibility and name them descriptively.
-
-## Configuration
-
-### `backend/.env`
+Copy from `backend/.env.example`. Key vars:
 
 ```env
 PORT=5001
@@ -145,7 +114,7 @@ NODE_ENV=development
 
 DB_HOST=localhost
 DB_PORT=5432
-DB_USER=postgres
+DB_USER=your_db_username   # macOS: run `whoami`; Linux/Docker: postgres
 DB_PASSWORD=
 DB_NAME=nba_stats
 
@@ -154,241 +123,154 @@ REDIS_PORT=6379
 REDIS_PASSWORD=
 
 CURRENT_SEASON=2025
+FRONTEND_URL=http://localhost:3000
 ```
 
-### `frontend/.env`
+### Production — `backend/.env.production`
+
+This file is **gitignored** and never committed. It contains a single Railway-provided connection string:
 
 ```env
-REACT_APP_API_URL=http://localhost:5001/api
-REACT_APP_CURRENT_SEASON=2025
+DATABASE_URL=postgresql://...   # from Railway dashboard
 ```
 
-### Python pipeline (reads from shell env, or set explicitly)
+---
 
-```bash
-export DB_HOST=localhost DB_PORT=5432 DB_USER=postgres \
-       DB_PASSWORD="" DB_NAME=nba_stats CURRENT_SEASON=2025
-```
+## Makefile Reference
+
+### Dev
+
+| Target          | Description                              |
+| --------------- | ---------------------------------------- |
+| `make`          | Start backend + frontend dev servers     |
+| `make backend`  | Start backend only (nodemon)             |
+| `make frontend` | Start frontend only (Vite)               |
+| `make services` | Start PostgreSQL 16 + Redis via Homebrew |
+| `make stop`     | Stop PostgreSQL + Redis                  |
+
+### Data Pipeline
+
+| Target          | Description                                      |
+| --------------- | ------------------------------------------------ |
+| `make fetch`    | Fetch new games from nba_api → local DB          |
+| `make derive`   | Derive team stats + rankings → flush local Redis |
+| `make pipeline` | Full local pipeline: fetch → derive → rankings   |
+
+### Production
+
+| Target               | Description                                   |
+| -------------------- | --------------------------------------------- |
+| `make fetch-prod`    | Fetch games → Railway DB                      |
+| `make derive-prod`   | Derive stats + rankings → flush Railway Redis |
+| `make pipeline-prod` | Full production pipeline + auto-backup        |
+
+### Backup & Archive
+
+| Target                | Description                                                                |
+| --------------------- | -------------------------------------------------------------------------- |
+| `make backup`         | Dump production DB to `backups/` (warns if local pg_dump version mismatch) |
+| `make backup-clean`   | Delete local backup files older than 7 days                                |
+| `make archive-season` | Export season CSVs + SHA-256 checksums to `season_archive/`                |
+
+### Load Testing
+
+| Target           | Description                             |
+| ---------------- | --------------------------------------- |
+| `make k6-smoke`  | k6 smoke test (default: localhost:5001) |
+| `make k6-load`   | k6 load test (20 VUs)                   |
+| `make k6-stress` | k6 stress test (50 VUs)                 |
+
+Override the target URL: `BASE_URL=https://your-server.com make k6-load`
+
+---
+
+## GitHub Actions
+
+Two workflows run **automatically** on a schedule. The rest are triggered manually.
+
+| Workflow                                   | Trigger                                   | What it does                                                                       | Secrets needed                                |
+| ------------------------------------------ | ----------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------- |
+| **CI** (`ci.yml`)                          | Push / PR to `main`                       | Dependency audit, lint, unit tests (backend + frontend), E2E (Playwright)          | —                                             |
+| **NBA Data Pipeline** (`nba-pipeline.yml`) | **Daily 10:00 UTC** (auto) + manual       | Derives team stats + rankings on production, flushes Redis                         | `DATABASE_URL`, `REDIS_URL`, `CURRENT_SEASON` |
+| **DB Backup** (`backup-release.yml`)       | **Every Sunday 2:00 UTC** (auto) + manual | `pg_dump` production DB → GitHub Release                                           | `DATABASE_URL`                                |
+| **Load Tests** (`load-test.yml`)           | Manual                                    | k6 smoke / load / stress against a target URL                                      | —                                             |
+| **Season Archive** (`season-archive.yml`)  | Manual                                    | Exports season CSVs + full DB dump → GitHub Release tagged `season-archive-{YEAR}` | `DATABASE_URL`, `CURRENT_SEASON`              |
+
+---
+
+## API Reference
+
+### Rankings
+
+| Method | Endpoint                                 | Description                                 |
+| ------ | ---------------------------------------- | ------------------------------------------- |
+| `GET`  | `/api/categories`                        | All available stat categories               |
+| `GET`  | `/api/rankings?category=PPG&season=2025` | Rankings for a stat category (Redis-cached) |
+
+### Teams
+
+| Method | Endpoint                                 | Description                                |
+| ------ | ---------------------------------------- | ------------------------------------------ |
+| `GET`  | `/api/teams`                             | All 30 teams (optional `?team_id=` filter) |
+| `GET`  | `/api/teams/abbr/:abbreviation`          | Team by abbreviation (e.g., `LAL`)         |
+| `GET`  | `/api/team/:teamId/stats?season=2025`    | Season stats for a team                    |
+| `GET`  | `/api/team/:teamId/rankings?season=2025` | All-category rankings for a team           |
+
+### Audit
+
+| Method | Endpoint                                                                                    | Description                            |
+| ------ | ------------------------------------------------------------------------------------------- | -------------------------------------- |
+| `GET`  | `/api/audit/games?season=2025&status=collected\|missing&date=YYYY-MM-DD&limit=100&offset=0` | Game collection status with pagination |
+| `GET`  | `/api/audit/game/:gameId/stats`                                                             | Per-team box score for a specific game |
+
+---
 
 ## Database Schema
 
 | Table           | Purpose                                                        |
 | --------------- | -------------------------------------------------------------- |
-| `teams`         | Team metadata (id, name, logo_url from NBA CDN)                |
+| `teams`         | Team metadata (id, name, logo URL, colors)                     |
 | `games`         | Game log — game_id, date, home/away team IDs, `collected` flag |
 | `game_stats`    | Per-team per-game box score rows                               |
 | `team_stats`    | Season averages derived by `derive_team_stats.py`              |
 | `stat_rankings` | Pre-computed rankings — 15 categories × 30 teams = 450 rows    |
-| `refresh_logs`  | Pipeline run audit trail                                       |
 
-### Useful queries
+---
 
-```sql
--- Collection status for current season
-SELECT COUNT(*) AS total,
-       SUM(CASE WHEN collected THEN 1 ELSE 0 END) AS collected,
-       ROUND(100.0 * SUM(CASE WHEN collected THEN 1 ELSE 0 END) / COUNT(*), 2) AS pct
-FROM games WHERE season = '2025';
+## Contributing
 
--- Top 5 teams by PPG
-SELECT t.team_name, sr.rank, sr.value
-FROM stat_rankings sr JOIN teams t ON sr.team_id = t.team_id
-WHERE sr.stat_category = 'PPG' ORDER BY sr.rank LIMIT 5;
-
--- All rankings for one team
-SELECT stat_category, rank, value FROM stat_rankings
-WHERE team_id = 1610612743 ORDER BY stat_category;
-```
-
-## Stat Categories (15)
-
-| Code       | Label              | Code | Label                   |
-| ---------- | ------------------ | ---- | ----------------------- |
-| PPG        | Points Per Game    | RPG  | Rebounds Per Game       |
-| APG        | Assists Per Game   | SPG  | Steals Per Game         |
-| BPG        | Blocks Per Game    | FG%  | Field Goal %            |
-| 3P%        | 3-Point %          | FT%  | Free Throw %            |
-| TO         | Turnovers Per Game | PF   | Personal Fouls Per Game |
-| OREB       | Offensive Rebounds | DREB | Defensive Rebounds      |
-| PLUS_MINUS | Plus/Minus         | FGM  | FG Made Per Game        |
-| FG3M       | 3PM Per Game       |      |                         |
-
-See `backend/src/services/statProcessor.js` for the full `STAT_CATEGORIES` config.
-
-## API Endpoints
-
-All on `http://localhost:5001`.
-
-| Method | Path                                     | Description                       |
-| ------ | ---------------------------------------- | --------------------------------- |
-| GET    | `/health`                                | Server health check               |
-| GET    | `/api/categories`                        | List all 15 stat categories       |
-| GET    | `/api/rankings?category=PPG&season=2025` | League rankings for a stat        |
-| GET    | `/api/team/:teamId/stats?season=2025`    | All stats for one team            |
-| GET    | `/api/team/:teamId/rankings?season=2025` | How a team ranks across all stats |
-| GET    | `/api/audit/games?season=2025&limit=10`  | Data collection audit             |
+### Branching
 
 ```bash
-curl "http://localhost:5001/api/rankings?category=PPG&season=2025"
-curl "http://localhost:5001/api/team/1610612743/stats?season=2025"
-curl "http://localhost:5001/api/audit/games?season=2025&limit=5"
+git checkout -b feature/your-feature-#ISSUE
 ```
 
-## Project Structure
+Branch naming convention: `feature/{feature-name}-#{issue-number}`
 
-```
-topfivin2/
-├── backend/
-│   ├── scripts/
-│   │   ├── fetch_nba_stats.py       # Game-by-game box score fetcher
-│   │   ├── derive_team_stats.py     # Aggregates game_stats → team_stats
-│   │   └── derive_rankings.py       # Computes stat_rankings from team_stats
-│   ├── migrations/
-│   │   └── 001_init_schema.js
-│   ├── src/
-│   │   ├── index.js
-│   │   ├── routes/
-│   │   │   ├── api.js               # Route aggregator
-│   │   │   ├── rankings.js          # /categories, /rankings
-│   │   │   ├── teams.js             # /team/:id/stats, /team/:id/rankings
-│   │   │   └── audit.js             # /audit/games
-│   │   ├── services/
-│   │   │   ├── rankingsService.js
-│   │   │   ├── teamsService.js
-│   │   │   ├── auditService.js
-│   │   │   └── statProcessor.js     # STAT_CATEGORIES config
-│   │   ├── cache/redisClient.js
-│   │   └── db/postgresClient.js
-│   ├── .env / .env.example
-│   └── package.json
-│
-├── frontend/
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── RankingsPage.jsx
-│   │   │   ├── TeamPage.jsx
-│   │   │   └── AuditPage.jsx
-│   │   ├── components/RankingsGrid.jsx
-│   │   ├── hooks/useApi.js
-│   │   └── App.js
-│   ├── .env / .env.example
-│   └── package.json
-│
-├── backups/                          # (reserved for manual database backups)
-├── .venv/                            # Python virtualenv (gitignored — recreate with requirements.txt)
-├── requirements.txt                  # Python dependencies
-└── README.md
-```
+### Commit & push
 
-## NBA Team IDs
-
-```
-1610612738  Boston Celtics          1610612739  Cleveland Cavaliers
-1610612740  New Orleans Pelicans    1610612741  Chicago Bulls
-1610612742  Dallas Mavericks        1610612743  Denver Nuggets
-1610612744  Golden State Warriors   1610612745  Houston Rockets
-1610612746  LA Clippers             1610612747  LA Lakers
-1610612748  Miami Heat              1610612749  Milwaukee Bucks
-1610612750  Minnesota Timberwolves  1610612751  Brooklyn Nets
-1610612752  New York Knicks         1610612755  Philadelphia 76ers
-1610612756  Phoenix Suns            1610612757  Portland Trail Blazers
-1610612758  Sacramento Kings        1610612759  San Antonio Spurs
-1610612760  Oklahoma City Thunder   1610612761  Toronto Raptors
-1610612762  Utah Jazz               1610612763  Memphis Grizzlies
-1610612764  Washington Wizards      1610612765  Detroit Pistons
-1610612766  Charlotte Hornets       1610612767  Atlanta Hawks
-1610612768  Orlando Magic           1610612769  Indiana Pacers
-```
-
-## Redis Cache
+Atomic commits — one feature, one commit when possible:
 
 ```bash
-redis-cli KEYS "nba:rankings:*"          # list all cached ranking keys
-redis-cli TTL "nba:rankings:PPG:2025"    # seconds until expiry
-redis-cli FLUSHDB                         # clear cache (run after pipeline)
+git add .
+git commit -m "Descriptive message - Issue #ISSUE"
+git push -u origin feature/your-feature-#ISSUE
 ```
 
-## Stack
+### Pull request
 
-**Backend:** Express 5, PostgreSQL (`pg`), Redis (`ioredis`), dotenv  
-**Frontend:** React 19, React Query, Axios, Tailwind CSS, daisyUI  
-**Data pipeline:** Python 3.13, nba_api 1.11.4, psycopg2-binary, pandas
+Include a closing keyword in the PR body to auto-close the linked issue on merge:
 
-## Troubleshooting
-
-### Setup & Environment
-
-**Missing or incorrect `.env` files**
-
-Copy `.env.example` to `.env` in both `backend/` and `frontend/`. The default values work for local development. If you change database credentials, update both files to match.
-
-```bash
-cd backend && cp .env.example .env
-cd ../frontend && cp .env.example .env
+```
+Closes #ISSUE
 ```
 
-**PostgreSQL or Redis not running**
+### Code layout
 
-```bash
-brew services start postgresql@16
-brew services start redis
-redis-cli ping   # should return PONG
-```
-
-**Port conflicts** (backend on 5001, frontend on 3000)
-
-If either port is already in use, update the `.env` files or stop the conflicting service:
-
-```bash
-lsof -i :5001    # find process using port 5001
-kill -9 <PID>    # terminate it
-```
-
-### Development & Testing
-
-**Backend: Test API endpoints before committing**
-
-After starting the backend, verify it's working:
-
-```bash
-curl http://localhost:5001/health          # should return 200 OK
-curl http://localhost:5001/api/teams       # should return list of teams
-curl http://localhost:5001/api/rankings?category=PPG&season=2025  # should return rankings
-```
-
-**Frontend: Test components in the browser**
-
-Start the frontend and manually test your component in the browser. Check:
-
-- Does it render without errors?
-- Does it respond to user interactions (clicks, input)?
-- Do API calls work (check Network tab in DevTools)?
-
-Always test locally before committing.
-
-**Dashboard shows no data**
-
-1. Confirm backend running: `curl http://localhost:5001/health`
-2. Confirm rankings populated: `psql -U postgres -d nba_stats -c "SELECT COUNT(*) FROM stat_rankings;"`
-3. Check `.env` files point to correct ports (5001 for backend, 3000 for frontend)
-4. Check React console (DevTools) for error messages
-
-### Python Scripts
-
-**Python script errors**
-
-```bash
-source .venv/bin/activate
-python -c "import nba_api; print('OK')"
-# If missing: pip install nba_api psycopg2-binary
-```
-
-**Stale data after running pipeline**
-
-```bash
-redis-cli FLUSHDB   # force cache miss on next request
-```
-
-## License
-
-MIT
+| Path                       | Contents                                        |
+| -------------------------- | ----------------------------------------------- |
+| `backend/src/routes/`      | Express route handlers (rankings, teams, audit) |
+| `backend/src/services/`    | Business logic and DB queries                   |
+| `backend/scripts/`         | Python data pipeline scripts                    |
+| `frontend/src/pages/`      | Full page views                                 |
+| `frontend/src/components/` | Reusable UI components                          |
