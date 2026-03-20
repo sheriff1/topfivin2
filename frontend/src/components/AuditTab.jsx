@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useCallback } from "react";
-import GameStatsRow from "./GameStatsRow";
 import { apiClient } from "../hooks/useApi";
+import GameStatsRow from "./GameStatsRow";
 
 export function AuditTab({ season }) {
   // Only 2025-26 season data available

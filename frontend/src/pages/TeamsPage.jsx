@@ -1,5 +1,5 @@
-import { useAllTeams } from "../hooks/useApi";
 import { TeamCard } from "../components/TeamCard";
+import { useAllTeams } from "../hooks/useApi";
 
 export function TeamsPage() {
   const { data: teams, isLoading, error } = useAllTeams();

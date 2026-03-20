@@ -1,7 +1,7 @@
 import { useState, useRef } from "react";
-import { useCategories, useRankings } from "../hooks/useApi";
 import { RankingsGrid } from "../components/RankingsGrid";
 import { Top5Showcase } from "../components/Top5Showcase";
+import { useCategories, useRankings } from "../hooks/useApi";
 
 export function RankingsPage() {
   const [selectedCategory, setSelectedCategory] = useState("PPG");
