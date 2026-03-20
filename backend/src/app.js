@@ -1,6 +1,7 @@
 const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
+const logger = require("./utils/logger");
 
 const apiRoutes = require("./routes/api");
 const { apiLimiter } = require("./middleware/rateLimiter");
@@ -32,10 +33,21 @@ app.use((err, req, res, next) => {
     return res.status(400).json({
       success: false,
       message: "Invalid URL parameter encoding",
-      error: err.message,
     });
   }
   next(err);
+});
+
+// Catch-all error handler — must be last; keeps 4-arg signature for Express error handling
+
+app.use((err, req, res, _next) => {
+  logger.error("Unhandled error", {
+    message: err.message,
+    stack: err.stack,
+    method: req.method,
+    path: req.path,
+  });
+  res.status(500).json({ success: false, message: "An unexpected error occurred" });
 });
 
 module.exports = app;

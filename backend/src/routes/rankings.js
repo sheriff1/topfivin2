@@ -4,6 +4,7 @@ const cache = require("../cache/redisClient");
 const { getCategories, getRankings, STAT_CATEGORIES } = require("../services/rankingsService");
 const { validateCategories, validateRankings } = require("../middleware/validationSchemas");
 const { validationMiddleware } = require("../middleware/validation");
+const logger = require("../utils/logger");
 
 const router = express.Router();
 
@@ -16,11 +17,10 @@ router.get("/categories", validateCategories, validationMiddleware, (req, res) =
     const categories = getCategories();
     res.json({ success: true, categories });
   } catch (error) {
-    console.error("[API] /categories - Error:", error);
+    logger.error("[API] /categories - Error:", { message: error.message, stack: error.stack });
     res.status(500).json({
       success: false,
       message: "Failed to fetch categories",
-      error: error.message,
     });
   }
 });
@@ -69,11 +69,10 @@ router.get("/rankings", validateRankings, validationMiddleware, async (req, res)
         : { fetched_at: new Date().toISOString() }),
     });
   } catch (error) {
-    console.error("[API] /rankings - Error:", error);
+    logger.error("[API] /rankings - Error:", { message: error.message, stack: error.stack });
     res.status(500).json({
       success: false,
       message: "Failed to fetch rankings",
-      error: error.message,
     });
   }
 });

@@ -22,7 +22,7 @@ const poolConfig = process.env.DATABASE_URL
 const pool = new Pool(poolConfig);
 
 pool.on("error", (err) => {
-  console.error("Unexpected error on idle client", err);
+  logger.error("Unexpected error on idle client", { message: err.message, stack: err.stack });
 });
 
 /**
@@ -39,7 +39,7 @@ async function query(text, values) {
     logger.debug(`Query executed in ${duration}ms`, { duration });
     return result;
   } catch (error) {
-    console.error("Database query error:", error);
+    logger.error("Database query error:", { message: error.message, stack: error.stack });
     throw error;
   }
 }
