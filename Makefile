@@ -1,4 +1,4 @@
-.PHONY: backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod backup backup-clean archive-season k6-smoke k6-load k6-stress
+.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod backup backup-clean archive-season k6-smoke k6-load k6-stress
 
 # ── Infrastructure ───────────────────────────────────────────────────────────
 services:
@@ -6,6 +6,11 @@ services:
 	brew services start redis
 
 # ── Application ──────────────────────────────────────────────────────────────
+dev:
+	$(MAKE) services
+	cd backend && npm run dev &
+	cd frontend && pnpm dev
+
 backend:
 	cd backend && npm run dev
 
