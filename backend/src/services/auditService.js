@@ -133,12 +133,20 @@ async function getGameStats(gameId, db) {
     throw new Error(`No stats found for game ${gameId}`);
   }
 
+  // node-postgres returns NUMERIC columns as strings; normalize to numbers
+  const normalizeRow = (row) => ({
+    ...row,
+    fg_pct: parseFloat(row.fg_pct),
+    ft_pct: parseFloat(row.ft_pct),
+    three_p_pct: parseFloat(row.three_p_pct),
+  });
+
   // Organize by home (lower team_id) and away (higher team_id)
   const stats = {
     game_id: rows[0].game_id,
     game_date: rows[0].game_date,
-    home: rows[0],
-    away: rows[1] || null,
+    home: normalizeRow(rows[0]),
+    away: rows[1] ? normalizeRow(rows[1]) : null,
   };
 
   return stats;
