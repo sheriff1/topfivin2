@@ -1,15 +1,10 @@
 # Backend Scripts Guide
 
-This directory contains Python and Node.js scripts that power the NBA Stats data pipeline and team data initialization.
+Python scripts that power the NBA Stats data pipeline.
 
 ---
 
 ## Overview
-
-The backend scripts are organized into two categories:
-
-1. **Data Pipeline Scripts** — Recurring tasks that fetch, process, and rank NBA stats
-2. **Data Initialization Scripts** — One-time or as-needed setup tasks for team data
 
 ### Script Ecosystem & Dependencies
 
@@ -20,12 +15,17 @@ The backend scripts are organized into two categories:
            │
            ▼
 ┌─────────────────────────┐
-│ derive_team_stats.py    │  Aggregate player stats into season averages
+│ derive_team_stats.py    │  Aggregate game stats into season averages
 └──────────┬──────────────┘
            │
            ▼
 ┌──────────────────────────┐
 │ derive_rankings.py       │  Calculate stat rankings from team averages
+└──────────────────────────┘
+           │
+           ▼ (end-of-season only)
+┌──────────────────────────┐
+│ archive_season.py        │  Export immutable season snapshot (CSVs + checksums)
 └──────────────────────────┘
 ```
 
@@ -42,107 +42,61 @@ All team data and constants are sourced from official NBA resources:
 
 - **stats.nba.com** — `https://stats.nba.com`
   - Game schedules and box scores via nba_api
-  - Stat categories and rankings
-
----
-
-## Team Data Sourcing
-
-### Team Constants: `team_constants.py`
-
-All team data is centralized in [team_constants.py](./team_constants.py):
-
-- **`NBA_TEAMS`** (dict) — Maps team_id → team_name
-  - Source: nba_api.stats.static.teams
-  - 30 entries (all NBA teams)
-  - Synchronized with `teams` table in database
-
-- **`TEAM_ABBR_TO_ID`** (dict) — Maps abbreviation → team_id
-  - Source: nba_api.stats.static.teams
-  - Used for parsing MATCHUP strings from LeagueGameLog API
-  - Examples: 'LAL' → 1610612747, 'BOS' → 1610612738
-
-- **`NBA_CDN_BASE`** (str) — Base URL for official logos
-  - Value: `https://cdn.nba.com/logos/nba`
-
-**Important**: Keep `team_constants.py` synchronized with the database `teams` table. If new teams are added to the NBA in the future, update team_constants.py accordingly.
 
 ---
 
 ## Script Reference
 
-### Data Pipeline (Recurring)
-
-#### `fetch_nba_stats.py`
+### `fetch_nba_stats.py`
 
 **Purpose**: Download game-by-game box scores for a season from nba_api and populate the database.
 
-**Dependencies**:
-
-- `nba_api` (for stats.nba.com data)
-- `psycopg2` (PostgreSQL connection)
-- `team_constants.py` (imports `TEAM_ABBR_TO_ID`)
-
-**Usage**:
-
-```bash
-python fetch_nba_stats.py [--season YYYY] [--verbose]
-```
+**Dependencies**: `nba_api`, `psycopg2`, `team_constants.py`
 
 **Environment Variables**:
 
 ```bash
 DB_HOST=localhost
 DB_PORT=5432
-DB_USER=postgres
+DB_USER=your_db_username   # macOS Homebrew: run `whoami`; Linux/Docker: postgres
 DB_PASSWORD=
 DB_NAME=nba_stats
-CURRENT_SEASON=2025  # Used if --season not specified
+CURRENT_SEASON=2025
 ```
 
 **Output**:
 
-- Populates `games` table with game schedule and scores
-- Populates `game_stats` table with player-level box scores
-- Creates audit log entries for tracking
+- Populates `games` table with game schedule
+- Populates `game_stats` table with per-game team box scores
+- Skips already-collected games on re-run (resumable)
 
 **Notes**:
 
-- Fetches seasonal game list from nba_api (schedule)
-- Downloads box scores for each game (traditional, advanced, 4-factor stats)
-- Handles retries and rate-limiting via urllib3
-- Clears old data for season if re-running (can be disabled)
+- nba.com actively blocks GitHub Actions IPs — run locally (`make fetch`) rather than in CI
+- First run for a full season takes ~15-20 minutes due to rate limiting
 
 ---
 
-#### `derive_team_stats.py`
+### `derive_team_stats.py`
 
-**Purpose**: Aggregate player-level game_stats into team season averages and standard deviations.
+**Purpose**: Aggregate `game_stats` into season averages per team.
 
-**Dependencies**:
-
-- `psycopg2` (PostgreSQL connection)
-
-**Usage**:
-
-```bash
-python derive_team_stats.py [--season YYYY] [--verbose]
-```
+**Dependencies**: `psycopg2`
 
 **Environment Variables**:
 
 ```bash
 DB_HOST=localhost
 DB_PORT=5432
-DB_USER=postgres
+DB_USER=your_db_username
 DB_PASSWORD=
 DB_NAME=nba_stats
+CURRENT_SEASON=2025
 ```
 
 **Output**:
 
-- Populates `team_stats` table with 30 teams × 15 stats per season
-- Computes mean, stdev, min, max for each stat
+- Populates `team_stats` table with season averages for all 30 teams
 
 **Notes**:
 
@@ -151,62 +105,86 @@ DB_NAME=nba_stats
 
 ---
 
-#### `derive_rankings.py`
+### `derive_rankings.py`
 
-**Purpose**: Calculate percentile rankings for all stats across teams for a season.
+**Purpose**: Calculate stat rankings across all teams for a season and flush the Redis cache.
 
-**Dependencies**:
-
-- `psycopg2` (PostgreSQL connection)
-
-**Usage**:
-
-```bash
-python derive_rankings.py [--season YYYY] [--verbose]
-```
+**Dependencies**: `psycopg2`
 
 **Environment Variables**:
 
 ```bash
 DB_HOST=localhost
 DB_PORT=5432
-DB_USER=postgres
+DB_USER=your_db_username
 DB_PASSWORD=
 DB_NAME=nba_stats
+CURRENT_SEASON=2025
+# Production: REDIS_URL (flushes remote cache)
+# Local:      REDIS_HOST / REDIS_PORT
 ```
 
 **Output**:
 
-- Populates `stat_rankings` table with percentile ranks (0-100) for each team/stat/season
+- Populates `stat_rankings` table — 15 categories × 30 teams = 450 rows per season
+- Flushes Redis so the API immediately serves fresh data
 
 **Notes**:
 
 - Depends on `team_stats` being populated by `derive_team_stats.py`
-- Percentile: team_rank = (teams_below + 0.5) / 30 × 100
-- Example: 1st place = ~98th percentile, 15th place = 50th percentile, 30th place = ~2nd percentile
 
 ---
 
-## Execution Order & Setup
+### `archive_season.py`
 
-### Initial Setup (One-Time)
+**Purpose**: Export an immutable annual snapshot of a season as CSVs + SHA-256 checksum manifest. Intended as a one-time end-of-season operation.
+
+**Dependencies**: `psycopg2`
+
+**Environment Variables**:
 
 ```bash
-# Database must be initialized (run migrations first)
-node backend/migrations/001_init_schema.js
+DATABASE_URL=postgresql://...   # or DB_* vars (same as other scripts)
+ARCHIVE_SEASON=2025             # season to snapshot; falls back to CURRENT_SEASON
+ARCHIVE_DIR=season_archive      # output directory (default: ./season_archive)
 ```
 
-### Recurring Data Updates (e.g., nightly)
+**Output** (written to `ARCHIVE_DIR`):
+
+- `games_{SEASON}.csv`
+- `game_stats_{SEASON}.csv`
+- `team_stats_{SEASON}.csv`
+- `stat_rankings_{SEASON}.csv`
+- `checksums_{SEASON}.txt` — SHA-256 digest for each CSV
+
+**Notes**:
+
+- Typically triggered via `make archive-season` or the [Season Archive GitHub Actions workflow](../../.github/workflows/season-archive.yml)
+- Full DB dump is also produced by the workflow (requires `postgresql-client-18`)
+
+---
+
+## Execution Order
+
+### Recommended: use Makefile targets
 
 ```bash
-# 1. Fetch all games and box scores for season
-python backend/scripts/fetch_nba_stats.py --season 2025
+make pipeline        # local: fetch → derive → rankings
+make pipeline-prod   # production: same + auto-backup
+make archive-season  # end-of-season: CSVs + checksums (reads backend/.env.production)
+```
 
-# 2. Aggregate into team season stats
-python backend/scripts/derive_team_stats.py --season 2025
+### Manual execution
 
-# 3. Calculate stat rankings
-python backend/scripts/derive_rankings.py --season 2025
+```bash
+# From repo root, with venv activated:
+source .venv/bin/activate
+set -a && source backend/.env && set +a
+
+cd backend
+python scripts/fetch_nba_stats.py
+python scripts/derive_team_stats.py
+python scripts/derive_rankings.py
 ```
 
 ---
@@ -215,29 +193,23 @@ python backend/scripts/derive_rankings.py --season 2025
 
 ### Requirements
 
-All scripts assume:
-
-- PostgreSQL 12+ running locally or accessible via `DB_HOST`
-- Python 3.8+ with dependencies (see requirements.txt)
-- Node.js 14+ for .js scripts
+- PostgreSQL 16+ running locally or accessible via network
+- Python 3.13 with dependencies installed (`pip install -r requirements.txt`)
+- Redis running locally (for cache flushing)
 
 ### Python Dependencies
 
 ```bash
-pip install psycopg2-binary requests nba-api
+python3.13 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
 ```
 
-### Environment File (.env)
-
-Create `.env` or export environment variables:
+### Environment File
 
 ```bash
-export DB_HOST=localhost
-export DB_PORT=5432
-export DB_USER=postgres
-export DB_PASSWORD=your_password
-export DB_NAME=nba_stats
-export CURRENT_SEASON=2025
+cp backend/.env.example backend/.env
+# Edit DB_USER to match your system username (run: whoami on macOS)
 ```
 
 ---
@@ -249,17 +221,10 @@ export CURRENT_SEASON=2025
 1. Update `team_constants.py`:
    - Add `TEAM_ID: 'Team Name'` to `NBA_TEAMS`
    - Add `'ABBR': TEAM_ID` to `TEAM_ABBR_TO_ID`
-2. Insert row into `teams` table via migration or manually
-
-### Debugging
-
-- Add `--verbose` flag to most scripts for detailed logging
-- Check database: `psql -U postgres -d nba_stats -c "SELECT * FROM teams LIMIT 1;"`
-- View audit logs: `SELECT * FROM audit_log ORDER BY created_at DESC LIMIT 10;`
+2. Insert row into `teams` table via a new migration
 
 ---
 
 ## Related Documentation
 
-- [PYTHON_SCRIPT_REFERENCE.md](../PYTHON_SCRIPT_REFERENCE.md) — API reference for fetch_nba_stats.py
-- [README.md](../README.md) — Overall project architecture
+- [README.md](../../README.md) — Overall project architecture and local setup
