@@ -12,69 +12,12 @@ try {
   process.exit(1);
 }
 
-const express = require("express");
-const cors = require("cors");
-const helmet = require("helmet");
-
+const app = require("./app");
 const db = require("./db/postgresClient");
 const cache = require("./cache/redisClient");
 const { runMigrations } = require("../migrations/001_init_schema");
-const apiRoutes = require("./routes/api");
-const { apiLimiter } = require("./middleware/rateLimiter");
 
-const app = express();
 const PORT = process.env.PORT || 5000;
-
-// Middleware
-const allowedOrigins = [
-  "http://localhost:3000",
-  "http://localhost:3001",
-  process.env.FRONTEND_URL,
-].filter(Boolean);
-
-// Security headers with Helmet
-// Protects against XSS, clickjacking, MIME sniffing, and other attacks
-app.use(helmet());
-
-// CORS configuration
-app.use(
-  cors({
-    origin: allowedOrigins,
-  })
-);
-app.use(express.json());
-
-/**
- * Health check endpoint
- */
-app.get("/health", (req, res) => {
-  // Simple health check without database queries to avoid hangs
-  res.json({
-    status: "healthy",
-    timestamp: new Date().toISOString(),
-    api: "ok",
-  });
-});
-
-// API Routes with rate limiting
-// Apply general rate limiter to all API endpoints
-app.use("/api", apiLimiter, apiRoutes);
-
-/**
- * Error handler for URL decoding errors
- * This handles cases where special characters (like %) appear in URL params
- */
-app.use((err, req, res, next) => {
-  if (err instanceof URIError && err.message.includes("Failed to decode")) {
-    // For decoding errors, try to handle gracefully
-    return res.status(400).json({
-      success: false,
-      message: "Invalid URL parameter encoding",
-      error: err.message,
-    });
-  }
-  next(err);
-});
 
 /**
  * Initialize application
