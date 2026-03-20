@@ -30,7 +30,7 @@ jobs:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
           FILENAME="nba_stats_$(date +%Y%m%d).dump"
-          pg_dump "$DATABASE_URL" -F c -f "$FILENAME"
+          /usr/lib/postgresql/18/bin/pg_dump "$DATABASE_URL" -F c -f "$FILENAME"
           echo "DUMP_FILE=$FILENAME" >> $GITHUB_ENV
 
       - name: Create GitHub Release and upload dump
