@@ -1,43 +1,47 @@
 const rateLimit = require("express-rate-limit");
 
+const isDev = process.env.NODE_ENV === "development";
+
 /**
  * Standard rate limiter for general API endpoints
- * 30 requests per 15 minutes per IP address
+ * 200 requests per 15 minutes per IP address
+ * Disabled in development to avoid 429s during local browsing
  */
 const apiLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 30, // limit each IP to 30 requests per windowMs
+  max: 200,
   message: "Too many requests from this IP address, please try again after 15 minutes",
   standardHeaders: true, // Return rate limit info in the RateLimit-* headers
   legacyHeaders: false, // Disable the X-RateLimit-* headers
-  skip: (req) => {
-    // Skip rate limiting for health check endpoint
-    return req.path === "/health";
-  },
+  skip: (req) => isDev || req.path === "/health",
 });
 
 /**
- * Strict rate limiter for rankings endpoints
- * 15 requests per 15 minutes per IP address (more expensive database queries)
+ * Rate limiter for rankings endpoints
+ * 150 requests per 15 minutes per IP address
+ * Disabled in development
  */
 const rankingsLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 15, // limit each IP to 15 requests per windowMs
+  max: 150,
   message: "Too many ranking requests from this IP, please try again after 15 minutes",
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => isDev,
 });
 
 /**
- * Very strict rate limiter for team stats endpoints
- * 20 requests per 15 minutes per IP address
+ * Rate limiter for team stats endpoints
+ * 150 requests per 15 minutes per IP address
+ * Disabled in development
  */
 const teamStatsLimiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 20, // limit each IP to 20 requests per windowMs
+  max: 150,
   message: "Too many team stats requests from this IP, please try again after 15 minutes",
   standardHeaders: true,
   legacyHeaders: false,
+  skip: () => isDev,
 });
 
 module.exports = {

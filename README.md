@@ -97,7 +97,7 @@ make pipeline   # fetch → derive team stats → compute rankings → flush cac
 ### 5. Start the app
 
 ```bash
-make   # starts backend (port 5001) + frontend (port 3000)
+make dev   # starts services + backend (port 5001) + frontend (port 3000)
 ```
 
 ---
@@ -142,7 +142,7 @@ DATABASE_URL=postgresql://...   # from Railway dashboard
 
 | Target          | Description                              |
 | --------------- | ---------------------------------------- |
-| `make`          | Start backend + frontend dev servers     |
+| `make dev`      | Start services + backend + frontend      |
 | `make backend`  | Start backend only (nodemon)             |
 | `make frontend` | Start frontend only (Vite)               |
 | `make services` | Start PostgreSQL 16 + Redis via Homebrew |
