@@ -24,7 +24,11 @@ router.get("/audit/games", validateAuditGames, validationMiddleware, async (req,
 
     res.json({ success: true, ...result });
   } catch (error) {
-    logger.error("[API] /audit/games - Error:", { message: error.message, stack: error.stack });
+    logger.error("[API] /audit/games - Error:", {
+      message: error.message,
+      stack: error.stack,
+      requestId: req.id,
+    });
     res.status(500).json({
       success: false,
       message: "Failed to fetch audit data",
@@ -59,6 +63,7 @@ router.get(
         message: error.message,
         stack: error.stack,
         gameId: req.params.gameId,
+        requestId: req.id,
       });
       res.status(500).json({
         success: false,

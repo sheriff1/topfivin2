@@ -35,7 +35,11 @@ router.get("/teams", validateTeams, validationMiddleware, async (req, res) => {
     const result = await db.query(query, params);
     res.json({ success: true, data: result.rows });
   } catch (error) {
-    logger.error("[API] /teams - Error:", { message: error.message, stack: error.stack });
+    logger.error("[API] /teams - Error:", {
+      message: error.message,
+      stack: error.stack,
+      requestId: req.id,
+    });
     res.status(500).json({
       success: false,
       message: "Failed to fetch teams",
@@ -84,6 +88,7 @@ router.get(
       logger.error("[API] /teams/abbr/:abbreviation - Error:", {
         message: error.message,
         stack: error.stack,
+        requestId: req.id,
       });
       res.status(500).json({
         success: false,
@@ -114,6 +119,7 @@ router.get("/team/:teamId/stats", validateTeamStats, validationMiddleware, async
     logger.error("[API] /team/:teamId/stats - Error:", {
       message: error.message,
       stack: error.stack,
+      requestId: req.id,
     });
     res.status(500).json({
       success: false,
@@ -150,6 +156,7 @@ router.get(
       logger.error("[API] /team/:teamId/rankings - Error:", {
         message: error.message,
         stack: error.stack,
+        requestId: req.id,
       });
       res.status(500).json({
         success: false,

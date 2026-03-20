@@ -2,6 +2,8 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const logger = require("./utils/logger");
+const correlationId = require("./middleware/correlationId");
+const requestLogger = require("./middleware/requestLogger");
 
 const apiRoutes = require("./routes/api");
 const { apiLimiter } = require("./middleware/rateLimiter");
@@ -14,6 +16,8 @@ const allowedOrigins = [
   process.env.FRONTEND_URL,
 ].filter(Boolean);
 
+app.use(correlationId);
+app.use(requestLogger);
 app.use(helmet());
 app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
@@ -46,6 +50,7 @@ app.use((err, req, res, _next) => {
     stack: err.stack,
     method: req.method,
     path: req.path,
+    requestId: req.id,
   });
   res.status(500).json({ success: false, message: "An unexpected error occurred" });
 });
