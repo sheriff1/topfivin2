@@ -1,4 +1,4 @@
-.PHONY: backend frontend services stop pipeline k6-smoke k6-load k6-stress
+.PHONY: backend frontend services stop pipeline backup backup-clean k6-smoke k6-load k6-stress
 
 # ── Infrastructure ───────────────────────────────────────────────────────────
 services:
@@ -41,7 +41,19 @@ pipeline:
 	python scripts/derive_team_stats.py && \
 	python scripts/derive_rankings.py && \
 	redis-cli FLUSHDB
-	@echo "✅ Full pipeline complete — rankings updated"
+	@$(MAKE) backup
+	@echo "✅ Full pipeline complete — rankings updated + backup saved"
+
+backup:
+	@mkdir -p backups
+	@echo "📦 Backing up production database..."
+	@set -a && source backend/.env && set +a && \
+	pg_dump $$DATABASE_URL -F c -f backups/nba_stats_$$(date +%Y%m%d_%H%M%S).dump
+	@echo "✅ Backup saved to backups/"
+
+backup-clean:
+	@find backups/ -name "*.dump" -mtime +7 -delete
+	@echo "🧹 Backups older than 7 days removed"
 
 # ── Load Testing (k6) ────────────────────────────────────────────────────────
 # Requires: k6 installed (brew install k6) and a running backend server.
