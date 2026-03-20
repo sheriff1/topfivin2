@@ -1,4 +1,4 @@
-.PHONY: backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod backup backup-clean k6-smoke k6-load k6-stress
+.PHONY: backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod backup backup-clean archive-season k6-smoke k6-load k6-stress
 
 # ── Infrastructure ───────────────────────────────────────────────────────────
 services:
@@ -81,6 +81,13 @@ backup:
 backup-clean:
 	@find backups/ -name "*.dump" -mtime +7 -delete
 	@echo "🧹 Backups older than 7 days removed"
+
+archive-season:
+	@echo "📦 Archiving season..."
+	@source .venv/bin/activate && \
+	set -a && source backend/.env.production && set +a && \
+	ARCHIVE_DIR=season_archive python backend/scripts/archive_season.py
+	@echo "✅ Season archive complete — CSVs + checksums in season_archive/"
 
 # ── Load Testing (k6) ────────────────────────────────────────────────────────
 # Requires: k6 installed (brew install k6) and a running backend server.
