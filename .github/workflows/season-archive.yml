@@ -1,0 +1,92 @@
+name: Season Archive
+
+on:
+  workflow_dispatch:
+
+jobs:
+  archive:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install Python dependencies
+        run: pip install -r requirements.txt
+
+      - name: Install postgresql-client-18
+        run: |
+          sudo apt-get install -y gnupg curl
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+            | sudo gpg --dearmor -o /usr/share/keyrings/postgresql.gpg
+          echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] \
+            https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-18
+
+      - name: Export season CSVs and checksum manifest
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          ARCHIVE_SEASON: ${{ secrets.CURRENT_SEASON }}
+          ARCHIVE_DIR: ../season_archive
+        run: python scripts/archive_season.py
+
+      - name: Run pg_dump (full DB snapshot)
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          CURRENT_SEASON: ${{ secrets.CURRENT_SEASON }}
+        run: |
+          DUMP_FILE="nba_stats_season_${CURRENT_SEASON}.dump"
+          /usr/lib/postgresql/18/bin/pg_dump "$DATABASE_URL" -F c -f "$DUMP_FILE"
+          echo "DUMP_FILE=$DUMP_FILE" >> $GITHUB_ENV
+          echo "CURRENT_SEASON=$CURRENT_SEASON" >> $GITHUB_ENV
+
+      - name: Create GitHub Release with all archive assets
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: season-archive-${{ env.CURRENT_SEASON }}
+          name: "Season Archive — ${{ env.CURRENT_SEASON }}"
+          body: |
+            Immutable annual snapshot of NBA Season ${{ env.CURRENT_SEASON }}.
+
+            ## Contents
+            | File | Description |
+            |------|-------------|
+            | `${{ env.DUMP_FILE }}` | Full PostgreSQL database dump |
+            | `games_${{ env.CURRENT_SEASON }}.csv` | All games for season |
+            | `game_stats_${{ env.CURRENT_SEASON }}.csv` | Per-game team stats |
+            | `team_stats_${{ env.CURRENT_SEASON }}.csv` | Aggregated season team stats |
+            | `stat_rankings_${{ env.CURRENT_SEASON }}.csv` | Season stat rankings (all categories) |
+            | `checksums_${{ env.CURRENT_SEASON }}.txt` | SHA-256 checksums for all CSVs |
+
+            ## Restore database
+            ```bash
+            pg_restore --no-owner --no-privileges -d nba_stats ${{ env.DUMP_FILE }}
+            ```
+
+            ## Verify CSV integrity
+            ```bash
+            sha256sum -c checksums_${{ env.CURRENT_SEASON }}.txt
+            ```
+
+            - **Triggered by:** ${{ github.event_name }}
+            - **Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+          files: |
+            ${{ env.DUMP_FILE }}
+            season_archive/games_${{ env.CURRENT_SEASON }}.csv
+            season_archive/game_stats_${{ env.CURRENT_SEASON }}.csv
+            season_archive/team_stats_${{ env.CURRENT_SEASON }}.csv
+            season_archive/stat_rankings_${{ env.CURRENT_SEASON }}.csv
+            season_archive/checksums_${{ env.CURRENT_SEASON }}.txt
+          make_latest: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
