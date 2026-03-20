@@ -1,4 +1,4 @@
-.PHONY: backend frontend services stop pipeline
+.PHONY: backend frontend services stop pipeline k6-smoke k6-load k6-stress
 
 # ── Infrastructure ───────────────────────────────────────────────────────────
 services:
@@ -42,6 +42,21 @@ pipeline:
 	python scripts/derive_rankings.py && \
 	redis-cli FLUSHDB
 	@echo "✅ Full pipeline complete — rankings updated"
+
+# ── Load Testing (k6) ────────────────────────────────────────────────────────
+# Requires: k6 installed (brew install k6) and a running backend server.
+# Override the target URL with: BASE_URL=https://your-server.com make k6-load
+
+BASE_URL ?= http://localhost:5001
+
+k6-smoke:
+	BASE_URL=$(BASE_URL) k6 run load-tests/smoke.js
+
+k6-load:
+	BASE_URL=$(BASE_URL) k6 run load-tests/load.js
+
+k6-stress:
+	BASE_URL=$(BASE_URL) k6 run load-tests/stress.js
 
 # ── Teardown ──────────────────────────────────────────────────────────────────
 stop:

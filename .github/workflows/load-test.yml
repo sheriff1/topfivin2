@@ -1,0 +1,61 @@
+name: Load Tests
+
+on:
+  workflow_dispatch:
+    inputs:
+      base_url:
+        description: "Base URL of the backend server to test against"
+        required: true
+        default: "http://localhost:5001"
+      test_suite:
+        description: "Which test suite to run"
+        required: true
+        default: "smoke_and_load"
+        type: choice
+        options:
+          - smoke_only
+          - smoke_and_load
+          - all
+
+jobs:
+  k6-load-test:
+    name: K6 Load Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run smoke test
+        uses: grafana/k6-action@v0.3.1
+        env:
+          BASE_URL: ${{ github.event.inputs.base_url }}
+        with:
+          filename: load-tests/smoke.js
+
+      - name: Run load test (baseline — 20 VUs)
+        if: >
+          github.event.inputs.test_suite == 'smoke_and_load' ||
+          github.event.inputs.test_suite == 'all'
+        uses: grafana/k6-action@v0.3.1
+        env:
+          BASE_URL: ${{ github.event.inputs.base_url }}
+        with:
+          filename: load-tests/load.js
+          flags: "--out json=k6-summary.json"
+
+      - name: Run stress test (50 VUs — degradation threshold)
+        if: github.event.inputs.test_suite == 'all'
+        uses: grafana/k6-action@v0.3.1
+        env:
+          BASE_URL: ${{ github.event.inputs.base_url }}
+        with:
+          filename: load-tests/stress.js
+          flags: "--out json=k6-stress-summary.json"
+
+      - name: Upload k6 results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: k6-summary
+          path: "*.json"
+          if-no-files-found: ignore
