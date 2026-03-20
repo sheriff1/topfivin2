@@ -1,7 +1,7 @@
 import { useState } from "react";
-import { useCategories, useApiHealth } from "../hooks/useApi";
-import { RankingsGrid } from "../components/RankingsGrid";
 import { AuditTab } from "../components/AuditTab";
+import { RankingsGrid } from "../components/RankingsGrid";
+import { useCategories, useApiHealth } from "../hooks/useApi";
 
 export function Dashboard() {
   const [selectedCategory, setSelectedCategory] = useState("PPG");

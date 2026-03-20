@@ -133,7 +133,7 @@ module.exports = [
 
   // Test file configuration
   {
-    files: ["src/**/*.test.jsx", "src/**/*.test.js", "src/__tests__/**/*.js"],
+    files: ["**/src/**/*.test.jsx", "**/src/**/*.test.js", "**/src/__tests__/**/*.js"],
     languageOptions: {
       globals: {
         describe: "readonly",
@@ -162,5 +162,20 @@ module.exports = [
       ".env*",
       "vite.config.js",
     ],
+  },
+
+  // Playwright config + E2E test files (Node.js + browser globals)
+  {
+    files: ["**/playwright.config.js", "**/e2e/**/*.js"],
+    languageOptions: {
+      globals: {
+        process: "readonly",
+        URL: "readonly",
+      },
+    },
+    rules: {
+      "no-undef": "off",
+      "no-unused-vars": "off",
+    },
   },
 ];
