@@ -1,0 +1,55 @@
+name: Database Backup to GitHub Releases
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Every Sunday at 2:00 AM UTC
+    - cron: "0 2 * * 0"
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install postgresql-client-18
+        run: |
+          sudo apt-get install -y gnupg curl
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc \
+            | sudo gpg --dearmor -o /usr/share/keyrings/postgresql.gpg
+          echo "deb [signed-by=/usr/share/keyrings/postgresql.gpg] \
+            https://apt.postgresql.org/pub/repos/apt $(lsb_release -cs)-pgdg main" \
+            | sudo tee /etc/apt/sources.list.d/pgdg.list
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-18
+
+      - name: Run pg_dump against Railway
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+        run: |
+          FILENAME="nba_stats_$(date +%Y%m%d).dump"
+          pg_dump "$DATABASE_URL" -F c -f "$FILENAME"
+          echo "DUMP_FILE=$FILENAME" >> $GITHUB_ENV
+
+      - name: Create GitHub Release and upload dump
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: db-backup-${{ github.run_number }}
+          name: "DB Backup — ${{ env.DUMP_FILE }}"
+          body: |
+            Automated weekly production database backup.
+
+            - **File:** `${{ env.DUMP_FILE }}`
+            - **Triggered by:** ${{ github.event_name }}
+            - **Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
+
+            To restore locally:
+            ```bash
+            pg_restore --no-owner --no-privileges -d nba_stats ${{ env.DUMP_FILE }}
+            ```
+          files: ${{ env.DUMP_FILE }}
+          make_latest: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
