@@ -1,4 +1,4 @@
-.PHONY: backend frontend services stop pipeline backup backup-clean k6-smoke k6-load k6-stress
+.PHONY: backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod backup backup-clean k6-smoke k6-load k6-stress
 
 # ── Infrastructure ───────────────────────────────────────────────────────────
 services:
@@ -13,41 +13,67 @@ frontend:
 	cd frontend && pnpm dev
 
 # ── Data pipeline ─────────────────────────────────────────────────────────────
-# Note: fetch now runs locally via cron to bypass NBA IP blocks
-# Use 'make fetch' for manual NBA data fetch only
-# Use 'make derive' for derive+rank steps (runs automatically in CI/CD)
+# Local targets (fetch, derive, pipeline) use backend/.env → localhost postgres
+# Production targets (fetch-prod, derive-prod, pipeline-prod) use backend/.env.production → Railway
+# backup / backup-clean always target production
 
 fetch:
 	source .venv/bin/activate && \
 	set -a && source backend/.env && set +a && \
 	cd backend && \
 	python scripts/fetch_nba_stats.py
-	@echo "✅ Fetch complete"
+	@echo "✅ Fetch complete (local)"
+
+fetch-prod:
+	source .venv/bin/activate && \
+	set -a && source backend/.env.production && set +a && \
+	cd backend && \
+	python scripts/fetch_nba_stats.py
+	@echo "✅ Fetch complete (production)"
 
 derive:
 	source .venv/bin/activate && \
-	source backend/.env && \
+	set -a && source backend/.env && set +a && \
 	cd backend && \
 	python scripts/derive_team_stats.py && \
 	python scripts/derive_rankings.py && \
 	redis-cli FLUSHDB
-	@echo "✅ Derive + Rankings complete"
+	@echo "✅ Derive + Rankings complete (local)"
+
+derive-prod:
+	source .venv/bin/activate && \
+	set -a && source backend/.env.production && set +a && \
+	cd backend && \
+	python scripts/derive_team_stats.py && \
+	python scripts/derive_rankings.py && \
+	redis-cli FLUSHDB
+	@echo "✅ Derive + Rankings complete (production)"
 
 pipeline:
 	source .venv/bin/activate && \
-	source backend/.env && \
+	set -a && source backend/.env && set +a && \
+	cd backend && \
+	python scripts/fetch_nba_stats.py && \
+	python scripts/derive_team_stats.py && \
+	python scripts/derive_rankings.py && \
+	redis-cli FLUSHDB
+	@echo "✅ Full pipeline complete (local) — rankings updated"
+
+pipeline-prod:
+	source .venv/bin/activate && \
+	set -a && source backend/.env.production && set +a && \
 	cd backend && \
 	python scripts/fetch_nba_stats.py && \
 	python scripts/derive_team_stats.py && \
 	python scripts/derive_rankings.py && \
 	redis-cli FLUSHDB
 	@$(MAKE) backup
-	@echo "✅ Full pipeline complete — rankings updated + backup saved"
+	@echo "✅ Full pipeline complete (production) — rankings updated + backup saved"
 
 backup:
 	@mkdir -p backups
 	@echo "📦 Backing up production database..."
-	@set -a && source backend/.env && set +a && \
+	@set -a && source backend/.env.production && set +a && \
 	pg_dump $$DATABASE_URL -F c -f backups/nba_stats_$$(date +%Y%m%d_%H%M%S).dump
 	@echo "✅ Backup saved to backups/"
 
