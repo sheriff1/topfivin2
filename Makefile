@@ -1,4 +1,4 @@
-.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod backup backup-clean archive-season k6-smoke k6-load k6-stress fetch-advanced-extras fetch-summary-extras fetch-misc fetch-hustle backfill backfill-prod install-cron uninstall-cron logs-clean
+.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod backup backup-clean archive-season k6-smoke k6-load k6-stress fetch-advanced-extras fetch-summary-extras fetch-misc fetch-hustle backfill backfill-prod sync-advanced-prod install-cron uninstall-cron logs-clean
 
 # ── Infrastructure ───────────────────────────────────────────────────────────
 services:
@@ -19,8 +19,7 @@ frontend:
 
 # ── Data pipeline ─────────────────────────────────────────────────────────────
 # Local targets (fetch, derive, pipeline) use backend/.env → localhost postgres
-# Production targets (fetch-prod, derive-prod, pipeline-prod) use backend/.env.production → Railway
-# backup / backup-clean always target production
+# Production targets (fetch-prod, derive-prod, pipeline-prod) use backend/.env.production → Railway# pipeline-prod: fetch → backfill (4 V3 scripts, IS NULL guard) → derive → rankings → backup# backup / backup-clean always target production
 
 fetch:
 	source .venv/bin/activate && \
@@ -69,11 +68,15 @@ pipeline-prod:
 	set -a && source backend/.env.production && set +a && \
 	cd backend && \
 	python scripts/fetch_nba_stats.py && \
+	python scripts/fetch_advanced_extras.py && \
+	python scripts/fetch_summary_extras.py && \
+	python scripts/fetch_misc_stats.py && \
+	python scripts/fetch_hustle_stats.py && \
 	python scripts/derive_team_stats.py && \
 	python scripts/derive_rankings.py && \
 	redis-cli FLUSHDB
 	@$(MAKE) backup
-	@echo "✅ Full pipeline complete (production) — rankings updated + backup saved"
+	@echo "✅ Full pipeline complete (production) — ranked updated + backup saved"
 
 # ── V3 backfill targets (local only — NBA API blocked from cloud IPs) ─────────
 # Run these once after migration 004 to populate the 24 new columns.
@@ -143,6 +146,16 @@ backfill-prod:
 	cd backend && \
 	python scripts/fetch_hustle_stats.py 2>&1 | tee $(LOGS_DIR)/backfill_prod_hustle.log
 	@echo "✅ All prod backfill scripts complete — run: make derive-prod"
+
+# ── Sync advanced columns local → prod (use instead of backfill-prod when local DB is already filled) ──
+# Reads the 24 V3 columns directly from local game_stats and batch-UPDATEs Railway.
+# No NBA API calls — immune to rate limiting. Completes in seconds not hours.
+sync-advanced-prod:
+	source .venv/bin/activate && \
+	set -a && source backend/.env && source backend/.env.production && set +a && \
+	cd backend && \
+	python scripts/sync_advanced_to_prod.py
+	@echo "✅ Advanced columns synced local → production"
 
 backup:
 	@mkdir -p backups

@@ -164,11 +164,11 @@ DATABASE_URL=postgresql://...   # from Railway dashboard
 
 ### Production
 
-| Target               | Description                                   |
-| -------------------- | --------------------------------------------- |
-| `make fetch-prod`    | Fetch games → Railway DB                      |
-| `make derive-prod`   | Derive stats + rankings → flush Railway Redis |
-| `make pipeline-prod` | Full production pipeline + auto-backup        |
+| Target               | Description                                                             |
+| -------------------- | ----------------------------------------------------------------------- |
+| `make fetch-prod`    | Fetch games → Railway DB                                                |
+| `make derive-prod`   | Derive stats + rankings → flush Railway Redis                           |
+| `make pipeline-prod` | Full production pipeline: fetch → backfill → derive → rankings → backup |
 
 ### Backup & Archive
 
