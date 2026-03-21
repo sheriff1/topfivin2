@@ -50,6 +50,22 @@ STAT_CATEGORIES = [
     ('DEFLECT',   'deflections',       'DESC'),  # Deflections - higher is better
     ('CONTESTED', 'contested_shots',   'DESC'),  # Contested Shots - higher is better
     ('SCR_AST',   'screen_assists',    'DESC'),  # Screen Assists - higher is better
+    ('CONTESTED_2PT', 'contested_shots_2pt', 'DESC'),  # Contested 2PT shots - higher is better
+    ('CONTESTED_3PT', 'contested_shots_3pt', 'DESC'),  # Contested 3PT shots - higher is better
+    ('CHARGES',   'charges_drawn',     'DESC'),  # Charges Drawn - higher is better
+    ('BOX_OUTS',  'box_outs',          'DESC'),  # Box Outs - higher is better
+
+    # Misc new extras
+    ('OPP_PTS_OFF_TO',  'opp_pts_off_to',       'ASC'),   # Opp Pts Off Turnovers - lower is better
+    ('OPP_2ND_CHC',     'opp_pts_second_chance', 'ASC'),   # Opp 2nd Chance Pts - lower is better
+    ('BLK_AGT',         'blk_against',           'ASC'),   # Blocks Against - lower is better
+    ('FOULS_DRAWN',     'fouls_drawn',            'DESC'),  # Fouls Drawn - higher is better
+
+    # Advanced new extras
+    ('AST_TOV',       'ast_to_tov',        'DESC'),  # Assist-to-Turnover ratio - higher is better
+    ('PACE40',        'pace_per40',        'DESC'),  # Pace per 40 min - higher is better
+    ('BOX_OUT_TREB',  'box_out_team_reb',  'DESC'),  # Box Out Team Rebounds - higher is better
+    ('BOX_OUT_PREB',  'box_out_player_reb','DESC'),  # Box Out Player Rebounds - higher is better
 ]
 
 def clear_cache():

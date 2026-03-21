@@ -6,7 +6,8 @@ Calls BoxScoreSummaryV3 DF7 (team game summary) for every game that has
 biggest_lead IS NULL, and UPDATEs those columns in game_stats.
 
 Columns written:
-  biggest_lead, bench_points, lead_changes, times_tied, biggest_scoring_run
+  biggest_lead, bench_points, lead_changes, times_tied, biggest_scoring_run,
+  tov_team, tov_total, reb_team
 
 Resumable: re-running skips any game_id already filled (biggest_lead IS NOT NULL).
 Run via: make fetch-summary-extras
@@ -19,6 +20,7 @@ backfills those columns into already-existing game_stats rows.
 import os
 import sys
 import time
+from datetime import datetime
 import random
 import psycopg2
 
@@ -99,6 +101,9 @@ def fetch_summary_extras(game_id):
             "lead_changes":        _i(row, "leadChanges"),
             "times_tied":          _i(row, "timesTied"),
             "biggest_scoring_run": _i(row, "biggestScoringRun"),
+            "tov_team":            _i(row, "turnoversTeam"),
+            "tov_total":           _i(row, "turnoversTotal"),
+            "reb_team":            _i(row, "reboundsTeam"),
         }
     return out
 
@@ -107,7 +112,8 @@ def main():
     print("BACKFILL: fetch_summary_extras.py")
     print("Endpoint: BoxScoreSummaryV3 DF7")
     print("Columns:  biggest_lead, bench_points, lead_changes,")
-    print("          times_tied, biggest_scoring_run")
+    print("          times_tied, biggest_scoring_run,")
+    print("          tov_team, tov_total, reb_team")
     print("=" * 60)
 
     conn = db_connect()
@@ -115,14 +121,17 @@ def main():
 
     cur.execute("""
         SELECT DISTINCT game_id FROM game_stats
-        WHERE biggest_lead IS NULL
+        WHERE biggest_lead IS NULL OR tov_team IS NULL
         ORDER BY game_id
     """)
     pending = [row[0] for row in cur.fetchall()]
     total = len(pending)
     print(f"\n📋 Games to backfill: {total}\n")
 
-    updated = failed = 0
+    updated = failed = consecutive_failures = 0
+    bad_data_games = []
+    COOLDOWN_THRESHOLD = 2
+    COOLDOWN_SECS      = 300
 
     for idx, game_id in enumerate(pending, 1):
         print(f"  [{idx:4}/{total}] game_id={game_id}", end=" ", flush=True)
@@ -139,30 +148,48 @@ def main():
                             bench_points=%(bench_points)s,
                             lead_changes=%(lead_changes)s,
                             times_tied=%(times_tied)s,
-                            biggest_scoring_run=%(biggest_scoring_run)s
+                            biggest_scoring_run=%(biggest_scoring_run)s,
+                            tov_team=%(tov_team)s,
+                            tov_total=%(tov_total)s,
+                            reb_team=%(reb_team)s
                         WHERE game_id=%(game_id)s AND team_id=%(team_id)s
                     """, {**stats, "game_id": game_id, "team_id": team_id})
 
                 conn.commit()
                 updated += 1
+                consecutive_failures = 0
                 print("✓")
                 break
 
             except Exception as e:
                 conn.rollback()
+                if isinstance(e, (AttributeError, ValueError)):
+                    bad_data_games.append(game_id)
+                    print(f"⚠️  bad data — skipping (no retry): {e}")
+                    break
                 if attempt < RETRY_ATTEMPTS - 1:
                     wait = RETRY_DELAY * (2 ** attempt)
                     print(f"⚠ attempt {attempt+1} failed ({e}) — retrying in {wait}s", end=" ", flush=True)
                     time.sleep(wait)
                 else:
                     failed += 1
+                    consecutive_failures += 1
                     print(f"❌ failed after {RETRY_ATTEMPTS} attempts: {e}")
+                    if consecutive_failures >= COOLDOWN_THRESHOLD:
+                        ts_pause = datetime.now().strftime('%H:%M:%S')
+                        print(f"\n⏸  [{ts_pause}] Rate limit detected ({consecutive_failures} consecutive failures) — pausing {COOLDOWN_SECS//60} min...", flush=True)
+                        time.sleep(COOLDOWN_SECS)
+                        ts_resume = datetime.now().strftime('%H:%M:%S')
+                        print(f"▶  [{ts_resume}] Resuming...\n", flush=True)
+                        consecutive_failures = 0
 
     cur.close()
     conn.close()
 
     print(f"\n{'='*60}")
     print(f"✅ Done — updated: {updated}  failed: {failed}")
+    if bad_data_games:
+        print(f"   ⚠️  Bad data (skipped, no retry): {', '.join(bad_data_games)}")
     if failed:
         print(f"   Re-run to retry {failed} failed games")
     print(f"{'='*60}")

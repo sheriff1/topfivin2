@@ -41,6 +41,22 @@ const STAT_CATEGORIES = {
   DEFLECT: { label: "Deflections", index: "DEFLECT", lower: false },
   CONTESTED: { label: "Contested Shots", index: "CONTESTED", lower: false },
   SCR_AST: { label: "Screen Assists", index: "SCR_AST", lower: false },
+  CONTESTED_2PT: { label: "Contested 2PT Shots", index: "CONTESTED_2PT", lower: false },
+  CONTESTED_3PT: { label: "Contested 3PT Shots", index: "CONTESTED_3PT", lower: false },
+  CHARGES: { label: "Charges Drawn", index: "CHARGES", lower: false },
+  BOX_OUTS: { label: "Box Outs", index: "BOX_OUTS", lower: false },
+
+  // Misc new extras (BoxScoreMiscV3)
+  OPP_PTS_OFF_TO: { label: "Opp Pts Off Turnovers", index: "OPP_PTS_OFF_TO", lower: true },
+  OPP_2ND_CHC: { label: "Opp 2nd Chance Pts", index: "OPP_2ND_CHC", lower: true },
+  BLK_AGT: { label: "Blocks Against", index: "BLK_AGT", lower: true },
+  FOULS_DRAWN: { label: "Fouls Drawn", index: "FOULS_DRAWN", lower: false },
+
+  // Advanced new extras (BoxScoreAdvancedV3)
+  AST_TOV: { label: "Assist-to-Turnover Ratio", index: "AST_TOV", lower: false },
+  PACE40: { label: "Pace Per 40", index: "PACE40", lower: false },
+  BOX_OUT_TREB: { label: "Box Out Team Rebounds", index: "BOX_OUT_TREB", lower: false },
+  BOX_OUT_PREB: { label: "Box Out Player Rebounds", index: "BOX_OUT_PREB", lower: false },
 };
 
 /**

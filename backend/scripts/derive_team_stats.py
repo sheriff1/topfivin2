@@ -55,8 +55,14 @@ def derive_team_stats():
             biggest_lead, bench_points, lead_changes, times_tied, biggest_scoring_run,
             pts_paint, pts_fast_break, pts_second_chance, pts_off_to,
             opp_pts_paint, opp_pts_fast_break,
+            opp_pts_off_to, opp_pts_second_chance, blk_against, fouls_drawn,
             contested_shots, deflections, screen_assists, screen_assist_pts,
-            box_outs, loose_balls_recovered
+            box_outs, loose_balls_recovered,
+            contested_shots_2pt, contested_shots_3pt, charges_drawn,
+            loose_balls_off, loose_balls_def, box_outs_off, box_outs_def,
+            tov_team, tov_total, reb_team,
+            ast_to_tov, ast_ratio, tov_ratio,
+            pace_per40, box_out_team_reb, box_out_player_reb
         )
         SELECT 
             team_id, season,
@@ -122,13 +128,37 @@ def derive_team_stats():
             ROUND(AVG(COALESCE(pts_off_to, 0))::numeric, 1) as pts_off_to,
             ROUND(AVG(COALESCE(opp_pts_paint, 0))::numeric, 1) as opp_pts_paint,
             ROUND(AVG(COALESCE(opp_pts_fast_break, 0))::numeric, 1) as opp_pts_fast_break,
+            -- BoxScoreMiscV3 new extras
+            ROUND(AVG(COALESCE(opp_pts_off_to, 0))::numeric, 1) as opp_pts_off_to,
+            ROUND(AVG(COALESCE(opp_pts_second_chance, 0))::numeric, 1) as opp_pts_second_chance,
+            ROUND(AVG(COALESCE(blk_against, 0))::numeric, 1) as blk_against,
+            ROUND(AVG(COALESCE(fouls_drawn, 0))::numeric, 1) as fouls_drawn,
             -- BoxScoreHustleV2
             ROUND(AVG(COALESCE(contested_shots, 0))::numeric, 1) as contested_shots,
             ROUND(AVG(COALESCE(deflections, 0))::numeric, 1) as deflections,
             ROUND(AVG(COALESCE(screen_assists, 0))::numeric, 1) as screen_assists,
             ROUND(AVG(COALESCE(screen_assist_pts, 0))::numeric, 1) as screen_assist_pts,
             ROUND(AVG(COALESCE(box_outs, 0))::numeric, 1) as box_outs,
-            ROUND(AVG(COALESCE(loose_balls_recovered, 0))::numeric, 1) as loose_balls_recovered
+            ROUND(AVG(COALESCE(loose_balls_recovered, 0))::numeric, 1) as loose_balls_recovered,
+            -- BoxScoreHustleV2 new extras
+            ROUND(AVG(COALESCE(contested_shots_2pt, 0))::numeric, 1) as contested_shots_2pt,
+            ROUND(AVG(COALESCE(contested_shots_3pt, 0))::numeric, 1) as contested_shots_3pt,
+            ROUND(AVG(COALESCE(charges_drawn, 0))::numeric, 1) as charges_drawn,
+            ROUND(AVG(COALESCE(loose_balls_off, 0))::numeric, 1) as loose_balls_off,
+            ROUND(AVG(COALESCE(loose_balls_def, 0))::numeric, 1) as loose_balls_def,
+            ROUND(AVG(COALESCE(box_outs_off, 0))::numeric, 1) as box_outs_off,
+            ROUND(AVG(COALESCE(box_outs_def, 0))::numeric, 1) as box_outs_def,
+            -- BoxScoreSummaryV3 new extras
+            ROUND(AVG(COALESCE(tov_team, 0))::numeric, 1) as tov_team,
+            ROUND(AVG(COALESCE(tov_total, 0))::numeric, 1) as tov_total,
+            ROUND(AVG(COALESCE(reb_team, 0))::numeric, 1) as reb_team,
+            -- BoxScoreAdvancedV3 new extras
+            ROUND(AVG(COALESCE(ast_to_tov, 0))::numeric, 4) as ast_to_tov,
+            ROUND(AVG(COALESCE(ast_ratio, 0))::numeric, 4) as ast_ratio,
+            ROUND(AVG(COALESCE(tov_ratio, 0))::numeric, 4) as tov_ratio,
+            ROUND(AVG(COALESCE(pace_per40, 0))::numeric, 4) as pace_per40,
+            ROUND(AVG(COALESCE(box_out_team_reb, 0))::numeric, 1) as box_out_team_reb,
+            ROUND(AVG(COALESCE(box_out_player_reb, 0))::numeric, 1) as box_out_player_reb
         FROM game_stats
         GROUP BY team_id, season
         ON CONFLICT (team_id, season) DO UPDATE SET
@@ -185,12 +215,32 @@ def derive_team_stats():
             pts_off_to = EXCLUDED.pts_off_to,
             opp_pts_paint = EXCLUDED.opp_pts_paint,
             opp_pts_fast_break = EXCLUDED.opp_pts_fast_break,
+            opp_pts_off_to = EXCLUDED.opp_pts_off_to,
+            opp_pts_second_chance = EXCLUDED.opp_pts_second_chance,
+            blk_against = EXCLUDED.blk_against,
+            fouls_drawn = EXCLUDED.fouls_drawn,
             contested_shots = EXCLUDED.contested_shots,
             deflections = EXCLUDED.deflections,
             screen_assists = EXCLUDED.screen_assists,
             screen_assist_pts = EXCLUDED.screen_assist_pts,
             box_outs = EXCLUDED.box_outs,
             loose_balls_recovered = EXCLUDED.loose_balls_recovered,
+            contested_shots_2pt = EXCLUDED.contested_shots_2pt,
+            contested_shots_3pt = EXCLUDED.contested_shots_3pt,
+            charges_drawn = EXCLUDED.charges_drawn,
+            loose_balls_off = EXCLUDED.loose_balls_off,
+            loose_balls_def = EXCLUDED.loose_balls_def,
+            box_outs_off = EXCLUDED.box_outs_off,
+            box_outs_def = EXCLUDED.box_outs_def,
+            tov_team = EXCLUDED.tov_team,
+            tov_total = EXCLUDED.tov_total,
+            reb_team = EXCLUDED.reb_team,
+            ast_to_tov = EXCLUDED.ast_to_tov,
+            ast_ratio = EXCLUDED.ast_ratio,
+            tov_ratio = EXCLUDED.tov_ratio,
+            pace_per40 = EXCLUDED.pace_per40,
+            box_out_team_reb = EXCLUDED.box_out_team_reb,
+            box_out_player_reb = EXCLUDED.box_out_player_reb,
             updated_at = CURRENT_TIMESTAMP
         """
         

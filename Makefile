@@ -1,4 +1,4 @@
-.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod backup backup-clean archive-season k6-smoke k6-load k6-stress fetch-advanced-extras fetch-summary-extras fetch-misc fetch-hustle backfill backfill-prod sync-advanced-prod install-cron uninstall-cron logs-clean
+.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod backup backup-clean archive-season k6-smoke k6-load k6-stress fetch-advanced-extras fetch-summary-extras fetch-misc fetch-hustle backfill backfill-prod backfill-missing sync-advanced-prod sync-missing-prod migrate-prod check-progress check-progress-prod install-cron uninstall-cron logs-clean
 
 # ── Infrastructure ───────────────────────────────────────────────────────────
 services:
@@ -124,6 +124,16 @@ backfill:
 	$(MAKE) fetch-hustle
 	@echo "✅ All backfill scripts complete — run: make derive"
 
+# ── Migration-005 backfill: fetch missing stats from all 4 endpoints (local only) ──
+# Run once after migration 005 to populate the 17 new game_stats columns.
+# Each script uses IS NULL guard — safe to re-run.
+backfill-missing:
+	$(MAKE) fetch-advanced-extras
+	$(MAKE) fetch-summary-extras
+	$(MAKE) fetch-misc
+	$(MAKE) fetch-hustle
+	@echo "✅ Migration-005 backfill complete — run: make derive"
+
 # ── V3 backfill against production DB (run locally — NBA API blocked from cloud IPs) ──
 # Requires DATABASE_URL to be set in backend/.env.production.
 # Run after migration 004 on prod: node backend/migrations/004_add_advanced_team_metrics.js
@@ -147,6 +157,27 @@ backfill-prod:
 	python scripts/fetch_hustle_stats.py 2>&1 | tee $(LOGS_DIR)/backfill_prod_hustle.log
 	@echo "✅ All prod backfill scripts complete — run: make derive-prod"
 
+# ── Run a migration against Railway production ──────────────────────────────
+# Usage: make migrate-prod MIGRATION=005_add_missing_stats
+# Runs the specified migration file against DATABASE_URL (Railway).
+migrate-prod:
+	set -a && source backend/.env.production && set +a && \
+	node backend/migrations/$(MIGRATION).js
+	@echo "✅ Migration $(MIGRATION) applied to production"
+
+# ── Check backfill progress (local or production) ─────────────────────────────
+check-progress:
+	source .venv/bin/activate && \
+	set -a && source backend/.env && set +a && \
+	cd backend && \
+	python scripts/check_backfill_progress.py
+
+check-progress-prod:
+	source .venv/bin/activate && \
+	set -a && source backend/.env.production && set +a && \
+	cd backend && \
+	python scripts/check_backfill_progress.py
+
 # ── Sync advanced columns local → prod (use instead of backfill-prod when local DB is already filled) ──
 # Reads the 24 V3 columns directly from local game_stats and batch-UPDATEs Railway.
 # No NBA API calls — immune to rate limiting. Completes in seconds not hours.
@@ -156,6 +187,16 @@ sync-advanced-prod:
 	cd backend && \
 	python scripts/sync_advanced_to_prod.py
 	@echo "✅ Advanced columns synced local → production"
+
+# ── Sync migration-005 columns local → prod (use instead of backfill-missing against prod) ──
+# Reads the 17 new game_stats columns from local and batch-UPDATEs Railway.
+# No NBA API calls — immune to rate limiting.
+sync-missing-prod:
+	source .venv/bin/activate && \
+	set -a && source backend/.env && source backend/.env.production && set +a && \
+	cd backend && \
+	python scripts/sync_missing_to_prod.py
+	@echo "✅ Migration-005 columns synced local → production"
 
 backup:
 	@mkdir -p backups
