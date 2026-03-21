@@ -19,22 +19,26 @@ A full-stack web app that fetches NBA team statistics from the official NBA.com 
 
 ```
 nba_api (Python — run locally)
-  └─ fetch_nba_stats.py       → games + game_stats tables
-       └─ derive_team_stats.py    → team_stats table
-            └─ derive_rankings.py     → stat_rankings table
-                                            │
-                                Node.js / Express  (port 5001)
-                                GET /api/categories
-                                GET /api/rankings
-                                GET /api/teams
-                                GET /api/teams/abbr/:abbreviation
-                                GET /api/team/:id/stats
-                                GET /api/team/:id/rankings
-                                GET /api/audit/games
-                                GET /api/audit/game/:gameId/stats
-                                            │
-                                React Frontend  (port 3000)
-                                Tailwind + DaisyUI + TanStack Query
+  └─ fetch_nba_stats.py         → games + game_stats tables
+       ├─ fetch_advanced_extras.py  ┐
+       ├─ fetch_summary_extras.py   ├─ backfill (one-time, resumable — post-migration only)
+       ├─ fetch_misc_stats.py       │
+       └─ fetch_hustle_stats.py     ┘
+            └─ derive_team_stats.py     → team_stats table
+                 └─ derive_rankings.py      → stat_rankings table
+                                                  │
+                                      Node.js / Express  (port 5001)
+                                      GET /api/categories
+                                      GET /api/rankings
+                                      GET /api/teams
+                                      GET /api/teams/abbr/:abbreviation
+                                      GET /api/team/:id/stats
+                                      GET /api/team/:id/rankings
+                                      GET /api/audit/games
+                                      GET /api/audit/game/:gameId/stats
+                                                  │
+                                      React Frontend  (port 3000)
+                                      Tailwind + DaisyUI + TanStack Query
 ```
 
 PostgreSQL stores all data. Redis caches ranking responses (1-hour TTL).
@@ -150,11 +154,13 @@ DATABASE_URL=postgresql://...   # from Railway dashboard
 
 ### Data Pipeline
 
-| Target          | Description                                      |
-| --------------- | ------------------------------------------------ |
-| `make fetch`    | Fetch new games from nba_api → local DB          |
-| `make derive`   | Derive team stats + rankings → flush local Redis |
-| `make pipeline` | Full local pipeline: fetch → derive → rankings   |
+| Target               | Description                                                   |
+| -------------------- | ------------------------------------------------------------- |
+| `make fetch`         | Fetch new games from nba_api → local DB                       |
+| `make derive`        | Derive team stats + rankings → flush local Redis              |
+| `make pipeline`      | Full local pipeline: fetch → derive → rankings                |
+| `make backfill`      | One-time backfill of 24 V3 advanced columns → local DB        |
+| `make backfill-prod` | Same backfill against Railway DB (run locally post-migration) |
 
 ### Production
 
@@ -279,6 +285,23 @@ make uninstall-cron
 | `game_stats`    | Per-team per-game box score rows                               |
 | `team_stats`    | Season averages derived by `derive_team_stats.py`              |
 | `stat_rankings` | Pre-computed rankings — 27 categories × 30 teams = 810 rows    |
+
+---
+
+## Data Accuracy & Completeness
+
+Stat rankings are computed from season averages across all collected games. A small number of games have permanently incomplete records in the NBA API:
+
+| Game ID      | Missing data source   | Affected columns                                                                    |
+| ------------ | --------------------- | ----------------------------------------------------------------------------------- |
+| `0022500259` | BoxScoreSummaryV3 DF7 | `biggest_lead`, `bench_points`, `lead_changes`, `times_tied`, `biggest_scoring_run` |
+| `0022500260` | BoxScoreSummaryV3 DF7 | same                                                                                |
+| `0022500261` | BoxScoreSummaryV3 DF7 | same                                                                                |
+| `0022500265` | BoxScoreSummaryV3 DF7 | same                                                                                |
+
+**Cause:** These games appear to have incomplete records in the NBA API — likely postponed or rescheduled games that were never fully recorded.
+
+**Impact:** Negligible. `COALESCE` treats missing values as 0 in season averages. With 70+ games per team in a season, 4 missing games shift any affected average by less than 0.1%.
 
 ---
 
