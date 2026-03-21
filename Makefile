@@ -1,4 +1,4 @@
-.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod backup backup-clean archive-season k6-smoke k6-load k6-stress fetch-advanced-extras fetch-summary-extras fetch-misc fetch-hustle backfill backfill-prod
+.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod backup backup-clean archive-season k6-smoke k6-load k6-stress fetch-advanced-extras fetch-summary-extras fetch-misc fetch-hustle backfill backfill-prod install-cron uninstall-cron logs-clean
 
 # ── Infrastructure ───────────────────────────────────────────────────────────
 services:
@@ -162,6 +162,29 @@ archive-season:
 	set -a && source backend/.env.production && set +a && \
 	ARCHIVE_DIR=season_archive python backend/scripts/archive_season.py
 	@echo "✅ Season archive complete — CSVs + checksums in season_archive/"
+
+# ── Automation (launchd) ─────────────────────────────────────────────────────
+# install-cron installs a macOS launchd job that runs make pipeline-prod daily
+# at 09:00 UTC — one hour before the GitHub Actions derive job (10:00 UTC).
+# Prerequisite: backend/.env.production and .venv must already exist.
+# Monitor: tail -f logs/pipeline_prod.log
+
+install-cron:
+	mkdir -p $(LOGS_DIR)
+	sed 's|__REPO_DIR__|$(CURDIR)|g' launchd/com.topfivin2.pipeline.plist \
+	  > $(HOME)/Library/LaunchAgents/com.topfivin2.pipeline.plist
+	launchctl load $(HOME)/Library/LaunchAgents/com.topfivin2.pipeline.plist
+	@echo "✅ launchd job installed — runs make pipeline-prod daily at 09:00 UTC"
+	@echo "   Monitor: tail -f $(LOGS_DIR)/pipeline_prod.log"
+
+uninstall-cron:
+	-launchctl unload $(HOME)/Library/LaunchAgents/com.topfivin2.pipeline.plist
+	-rm -f $(HOME)/Library/LaunchAgents/com.topfivin2.pipeline.plist
+	@echo "🗑️  launchd job removed"
+
+logs-clean:
+	@find $(LOGS_DIR) -name "pipeline_prod.log" -size +50M -delete && \
+	  echo "🧹 pipeline_prod.log truncated (was over 50 MB)" || true
 
 # ── Load Testing (k6) ────────────────────────────────────────────────────────
 # Requires: k6 installed (brew install k6) and a running backend server.
