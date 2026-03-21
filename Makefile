@@ -1,4 +1,4 @@
-.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod backup backup-clean archive-season k6-smoke k6-load k6-stress
+.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod backup backup-clean archive-season k6-smoke k6-load k6-stress fetch-advanced-extras fetch-summary-extras fetch-misc fetch-hustle backfill
 
 # ── Infrastructure ───────────────────────────────────────────────────────────
 services:
@@ -74,6 +74,45 @@ pipeline-prod:
 	redis-cli FLUSHDB
 	@$(MAKE) backup
 	@echo "✅ Full pipeline complete (production) — rankings updated + backup saved"
+
+# ── V3 backfill targets (local only — NBA API blocked from cloud IPs) ─────────
+# Run these once after migration 004 to populate the 24 new columns.
+# Each script uses IS NULL as a resumability guard — safe to re-run.
+
+fetch-advanced-extras:
+	source .venv/bin/activate && \
+	set -a && source backend/.env && set +a && \
+	cd backend && \
+	python scripts/fetch_advanced_extras.py
+	@echo "✅ Advanced extras backfill complete (local)"
+
+fetch-summary-extras:
+	source .venv/bin/activate && \
+	set -a && source backend/.env && set +a && \
+	cd backend && \
+	python scripts/fetch_summary_extras.py
+	@echo "✅ Summary extras backfill complete (local)"
+
+fetch-misc:
+	source .venv/bin/activate && \
+	set -a && source backend/.env && set +a && \
+	cd backend && \
+	python scripts/fetch_misc_stats.py
+	@echo "✅ Misc stats backfill complete (local)"
+
+fetch-hustle:
+	source .venv/bin/activate && \
+	set -a && source backend/.env && set +a && \
+	cd backend && \
+	python scripts/fetch_hustle_stats.py
+	@echo "✅ Hustle stats backfill complete (local)"
+
+backfill:
+	$(MAKE) fetch-advanced-extras
+	$(MAKE) fetch-summary-extras
+	$(MAKE) fetch-misc
+	$(MAKE) fetch-hustle
+	@echo "✅ All backfill scripts complete — run: make derive"
 
 backup:
 	@mkdir -p backups

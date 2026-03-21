@@ -32,6 +32,24 @@ STAT_CATEGORIES = [
     ('AST%', 'ast_pct', 'DESC'),       # Assist % - higher is better  
     ('USG%', 'usg_pct', 'DESC'),       # Usage % - higher is better
     ('TOV%', 'tov_pct', 'ASC'),        # Turnover % - lower is better
+
+    # V3 Advanced extras (OffRtg / DefRtg / Net)
+    ('ORTG',     'ortg',               'DESC'),  # Offensive Rating - higher is better
+    ('DRTG',     'drtg',               'ASC'),   # Defensive Rating - lower is better
+    ('NET_RTG',  'net_rtg',            'DESC'),  # Net Rating - higher is better
+    ('EFG%',     'efg_pct',            'DESC'),  # Effective FG% - higher is better
+    ('PACE',     'pace',               'DESC'),  # Pace - higher is better
+
+    # Misc scoring breakdown
+    ('PTS_PAINT', 'pts_paint',         'DESC'),  # Points in Paint - higher is better
+    ('OPP_PAINT', 'opp_pts_paint',     'ASC'),   # Opp Points in Paint - lower is better
+    ('FAST_BRK',  'pts_fast_break',    'DESC'),  # Fast Break Points - higher is better
+    ('OPP_FBRK',  'opp_pts_fast_break','ASC'),   # Opp Fast Break Pts - lower is better
+
+    # Hustle stats
+    ('DEFLECT',   'deflections',       'DESC'),  # Deflections - higher is better
+    ('CONTESTED', 'contested_shots',   'DESC'),  # Contested Shots - higher is better
+    ('SCR_AST',   'screen_assists',    'DESC'),  # Screen Assists - higher is better
 ]
 
 def clear_cache():
