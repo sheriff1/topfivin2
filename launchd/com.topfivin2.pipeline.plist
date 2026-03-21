@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.topfivin2.pipeline</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>-c</string>
+        <string>cd __REPO_DIR__ && /usr/bin/make pipeline-prod >> __REPO_DIR__/logs/pipeline_prod.log 2>&1</string>
+    </array>
+
+    <!-- Run daily at 09:00 UTC (before GitHub Actions derive job at 10:00 UTC).
+         StartCalendarInterval automatically re-runs a missed job on next wake
+         if the machine was asleep or off at scheduled time. -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>9</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <!-- Do NOT run immediately on launchctl load — only at scheduled time. -->
+    <key>RunAtLoad</key>
+    <false/>
+
+    <key>WorkingDirectory</key>
+    <string>__REPO_DIR__</string>
+
+    <key>StandardOutPath</key>
+    <string>__REPO_DIR__/logs/pipeline_prod.log</string>
+
+    <key>StandardErrorPath</key>
+    <string>__REPO_DIR__/logs/pipeline_prod.log</string>
+</dict>
+</plist>

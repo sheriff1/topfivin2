@@ -182,6 +182,14 @@ DATABASE_URL=postgresql://...   # from Railway dashboard
 
 Override the target URL: `BASE_URL=https://your-server.com make k6-load`
 
+### Automation
+
+| Target                | Description                                                   |
+| --------------------- | ------------------------------------------------------------- |
+| `make install-cron`   | Install launchd job — runs `pipeline-prod` daily at 09:00 UTC |
+| `make uninstall-cron` | Remove launchd job                                            |
+| `make logs-clean`     | Delete `logs/pipeline_prod.log` if it exceeds 50 MB           |
+
 ---
 
 ## GitHub Actions
@@ -195,6 +203,43 @@ Two workflows run **automatically** on a schedule. The rest are triggered manual
 | **DB Backup** (`backup-release.yml`)       | **Every Sunday 2:00 UTC** (auto) + manual | `pg_dump` production DB → GitHub Release                                           | `DATABASE_URL`                                |
 | **Load Tests** (`load-test.yml`)           | Manual                                    | k6 smoke / load / stress against a target URL                                      | —                                             |
 | **Season Archive** (`season-archive.yml`)  | Manual                                    | Exports season CSVs + full DB dump → GitHub Release tagged `season-archive-{YEAR}` | `DATABASE_URL`, `CURRENT_SEASON`              |
+
+---
+
+## Automated Local Pipeline
+
+The GitHub Actions daily job (10:00 UTC) only derives and ranks — it cannot fetch new games because nba.com blocks cloud IPs. A macOS `launchd` job runs `make pipeline-prod` locally at **09:00 UTC daily**, ensuring production data is always fresh before the derive step.
+
+### Prerequisites
+
+- `backend/.env.production` exists with a valid `DATABASE_URL`
+- `.venv` is set up (`python3.13 -m venv .venv && pip install -r requirements.txt`)
+
+### Install
+
+```bash
+make install-cron
+```
+
+This substitutes the absolute repo path into `launchd/com.topfivin2.pipeline.plist` and installs it to `~/Library/LaunchAgents/`. The job runs `make pipeline-prod` (fetch → derive → rankings → backup) daily at 09:00 UTC.
+
+### Monitor
+
+```bash
+tail -f logs/pipeline_prod.log
+```
+
+### Uninstall
+
+```bash
+make uninstall-cron
+```
+
+### Notes
+
+- The machine must be **on and awake** at 09:00 UTC for the job to fire on schedule. `StartCalendarInterval` automatically re-runs a missed job the next time the machine wakes — no extra configuration needed. Since `fetch_nba_stats.py` skips already-collected games, a catch-up run is safe.
+- `logs/pipeline_prod.log` is gitignored and grows ~100 lines per day. Run `make logs-clean` to remove it if it exceeds 50 MB.
+- To reproduce this setup on a new machine: `make install-cron` (the plist template is committed at `launchd/com.topfivin2.pipeline.plist`).
 
 ---
 
