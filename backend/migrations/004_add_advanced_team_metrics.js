@@ -120,8 +120,14 @@ async function runMigration() {
     // Run each statement individually so a failure is clearly attributed
     const statements = migration
       .split(";")
-      .map((s) => s.trim())
-      .filter((s) => s.length > 0 && !s.startsWith("--"));
+      .map((s) =>
+        s
+          .split("\n")
+          .filter((line) => !line.trim().startsWith("--"))
+          .join("\n")
+          .trim()
+      )
+      .filter((s) => s.length > 0);
 
     for (const stmt of statements) {
       await db.query(stmt);

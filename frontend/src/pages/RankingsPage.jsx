@@ -47,11 +47,13 @@ export function RankingsPage() {
                 {categoriesLoading ? (
                   <option>Loading categories...</option>
                 ) : (
-                  categories?.map((cat) => (
-                    <option key={cat.code} value={cat.code}>
-                      {cat.label} ({cat.code})
-                    </option>
-                  ))
+                  [...(categories ?? [])]
+                    .sort((a, b) => a.label.localeCompare(b.label))
+                    .map((cat) => (
+                      <option key={cat.code} value={cat.code}>
+                        {cat.label} ({cat.code})
+                      </option>
+                    ))
                 )}
               </select>
             </div>
