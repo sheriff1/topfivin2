@@ -23,6 +23,24 @@ const STAT_CATEGORIES = {
   "AST%": { label: "Assist %", index: "AST_PCT", lower: false },
   "USG%": { label: "Usage %", index: "USG_PCT", lower: false },
   "TOV%": { label: "Turnover %", index: "TOV_PCT", lower: true },
+
+  // V3 Rating Stats (BoxScoreAdvancedV3)
+  ORTG: { label: "Offensive Rating", index: "ORTG", lower: false },
+  DRTG: { label: "Defensive Rating", index: "DRTG", lower: true },
+  NET_RTG: { label: "Net Rating", index: "NET_RTG", lower: false },
+  "EFG%": { label: "Effective FG %", index: "EFG_PCT", lower: false },
+  PACE: { label: "Pace", index: "PACE", lower: false },
+
+  // Scoring Breakdown (BoxScoreMiscV3)
+  PTS_PAINT: { label: "Points in Paint", index: "PTS_PAINT", lower: false },
+  OPP_PAINT: { label: "Opp Points in Paint", index: "OPP_PAINT", lower: true },
+  FAST_BRK: { label: "Fast Break Points", index: "FAST_BRK", lower: false },
+  OPP_FBRK: { label: "Opp Fast Break Pts", index: "OPP_FBRK", lower: true },
+
+  // Hustle Stats (BoxScoreHustleV2)
+  DEFLECT: { label: "Deflections", index: "DEFLECT", lower: false },
+  CONTESTED: { label: "Contested Shots", index: "CONTESTED", lower: false },
+  SCR_AST: { label: "Screen Assists", index: "SCR_AST", lower: false },
 };
 
 /**

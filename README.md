@@ -1,6 +1,6 @@
 # NBA Stats Ranking Dashboard
 
-A full-stack web app that fetches NBA team statistics from the official NBA.com API, computes rankings across 15 stat categories, and displays them in an interactive dashboard. Data is fetched locally via Python scripts and served through a Node.js/Express API backed by PostgreSQL and Redis.
+A full-stack web app that fetches NBA team statistics from the official NBA.com API, computes rankings across 27 stat categories, and displays them in an interactive dashboard. Data is fetched locally via Python scripts and served through a Node.js/Express API backed by PostgreSQL and Redis.
 
 ---
 
@@ -233,7 +233,7 @@ Two workflows run **automatically** on a schedule. The rest are triggered manual
 | `games`         | Game log — game_id, date, home/away team IDs, `collected` flag |
 | `game_stats`    | Per-team per-game box score rows                               |
 | `team_stats`    | Season averages derived by `derive_team_stats.py`              |
-| `stat_rankings` | Pre-computed rankings — 15 categories × 30 teams = 450 rows    |
+| `stat_rankings` | Pre-computed rankings — 27 categories × 30 teams = 810 rows    |
 
 ---
 
