@@ -52,6 +52,7 @@ def derive_team_stats():
             reb_avg, ast_avg, tov_avg, stl_avg, blk_avg, pts_avg,
             orb_pct, drb_pct, trb_pct, ast_pct, tov_pct, usg_pct, ts_pct,
             ortg, drtg, net_rtg, efg_pct, pace, possessions, pie,
+            e_ortg, e_drtg, e_net_rtg, e_pace,
             biggest_lead, bench_points, lead_changes, times_tied, biggest_scoring_run,
             pts_paint, pts_fast_break, pts_second_chance, pts_off_to,
             opp_pts_paint, opp_pts_fast_break,
@@ -62,7 +63,24 @@ def derive_team_stats():
             loose_balls_off, loose_balls_def, box_outs_off, box_outs_def,
             tov_team, tov_total, reb_team,
             ast_to_tov, ast_ratio, tov_ratio,
-            pace_per40, box_out_team_reb, box_out_player_reb
+            pace_per40, box_out_team_reb, box_out_player_reb,
+            oreb_avg, dreb_avg, pf_avg, pm_avg,
+            -- Starters/bench split stats (migration 007)
+            starters_fg, starters_fga, starters_fg_pct,
+            starters_three_p, starters_three_pa, starters_three_p_pct,
+            starters_ft, starters_fta, starters_ft_pct,
+            starters_oreb, starters_dreb, starters_reb,
+            starters_ast, starters_stl, starters_blk, starters_tov,
+            starters_pf, starters_pts, starters_pm,
+            bench_fg, bench_fga, bench_fg_pct,
+            bench_three_p, bench_three_pa, bench_three_p_pct,
+            bench_ft, bench_fta, bench_ft_pct,
+            bench_oreb, bench_dreb, bench_reb,
+            bench_ast, bench_stl, bench_blk, bench_tov,
+            bench_pf, bench_pts, bench_pm,
+            -- Game context (migration 007)
+            attendance, duration_mins,
+            q1_pts, q2_pts, q3_pts, q4_pts
         )
         SELECT 
             team_id, season,
@@ -115,6 +133,11 @@ def derive_team_stats():
             ROUND(AVG(COALESCE(pace, 0))::numeric, 4) as pace,
             ROUND(AVG(COALESCE(possessions, 0))::numeric, 4) as possessions,
             ROUND(AVG(COALESCE(pie, 0))::numeric, 4) as pie,
+            -- BoxScoreAdvancedV3 estimated variants (migration 008)
+            ROUND(AVG(COALESCE(e_ortg, 0))::numeric, 4) as e_ortg,
+            ROUND(AVG(COALESCE(e_drtg, 0))::numeric, 4) as e_drtg,
+            ROUND(AVG(COALESCE(e_net_rtg, 0))::numeric, 4) as e_net_rtg,
+            ROUND(AVG(COALESCE(e_pace, 0))::numeric, 4) as e_pace,
             -- BoxScoreSummaryV3 DF7 extras
             ROUND(AVG(COALESCE(biggest_lead, 0))::numeric, 1) as biggest_lead,
             ROUND(AVG(COALESCE(bench_points, 0))::numeric, 1) as bench_points,
@@ -158,7 +181,70 @@ def derive_team_stats():
             ROUND(AVG(COALESCE(tov_ratio, 0))::numeric, 4) as tov_ratio,
             ROUND(AVG(COALESCE(pace_per40, 0))::numeric, 4) as pace_per40,
             ROUND(AVG(COALESCE(box_out_team_reb, 0))::numeric, 1) as box_out_team_reb,
-            ROUND(AVG(COALESCE(box_out_player_reb, 0))::numeric, 1) as box_out_player_reb
+            ROUND(AVG(COALESCE(box_out_player_reb, 0))::numeric, 1) as box_out_player_reb,
+            -- Per-game averages for traditional counting stats
+            ROUND(AVG(COALESCE(oreb, 0))::numeric, 1) as oreb_avg,
+            ROUND(AVG(COALESCE(dreb, 0))::numeric, 1) as dreb_avg,
+            ROUND(AVG(COALESCE(pf, 0))::numeric, 1) as pf_avg,
+            ROUND(AVG(COALESCE(plus_minus, 0))::numeric, 1) as pm_avg,
+            -- Starters/bench split stats
+            ROUND(AVG(COALESCE(starters_fg, 0))::numeric, 1)   as starters_fg,
+            ROUND(AVG(COALESCE(starters_fga, 0))::numeric, 1)  as starters_fga,
+            CASE WHEN SUM(COALESCE(starters_fga, 0)) > 0
+                 THEN ROUND(100.0 * SUM(COALESCE(starters_fg, 0)) / SUM(COALESCE(starters_fga, 0)), 1)
+                 ELSE 0 END as starters_fg_pct,
+            ROUND(AVG(COALESCE(starters_three_p, 0))::numeric, 1)  as starters_three_p,
+            ROUND(AVG(COALESCE(starters_three_pa, 0))::numeric, 1) as starters_three_pa,
+            CASE WHEN SUM(COALESCE(starters_three_pa, 0)) > 0
+                 THEN ROUND(100.0 * SUM(COALESCE(starters_three_p, 0)) / SUM(COALESCE(starters_three_pa, 0)), 1)
+                 ELSE 0 END as starters_three_p_pct,
+            ROUND(AVG(COALESCE(starters_ft, 0))::numeric, 1)   as starters_ft,
+            ROUND(AVG(COALESCE(starters_fta, 0))::numeric, 1)  as starters_fta,
+            CASE WHEN SUM(COALESCE(starters_fta, 0)) > 0
+                 THEN ROUND(100.0 * SUM(COALESCE(starters_ft, 0)) / SUM(COALESCE(starters_fta, 0)), 1)
+                 ELSE 0 END as starters_ft_pct,
+            ROUND(AVG(COALESCE(starters_oreb, 0))::numeric, 1) as starters_oreb,
+            ROUND(AVG(COALESCE(starters_dreb, 0))::numeric, 1) as starters_dreb,
+            ROUND(AVG(COALESCE(starters_reb, 0))::numeric, 1)  as starters_reb,
+            ROUND(AVG(COALESCE(starters_ast, 0))::numeric, 1)  as starters_ast,
+            ROUND(AVG(COALESCE(starters_stl, 0))::numeric, 1)  as starters_stl,
+            ROUND(AVG(COALESCE(starters_blk, 0))::numeric, 1)  as starters_blk,
+            ROUND(AVG(COALESCE(starters_tov, 0))::numeric, 1)  as starters_tov,
+            ROUND(AVG(COALESCE(starters_pf, 0))::numeric, 1)   as starters_pf,
+            ROUND(AVG(COALESCE(starters_pts, 0))::numeric, 1)  as starters_pts,
+            ROUND(AVG(COALESCE(starters_pm, 0))::numeric, 1)   as starters_pm,
+            ROUND(AVG(COALESCE(bench_fg, 0))::numeric, 1)      as bench_fg,
+            ROUND(AVG(COALESCE(bench_fga, 0))::numeric, 1)     as bench_fga,
+            CASE WHEN SUM(COALESCE(bench_fga, 0)) > 0
+                 THEN ROUND(100.0 * SUM(COALESCE(bench_fg, 0)) / SUM(COALESCE(bench_fga, 0)), 1)
+                 ELSE 0 END as bench_fg_pct,
+            ROUND(AVG(COALESCE(bench_three_p, 0))::numeric, 1)  as bench_three_p,
+            ROUND(AVG(COALESCE(bench_three_pa, 0))::numeric, 1) as bench_three_pa,
+            CASE WHEN SUM(COALESCE(bench_three_pa, 0)) > 0
+                 THEN ROUND(100.0 * SUM(COALESCE(bench_three_p, 0)) / SUM(COALESCE(bench_three_pa, 0)), 1)
+                 ELSE 0 END as bench_three_p_pct,
+            ROUND(AVG(COALESCE(bench_ft, 0))::numeric, 1)      as bench_ft,
+            ROUND(AVG(COALESCE(bench_fta, 0))::numeric, 1)     as bench_fta,
+            CASE WHEN SUM(COALESCE(bench_fta, 0)) > 0
+                 THEN ROUND(100.0 * SUM(COALESCE(bench_ft, 0)) / SUM(COALESCE(bench_fta, 0)), 1)
+                 ELSE 0 END as bench_ft_pct,
+            ROUND(AVG(COALESCE(bench_oreb, 0))::numeric, 1)    as bench_oreb,
+            ROUND(AVG(COALESCE(bench_dreb, 0))::numeric, 1)    as bench_dreb,
+            ROUND(AVG(COALESCE(bench_reb, 0))::numeric, 1)     as bench_reb,
+            ROUND(AVG(COALESCE(bench_ast, 0))::numeric, 1)     as bench_ast,
+            ROUND(AVG(COALESCE(bench_stl, 0))::numeric, 1)     as bench_stl,
+            ROUND(AVG(COALESCE(bench_blk, 0))::numeric, 1)     as bench_blk,
+            ROUND(AVG(COALESCE(bench_tov, 0))::numeric, 1)     as bench_tov,
+            ROUND(AVG(COALESCE(bench_pf, 0))::numeric, 1)      as bench_pf,
+            ROUND(AVG(COALESCE(bench_pts, 0))::numeric, 1)     as bench_pts,
+            ROUND(AVG(COALESCE(bench_pm, 0))::numeric, 1)      as bench_pm,
+            -- Game context
+            ROUND(AVG(COALESCE(attendance, 0))::numeric, 0)    as attendance,
+            ROUND(AVG(COALESCE(duration_mins, 0))::numeric, 2) as duration_mins,
+            ROUND(AVG(COALESCE(q1_pts, 0))::numeric, 1)        as q1_pts,
+            ROUND(AVG(COALESCE(q2_pts, 0))::numeric, 1)        as q2_pts,
+            ROUND(AVG(COALESCE(q3_pts, 0))::numeric, 1)        as q3_pts,
+            ROUND(AVG(COALESCE(q4_pts, 0))::numeric, 1)        as q4_pts
         FROM game_stats
         GROUP BY team_id, season
         ON CONFLICT (team_id, season) DO UPDATE SET
@@ -204,6 +290,10 @@ def derive_team_stats():
             pace = EXCLUDED.pace,
             possessions = EXCLUDED.possessions,
             pie = EXCLUDED.pie,
+            e_ortg = EXCLUDED.e_ortg,
+            e_drtg = EXCLUDED.e_drtg,
+            e_net_rtg = EXCLUDED.e_net_rtg,
+            e_pace = EXCLUDED.e_pace,
             biggest_lead = EXCLUDED.biggest_lead,
             bench_points = EXCLUDED.bench_points,
             lead_changes = EXCLUDED.lead_changes,
@@ -241,6 +331,54 @@ def derive_team_stats():
             pace_per40 = EXCLUDED.pace_per40,
             box_out_team_reb = EXCLUDED.box_out_team_reb,
             box_out_player_reb = EXCLUDED.box_out_player_reb,
+            oreb_avg = EXCLUDED.oreb_avg,
+            dreb_avg = EXCLUDED.dreb_avg,
+            pf_avg = EXCLUDED.pf_avg,
+            pm_avg = EXCLUDED.pm_avg,
+            starters_fg = EXCLUDED.starters_fg,
+            starters_fga = EXCLUDED.starters_fga,
+            starters_fg_pct = EXCLUDED.starters_fg_pct,
+            starters_three_p = EXCLUDED.starters_three_p,
+            starters_three_pa = EXCLUDED.starters_three_pa,
+            starters_three_p_pct = EXCLUDED.starters_three_p_pct,
+            starters_ft = EXCLUDED.starters_ft,
+            starters_fta = EXCLUDED.starters_fta,
+            starters_ft_pct = EXCLUDED.starters_ft_pct,
+            starters_oreb = EXCLUDED.starters_oreb,
+            starters_dreb = EXCLUDED.starters_dreb,
+            starters_reb = EXCLUDED.starters_reb,
+            starters_ast = EXCLUDED.starters_ast,
+            starters_stl = EXCLUDED.starters_stl,
+            starters_blk = EXCLUDED.starters_blk,
+            starters_tov = EXCLUDED.starters_tov,
+            starters_pf = EXCLUDED.starters_pf,
+            starters_pts = EXCLUDED.starters_pts,
+            starters_pm = EXCLUDED.starters_pm,
+            bench_fg = EXCLUDED.bench_fg,
+            bench_fga = EXCLUDED.bench_fga,
+            bench_fg_pct = EXCLUDED.bench_fg_pct,
+            bench_three_p = EXCLUDED.bench_three_p,
+            bench_three_pa = EXCLUDED.bench_three_pa,
+            bench_three_p_pct = EXCLUDED.bench_three_p_pct,
+            bench_ft = EXCLUDED.bench_ft,
+            bench_fta = EXCLUDED.bench_fta,
+            bench_ft_pct = EXCLUDED.bench_ft_pct,
+            bench_oreb = EXCLUDED.bench_oreb,
+            bench_dreb = EXCLUDED.bench_dreb,
+            bench_reb = EXCLUDED.bench_reb,
+            bench_ast = EXCLUDED.bench_ast,
+            bench_stl = EXCLUDED.bench_stl,
+            bench_blk = EXCLUDED.bench_blk,
+            bench_tov = EXCLUDED.bench_tov,
+            bench_pf = EXCLUDED.bench_pf,
+            bench_pts = EXCLUDED.bench_pts,
+            bench_pm = EXCLUDED.bench_pm,
+            attendance = EXCLUDED.attendance,
+            duration_mins = EXCLUDED.duration_mins,
+            q1_pts = EXCLUDED.q1_pts,
+            q2_pts = EXCLUDED.q2_pts,
+            q3_pts = EXCLUDED.q3_pts,
+            q4_pts = EXCLUDED.q4_pts,
             updated_at = CURRENT_TIMESTAMP
         """
         

@@ -57,6 +57,108 @@ const STAT_CATEGORIES = {
   PACE40: { label: "Pace Per 40", index: "PACE40", lower: false },
   BOX_OUT_TREB: { label: "Box Out Team Rebounds", index: "BOX_OUT_TREB", lower: false },
   BOX_OUT_PREB: { label: "Box Out Player Rebounds", index: "BOX_OUT_PREB", lower: false },
+
+  // Traditional per-game averages
+  ORPG: { label: "Offensive Rebounds Per Game", index: "ORPG", lower: false },
+  DRPG: { label: "Defensive Rebounds Per Game", index: "DRPG", lower: false },
+  TPG: { label: "Turnovers Per Game", index: "TPG", lower: true },
+  PFPG: { label: "Personal Fouls Per Game", index: "PFPG", lower: true },
+  PM: { label: "Plus/Minus Per Game", index: "PM", lower: false },
+  FG_PG: { label: "Field Goals Made Per Game", index: "FG_PG", lower: false },
+  FGA_PG: { label: "Field Goal Attempts Per Game", index: "FGA_PG", lower: false },
+  THREE_PG: { label: "3-Pointers Made Per Game", index: "THREE_PG", lower: false },
+
+  // BoxScoreAdvancedV3 extras
+  POSS: { label: "Possessions Per Game", index: "POSS", lower: false },
+  PIE: { label: "Player Impact Estimate", index: "PIE", lower: false },
+  AST_RATIO: { label: "Assist Ratio", index: "AST_RATIO", lower: false },
+  TOV_RATIO: { label: "Turnover Ratio", index: "TOV_RATIO", lower: true },
+
+  // BoxScoreSummaryV3 extras
+  BIG_LEAD: { label: "Biggest Lead (avg)", index: "BIG_LEAD", lower: false },
+  BENCH_PTS: { label: "Bench Points Per Game", index: "BENCH_PTS", lower: false },
+  LEAD_CHG: { label: "Lead Changes Per Game", index: "LEAD_CHG", lower: false },
+  TIMES_TIED: { label: "Times Tied Per Game", index: "TIMES_TIED", lower: false },
+  BIG_RUN: { label: "Biggest Scoring Run (avg)", index: "BIG_RUN", lower: false },
+  TOV_TEAM: { label: "Team Turnovers Per Game", index: "TOV_TEAM", lower: true },
+  TOV_TOTAL: { label: "Total Turnovers Per Game", index: "TOV_TOTAL", lower: true },
+  REB_TEAM: { label: "Team Rebounds Per Game", index: "REB_TEAM", lower: false },
+
+  // BoxScoreMiscV3 extras
+  PTS_2ND_CHC: { label: "2nd Chance Points Per Game", index: "PTS_2ND_CHC", lower: false },
+  PTS_OFF_TO: { label: "Points Off Turnovers Per Game", index: "PTS_OFF_TO", lower: false },
+
+  // BoxScoreHustleV2 extras
+  SCR_AST_PTS: { label: "Screen Assist Points Per Game", index: "SCR_AST_PTS", lower: false },
+  LOOSE_BALLS: { label: "Loose Balls Recovered Per Game", index: "LOOSE_BALLS", lower: false },
+  LOOSE_BALLS_O: {
+    label: "Off. Loose Balls Recovered Per Game",
+    index: "LOOSE_BALLS_O",
+    lower: false,
+  },
+  LOOSE_BALLS_D: {
+    label: "Def. Loose Balls Recovered Per Game",
+    index: "LOOSE_BALLS_D",
+    lower: false,
+  },
+  BOX_OUTS_O: { label: "Offensive Box Outs Per Game", index: "BOX_OUTS_O", lower: false },
+  BOX_OUTS_D: { label: "Defensive Box Outs Per Game", index: "BOX_OUTS_D", lower: false },
+
+  // Starters group stats (BoxScoreTraditionalV3 DF1)
+  STARTERS_PPG: { label: "Starter Points Per Game", index: "STARTERS_PPG", lower: false },
+  STARTERS_RPG: { label: "Starter Rebounds Per Game", index: "STARTERS_RPG", lower: false },
+  STARTERS_APG: { label: "Starter Assists Per Game", index: "STARTERS_APG", lower: false },
+  STARTERS_SPG: { label: "Starter Steals Per Game", index: "STARTERS_SPG", lower: false },
+  STARTERS_BPG: { label: "Starter Blocks Per Game", index: "STARTERS_BPG", lower: false },
+  "STARTERS_FG%": { label: "Starter Field Goal %", index: "STARTERS_FG%", lower: false },
+  "STARTERS_3P%": { label: "Starter 3-Point %", index: "STARTERS_3P%", lower: false },
+  "STARTERS_FT%": { label: "Starter Free Throw %", index: "STARTERS_FT%", lower: false },
+  STARTERS_FG: { label: "Starter FG Made Per Game", index: "STARTERS_FG", lower: false },
+  STARTERS_FGA: { label: "Starter FGA Per Game", index: "STARTERS_FGA", lower: false },
+  STARTERS_3P: { label: "Starter 3P Made Per Game", index: "STARTERS_3P", lower: false },
+  STARTERS_3PA: { label: "Starter 3PA Per Game", index: "STARTERS_3PA", lower: false },
+  STARTERS_OREB: { label: "Starter Off. Rebounds Per Game", index: "STARTERS_OREB", lower: false },
+  STARTERS_DREB: { label: "Starter Def. Rebounds Per Game", index: "STARTERS_DREB", lower: false },
+  STARTERS_FT: { label: "Starter FT Made Per Game", index: "STARTERS_FT", lower: false },
+  STARTERS_FTA: { label: "Starter FTA Per Game", index: "STARTERS_FTA", lower: false },
+  STARTERS_TOV: { label: "Starter Turnovers Per Game", index: "STARTERS_TOV", lower: true },
+  STARTERS_PF: { label: "Starter Fouls Per Game", index: "STARTERS_PF", lower: true },
+  STARTERS_PM: { label: "Starter Plus/Minus Per Game", index: "STARTERS_PM", lower: false },
+
+  // Bench group stats (BoxScoreTraditionalV3 DF1)
+  BENCH_PPG: { label: "Bench Points Per Game", index: "BENCH_PPG", lower: false },
+  BENCH_RPG: { label: "Bench Rebounds Per Game", index: "BENCH_RPG", lower: false },
+  BENCH_APG: { label: "Bench Assists Per Game", index: "BENCH_APG", lower: false },
+  BENCH_SPG: { label: "Bench Steals Per Game", index: "BENCH_SPG", lower: false },
+  BENCH_BPG: { label: "Bench Blocks Per Game", index: "BENCH_BPG", lower: false },
+  "BENCH_FG%": { label: "Bench Field Goal %", index: "BENCH_FG%", lower: false },
+  "BENCH_3P%": { label: "Bench 3-Point %", index: "BENCH_3P%", lower: false },
+  "BENCH_FT%": { label: "Bench Free Throw %", index: "BENCH_FT%", lower: false },
+  BENCH_FG: { label: "Bench FG Made Per Game", index: "BENCH_FG", lower: false },
+  BENCH_FGA: { label: "Bench FGA Per Game", index: "BENCH_FGA", lower: false },
+  BENCH_3P: { label: "Bench 3P Made Per Game", index: "BENCH_3P", lower: false },
+  BENCH_3PA: { label: "Bench 3PA Per Game", index: "BENCH_3PA", lower: false },
+  BENCH_OREB: { label: "Bench Off. Rebounds Per Game", index: "BENCH_OREB", lower: false },
+  BENCH_DREB: { label: "Bench Def. Rebounds Per Game", index: "BENCH_DREB", lower: false },
+  BENCH_FT: { label: "Bench FT Made Per Game", index: "BENCH_FT", lower: false },
+  BENCH_FTA: { label: "Bench FTA Per Game", index: "BENCH_FTA", lower: false },
+  BENCH_TOV: { label: "Bench Turnovers Per Game", index: "BENCH_TOV", lower: true },
+  BENCH_PF: { label: "Bench Fouls Per Game", index: "BENCH_PF", lower: true },
+  BENCH_PM: { label: "Bench Plus/Minus Per Game", index: "BENCH_PM", lower: false },
+
+  // Game context stats (BoxScoreSummaryV3 DF0 + DF4)
+  ATTEND: { label: "Avg Attendance", index: "ATTEND", lower: false },
+  DURATION: { label: "Avg Game Duration (mins)", index: "DURATION", lower: false },
+  Q1_PTS: { label: "Q1 Points Per Game", index: "Q1_PTS", lower: false },
+  Q2_PTS: { label: "Q2 Points Per Game", index: "Q2_PTS", lower: false },
+  Q3_PTS: { label: "Q3 Points Per Game", index: "Q3_PTS", lower: false },
+  Q4_PTS: { label: "Q4 Points Per Game", index: "Q4_PTS", lower: false },
+
+  // Estimated advanced ratings (BoxScoreAdvancedV3 DF1, migration 008)
+  E_ORTG: { label: "Estimated Off. Rating", index: "E_ORTG", lower: false },
+  E_DRTG: { label: "Estimated Def. Rating", index: "E_DRTG", lower: true },
+  E_NET_RTG: { label: "Estimated Net Rating", index: "E_NET_RTG", lower: false },
+  E_PACE: { label: "Estimated Pace", index: "E_PACE", lower: false },
 };
 
 /**

@@ -7,9 +7,10 @@ ortg IS NULL, and UPDATEs those columns in game_stats.
 
 Columns written:
   ortg, drtg, net_rtg, efg_pct, pace, possessions, pie,
-  ast_to_tov, ast_ratio, tov_ratio
+  ast_to_tov, ast_ratio, tov_ratio, pace_per40,
+  e_ortg, e_drtg, e_net_rtg, e_pace
 
-Resumable: re-running skips any game_id already filled (ortg IS NOT NULL).
+Resumable: re-running skips any game_id already filled (ortg IS NOT NULL AND e_ortg IS NOT NULL).
 Run via: make fetch-advanced-extras
 
 Note: BoxScoreAdvancedV3 is already called by fetch_nba_stats.py, but only
@@ -85,7 +86,7 @@ def delay():
     time.sleep(max(0.5, REQUEST_DELAY + jitter))
 
 def fetch_advanced(game_id):
-    """Return dict of team_id -> {ortg, drtg, ...} or raise."""
+    """Return dict of team_id -> {ortg, drtg, e_ortg, ...} or raise."""
     result = BoxScoreAdvancedV3(game_id=game_id, timeout=60)
     df = result.get_data_frames()[1]  # DF1 = team-level advanced
     out = {}
@@ -103,6 +104,10 @@ def fetch_advanced(game_id):
             "ast_ratio":   _f(row, "assistRatio"),
             "tov_ratio":   _f(row, "turnoverRatio"),
             "pace_per40":  _f(row, "pacePer40"),
+            "e_ortg":      _f(row, "estimatedOffensiveRating"),
+            "e_drtg":      _f(row, "estimatedDefensiveRating"),
+            "e_net_rtg":   _f(row, "estimatedNetRating"),
+            "e_pace":      _f(row, "estimatedPace"),
         }
     return out
 
@@ -116,7 +121,8 @@ def main():
     print("BACKFILL: fetch_advanced_extras.py")
     print("Endpoint: BoxScoreAdvancedV3 DF1")
     print("Columns:  ortg, drtg, net_rtg, efg_pct, pace, possessions, pie,")
-    print("          ast_to_tov, ast_ratio, tov_ratio, pace_per40")
+    print("          ast_to_tov, ast_ratio, tov_ratio, pace_per40,")
+    print("          e_ortg, e_drtg, e_net_rtg, e_pace")
     print("=" * 60)
 
     conn = db_connect()
@@ -125,6 +131,7 @@ def main():
     cur.execute("""
         SELECT DISTINCT game_id FROM game_stats
         WHERE ortg IS NULL OR ast_to_tov IS NULL OR pace_per40 IS NULL
+           OR e_ortg IS NULL
         ORDER BY game_id
     """)
     pending = [row[0] for row in cur.fetchall()]
@@ -134,7 +141,7 @@ def main():
     skipped = updated = failed = consecutive_failures = 0
     bad_data_games = []
     COOLDOWN_THRESHOLD = 2   # consecutive failures before auto-pause
-    COOLDOWN_SECS      = 300 # 5 minutes
+    COOLDOWN_SECS      = 480  # 8 minutes
 
     for idx, game_id in enumerate(pending, 1):
         print(f"  [{idx:4}/{total}] game_id={game_id}", end=" ", flush=True)
@@ -151,7 +158,9 @@ def main():
                             efg_pct=%(efg_pct)s, pace=%(pace)s,
                             possessions=%(possessions)s, pie=%(pie)s,
                             ast_to_tov=%(ast_to_tov)s, ast_ratio=%(ast_ratio)s,
-                            tov_ratio=%(tov_ratio)s, pace_per40=%(pace_per40)s
+                            tov_ratio=%(tov_ratio)s, pace_per40=%(pace_per40)s,
+                            e_ortg=%(e_ortg)s, e_drtg=%(e_drtg)s,
+                            e_net_rtg=%(e_net_rtg)s, e_pace=%(e_pace)s
                         WHERE game_id=%(game_id)s AND team_id=%(team_id)s
                     """, {**stats, "game_id": game_id, "team_id": team_id})
 
