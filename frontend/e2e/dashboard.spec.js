@@ -9,7 +9,9 @@ test("loads with PPG rankings table and Top 5 showcase", async ({ page }) => {
   await page.goto("/");
 
   // Heading shows default category
-  await expect(page.getByRole("heading", { name: /PPG Rankings - 2025-26 Season/i })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /Points Per Game Rankings - 2025-26 Season/i })
+  ).toBeVisible();
 
   // Category dropdown defaults to PPG
   await expect(page.locator("select.select-bordered")).toHaveValue("PPG");
@@ -25,13 +27,17 @@ test("category dropdown change updates rankings heading to RPG", async ({ page }
   await page.goto("/");
 
   // Wait for initial load
-  await expect(page.getByRole("heading", { name: /PPG Rankings - 2025-26 Season/i })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /Points Per Game Rankings - 2025-26 Season/i })
+  ).toBeVisible();
 
   // Change category
   await page.locator("select.select-bordered").selectOption("RPG");
 
   // Heading updates
-  await expect(page.getByRole("heading", { name: /RPG Rankings - 2025-26 Season/i })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /Rebounds Per Game Rankings - 2025-26 Season/i })
+  ).toBeVisible();
 
   // Brooklyn Nets is rank 1 in RPG mock data
   await expect(page.getByText("Brooklyn Nets").first()).toBeVisible();
@@ -40,7 +46,9 @@ test("category dropdown change updates rankings heading to RPG", async ({ page }
 test("ranks are displayed in the rankings table", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.getByRole("heading", { name: /PPG Rankings - 2025-26 Season/i })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /Points Per Game Rankings - 2025-26 Season/i })
+  ).toBeVisible();
 
   // Rank badges visible in table (rendered as #1, #2)
   await expect(page.getByText("#1").first()).toBeVisible();

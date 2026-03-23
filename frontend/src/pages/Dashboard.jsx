@@ -10,6 +10,10 @@ export function Dashboard() {
   const { data: categories, isLoading: categoriesLoading } = useCategories();
   const { data: health } = useApiHealth();
 
+  // Get the label for the selected category
+  const selectedCategoryLabel =
+    categories?.find((cat) => cat.code === selectedCategory)?.label || selectedCategory;
+
   return (
     <div className="min-h-screen bg-base-100">
       {/* Header */}
@@ -69,7 +73,7 @@ export function Dashboard() {
                       ) : (
                         categories?.map((cat) => (
                           <option key={cat.code} value={cat.code}>
-                            {cat.label} ({cat.code})
+                            {cat.label}
                           </option>
                         ))
                       )}
@@ -83,7 +87,7 @@ export function Dashboard() {
             <div className="card bg-base-200 shadow-xl">
               <div className="card-body">
                 <h2 className="card-title text-2xl mb-4">
-                  {selectedCategory} Rankings - 2025-26 Season
+                  {selectedCategoryLabel} Rankings - 2025-26 Season
                 </h2>
                 <RankingsGrid category={selectedCategory} season={season} />
               </div>

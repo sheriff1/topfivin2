@@ -13,7 +13,9 @@ test("logo click navigates to home from /audit", async ({ page }) => {
 
   // Should navigate to /
   await expect(page).toHaveURL("/");
-  await expect(page.getByRole("heading", { name: /PPG Rankings - 2025-26 Season/i })).toBeVisible();
+  await expect(
+    page.getByRole("heading", { name: /Points Per Game Rankings - 2025-26 Season/i })
+  ).toBeVisible();
 });
 
 test("Rankings tab is active at /", async ({ page }) => {
