@@ -1,4 +1,3 @@
-import PropTypes from "prop-types";
 import { useState } from "react";
 import { useRankings } from "../hooks/useApi";
 
@@ -101,7 +100,3 @@ export function GameCountPage() {
     </div>
   );
 }
-
-GameCountPage.propTypes = {
-  season: PropTypes.number,
-};
