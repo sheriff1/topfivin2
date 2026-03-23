@@ -28,13 +28,19 @@ export function formatStatValue(value, categoryLabel) {
     return "—";
   }
 
-  // Check if this is "Avg Game Duration" - convert to H:MM:SS format
-  if (categoryLabel && categoryLabel.includes("Avg Game Duration")) {
+  // Check if this is "Average Game Duration" (supports both old and new label formats)
+  if (
+    categoryLabel &&
+    (categoryLabel.includes("Avg Game Duration") || categoryLabel.includes("Average Game Duration"))
+  ) {
     return minutesToTimeFormat(value);
   }
 
-  // Check if this is "Avg Attendance" - format as integer (no decimals)
-  if (categoryLabel && categoryLabel === "Avg Attendance") {
+  // Check if this is "Average Attendance" (supports both old and new label formats)
+  if (
+    categoryLabel &&
+    (categoryLabel === "Average Attendance" || categoryLabel === "Avg Attendance")
+  ) {
     return Math.round(parseFloat(value)).toString();
   }
 
