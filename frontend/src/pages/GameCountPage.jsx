@@ -6,7 +6,11 @@ export function GameCountPage() {
   const season = import.meta.env.VITE_CURRENT_SEASON || "2025";
   // Use PPG category to get all teams with their games_count
   const [selectedCategory] = useState("PPG");
-  const { data: rankings, isLoading: rankingsLoading } = useRankings(selectedCategory, season);
+  const {
+    data: rankings,
+    isLoading: rankingsLoading,
+    error,
+  } = useRankings(selectedCategory, season);
 
   const isLoading = rankingsLoading;
 
@@ -18,17 +22,31 @@ export function GameCountPage() {
     );
   }
 
+  if (error) {
+    return (
+      <div className="alert alert-error">
+        <span>Error loading games count: {error.message}</span>
+      </div>
+    );
+  }
+
+  if (!rankings || !rankings.rankings) {
+    return (
+      <div className="alert alert-warning">
+        <span>No data available</span>
+      </div>
+    );
+  }
+
   // Extract team games count from rankings data
-  const teamGamesData = rankings?.rankings
-    ? rankings.rankings
-        .map((team) => ({
-          team_id: team.team_id,
-          team_name: team.team_name,
-          logo_url: team.logo_url,
-          games_count: team.games_count || 0,
-        }))
-        .sort((a, b) => a.team_name.localeCompare(b.team_name))
-    : [];
+  const teamGamesData = rankings.rankings
+    .map((team) => ({
+      team_id: team.team_id,
+      team_name: team.team_name,
+      logo_url: team.logo_url,
+      games_count: team.games_count || 0,
+    }))
+    .sort((a, b) => a.team_name.localeCompare(b.team_name));
 
   return (
     <div className="space-y-6">
