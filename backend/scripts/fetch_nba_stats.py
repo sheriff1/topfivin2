@@ -308,7 +308,7 @@ def extract_team_stats(game_id, game_date, team_mapping):
                     'BLK': float(row['blocks']) if pd.notna(row['blocks']) else 0,
                     'TO': float(row['turnovers']) if pd.notna(row['turnovers']) else 0,
                     'PF': float(row['foulsPersonal']) if pd.notna(row['foulsPersonal']) else 0,
-                    'PLUS_MINUS': 0.0,  # V3 doesn't include plus/minus
+                    'PLUS_MINUS': float(row['plusMinusPoints']) if pd.notna(row.get('plusMinusPoints')) else 0.0,
                 })
             
             # 2. Fetch Advanced Stats from BoxScoreAdvancedV3

@@ -1,17 +1,22 @@
 #!/usr/bin/env python3
 """
-Backfill: Misc V3 stats for existing game_stats rows.
+Backfill: Four Factors stats from BoxScoreFourFactorsV3 DF1.
 
-Calls BoxScoreMiscV3 DF1 (team-level) for every game that has
-pts_paint IS NULL, and UPDATEs those columns in game_stats.
+Calls BoxScoreFourFactorsV3 for every game that has ft_rate IS NULL,
+and UPDATEs those columns in game_stats.
 
 Columns written:
-  pts_paint, pts_fast_break, pts_second_chance, pts_off_to,
-  opp_pts_paint, opp_pts_fast_break,
-  opp_pts_off_to, opp_pts_second_chance, blk_against, fouls_drawn
+  ft_rate      ← freeThrowAttemptRate
+  tm_tov_pct   ← teamTurnoverPercentage
+  oreb_pct     ← offensiveReboundPercentage
+  opp_efg_pct  ← oppEffectiveFieldGoalPercentage
+  opp_ft_rate  ← oppFreeThrowAttemptRate
+  opp_tov_pct  ← oppTeamTurnoverPercentage
+  opp_oreb_pct ← oppOffensiveReboundPercentage
+  (effectiveFieldGoalPercentage skipped — already stored as efg_pct from AdvancedV3)
 
-Resumable: re-running skips any game_id already filled (pts_paint IS NOT NULL).
-Run via: make fetch-misc
+Resumable: re-running skips any game_id already filled (ft_rate IS NOT NULL).
+Run via: make fetch-fourfactors
 """
 
 import os
@@ -56,7 +61,7 @@ def patch_headers():
 
 patch_headers()
 
-from nba_api.stats.endpoints import BoxScoreMiscV3
+from nba_api.stats.endpoints import BoxScoreFourFactorsV3
 
 # ── Config ────────────────────────────────────────────────────────────────────
 REQUEST_DELAY  = 2.0
@@ -80,39 +85,35 @@ def delay():
     jitter = random.uniform(-REQUEST_JITTER, REQUEST_JITTER)
     time.sleep(max(0.5, REQUEST_DELAY + jitter))
 
-def _i(row, col):
+def _f(row, col):
     import pandas as pd
     val = row.get(col)
-    return int(val) if val is not None and pd.notna(val) else None
+    return float(val) if val is not None and pd.notna(val) else None
 
-def fetch_misc(game_id):
-    """Return dict of team_id -> misc stats or raise."""
-    result = BoxScoreMiscV3(game_id=game_id, timeout=60)
-    df = result.get_data_frames()[1]  # DF1 = team-level misc
+def fetch_fourfactors(game_id):
+    """Return dict of team_id -> {ft_rate, tm_tov_pct, oreb_pct, ...} or raise."""
+    result = BoxScoreFourFactorsV3(game_id=game_id, timeout=60)
+    df = result.get_data_frames()[1]  # DF1 = team-level four factors
     out = {}
     for _, row in df.iterrows():
         team_id = int(row["teamId"])
         out[team_id] = {
-            "pts_paint":              _i(row, "pointsPaint"),
-            "pts_fast_break":         _i(row, "pointsFastBreak"),
-            "pts_second_chance":      _i(row, "pointsSecondChance"),
-            "pts_off_to":             _i(row, "pointsOffTurnovers"),
-            "opp_pts_paint":          _i(row, "oppPointsPaint"),
-            "opp_pts_fast_break":     _i(row, "oppPointsFastBreak"),
-            "opp_pts_off_to":         _i(row, "oppPointsOffTurnovers"),
-            "opp_pts_second_chance":  _i(row, "oppPointsSecondChance"),
-            "blk_against":            _i(row, "blocksAgainst"),
-            "fouls_drawn":            _i(row, "foulsDrawn"),
+            "ft_rate":      _f(row, "freeThrowAttemptRate"),
+            "tm_tov_pct":   _f(row, "teamTurnoverPercentage"),
+            "oreb_pct":     _f(row, "offensiveReboundPercentage"),
+            "opp_efg_pct":  _f(row, "oppEffectiveFieldGoalPercentage"),
+            "opp_ft_rate":  _f(row, "oppFreeThrowAttemptRate"),
+            "opp_tov_pct":  _f(row, "oppTeamTurnoverPercentage"),
+            "opp_oreb_pct": _f(row, "oppOffensiveReboundPercentage"),
         }
     return out
 
 def main():
     print("=" * 60)
-    print("BACKFILL: fetch_misc_stats.py")
-    print("Endpoint: BoxScoreMiscV3 DF1")
-    print("Columns:  pts_paint, pts_fast_break, pts_second_chance,")
-    print("          pts_off_to, opp_pts_paint, opp_pts_fast_break,")
-    print("          opp_pts_off_to, opp_pts_second_chance, blk_against, fouls_drawn")
+    print("BACKFILL: fetch_fourfactors.py")
+    print("Endpoint: BoxScoreFourFactorsV3 DF1")
+    print("Columns:  ft_rate, tm_tov_pct, oreb_pct,")
+    print("          opp_efg_pct, opp_ft_rate, opp_tov_pct, opp_oreb_pct")
     print("=" * 60)
 
     conn = db_connect()
@@ -120,7 +121,7 @@ def main():
 
     cur.execute("""
         SELECT DISTINCT game_id FROM game_stats
-        WHERE pts_paint IS NULL OR opp_pts_off_to IS NULL
+        WHERE ft_rate IS NULL
         ORDER BY game_id
     """)
     pending = [row[0] for row in cur.fetchall()]
@@ -129,8 +130,8 @@ def main():
 
     updated = failed = consecutive_failures = 0
     bad_data_games = []
-    COOLDOWN_THRESHOLD = 2
-    COOLDOWN_SECS      = 300
+    COOLDOWN_THRESHOLD = 1
+    COOLDOWN_SECS      = 30
 
     for idx, game_id in enumerate(pending, 1):
         print(f"  [{idx:4}/{total}] game_id={game_id}", end=" ", flush=True)
@@ -138,21 +139,18 @@ def main():
         for attempt in range(RETRY_ATTEMPTS):
             try:
                 delay()
-                team_stats = fetch_misc(game_id)
+                team_stats = fetch_fourfactors(game_id)
 
                 for team_id, stats in team_stats.items():
                     cur.execute("""
                         UPDATE game_stats
-                        SET pts_paint=%(pts_paint)s,
-                            pts_fast_break=%(pts_fast_break)s,
-                            pts_second_chance=%(pts_second_chance)s,
-                            pts_off_to=%(pts_off_to)s,
-                            opp_pts_paint=%(opp_pts_paint)s,
-                            opp_pts_fast_break=%(opp_pts_fast_break)s,
-                            opp_pts_off_to=%(opp_pts_off_to)s,
-                            opp_pts_second_chance=%(opp_pts_second_chance)s,
-                            blk_against=%(blk_against)s,
-                            fouls_drawn=%(fouls_drawn)s
+                        SET ft_rate=%(ft_rate)s,
+                            tm_tov_pct=%(tm_tov_pct)s,
+                            oreb_pct=%(oreb_pct)s,
+                            opp_efg_pct=%(opp_efg_pct)s,
+                            opp_ft_rate=%(opp_ft_rate)s,
+                            opp_tov_pct=%(opp_tov_pct)s,
+                            opp_oreb_pct=%(opp_oreb_pct)s
                         WHERE game_id=%(game_id)s AND team_id=%(team_id)s
                     """, {**stats, "game_id": game_id, "team_id": team_id})
 
@@ -178,7 +176,14 @@ def main():
                     print(f"❌ failed after {RETRY_ATTEMPTS} attempts: {e}")
                     if consecutive_failures >= COOLDOWN_THRESHOLD:
                         ts_pause = datetime.now().strftime('%H:%M:%S')
-                        print(f"\n⏸  [{ts_pause}] Rate limit detected ({consecutive_failures} consecutive failures) — pausing {COOLDOWN_SECS//60} min...", flush=True)
+                        print(f"\n⏸  [{ts_pause}] Rate limit detected ({consecutive_failures} consecutive failures) — resetting session & pausing {COOLDOWN_SECS}s...", flush=True)
+                        try:
+                            from nba_api.stats.library import http as _sh
+                            from nba_api.library import http as _bh
+                            _sh.NBAStatsHTTP._session = None
+                            _bh.NBAHTTP._session = None
+                        except Exception:
+                            pass
                         time.sleep(COOLDOWN_SECS)
                         ts_resume = datetime.now().strftime('%H:%M:%S')
                         print(f"▶  [{ts_resume}] Resuming...\n", flush=True)
@@ -190,7 +195,7 @@ def main():
     print(f"\n{'='*60}")
     print(f"✅ Done — updated: {updated}  failed: {failed}")
     if bad_data_games:
-        print(f"   ⚠️  Bad data (skipped, no retry): {', '.join(bad_data_games)}")
+        print(f"   ⚠️  Bad data (skipped, no retry): {', '.join(map(str, bad_data_games))}")
     if failed:
         print(f"   Re-run to retry {failed} failed games")
     print(f"{'='*60}")

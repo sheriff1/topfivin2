@@ -7,7 +7,9 @@ contested_shots IS NULL, and UPDATEs those columns in game_stats.
 
 Columns written:
   contested_shots, deflections, screen_assists, screen_assist_pts,
-  box_outs, loose_balls_recovered
+  box_outs, loose_balls_recovered,
+  contested_shots_2pt, contested_shots_3pt, charges_drawn,
+  loose_balls_off, loose_balls_def, box_outs_off, box_outs_def
 
 Resumable: re-running skips any game_id already filled (contested_shots IS NOT NULL).
 Run via: make fetch-hustle
@@ -20,6 +22,7 @@ which is all we need here.
 import os
 import sys
 import time
+from datetime import datetime
 import random
 import psycopg2
 
@@ -95,12 +98,21 @@ def fetch_hustle(game_id):
     for _, row in df.iterrows():
         team_id = int(row["teamId"])
         out[team_id] = {
-            "contested_shots":      _i(row, "contestedShots"),
-            "deflections":          _i(row, "deflections"),
-            "screen_assists":       _i(row, "screenAssists"),
-            "screen_assist_pts":    _i(row, "screenAssistPoints"),
-            "box_outs":             _i(row, "boxOuts"),
+            "contested_shots":       _i(row, "contestedShots"),
+            "deflections":           _i(row, "deflections"),
+            "screen_assists":        _i(row, "screenAssists"),
+            "screen_assist_pts":     _i(row, "screenAssistPoints"),
+            "box_outs":              _i(row, "boxOuts"),
             "loose_balls_recovered": _i(row, "looseBallsRecoveredTotal"),
+            "contested_shots_2pt":   _i(row, "contestedShots2pt"),
+            "contested_shots_3pt":   _i(row, "contestedShots3pt"),
+            "charges_drawn":         _i(row, "chargesDrawn"),
+            "loose_balls_off":       _i(row, "looseBallsRecoveredOffensive"),
+            "loose_balls_def":       _i(row, "looseBallsRecoveredDefensive"),
+            "box_outs_off":          _i(row, "offensiveBoxOuts"),
+            "box_outs_def":          _i(row, "defensiveBoxOuts"),
+            "box_out_team_reb":      _i(row, "boxOutPlayerTeamRebounds"),
+            "box_out_player_reb":    _i(row, "boxOutPlayerRebounds"),
         }
     return out
 
@@ -109,7 +121,10 @@ def main():
     print("BACKFILL: fetch_hustle_stats.py")
     print("Endpoint: BoxScoreHustleV2 DF1")
     print("Columns:  contested_shots, deflections, screen_assists,")
-    print("          screen_assist_pts, box_outs, loose_balls_recovered")
+    print("          screen_assist_pts, box_outs, loose_balls_recovered,")
+    print("          contested_shots_2pt, contested_shots_3pt, charges_drawn,")
+    print("          loose_balls_off, loose_balls_def, box_outs_off, box_outs_def,")
+    print("          box_out_team_reb, box_out_player_reb")
     print("=" * 60)
 
     conn = db_connect()
@@ -117,14 +132,17 @@ def main():
 
     cur.execute("""
         SELECT DISTINCT game_id FROM game_stats
-        WHERE contested_shots IS NULL
+        WHERE contested_shots IS NULL OR contested_shots_2pt IS NULL OR box_out_team_reb IS NULL
         ORDER BY game_id
     """)
     pending = [row[0] for row in cur.fetchall()]
     total = len(pending)
     print(f"\n📋 Games to backfill: {total}\n")
 
-    updated = failed = 0
+    updated = failed = consecutive_failures = 0
+    bad_data_games = []
+    COOLDOWN_THRESHOLD = 2
+    COOLDOWN_SECS      = 300
 
     for idx, game_id in enumerate(pending, 1):
         print(f"  [{idx:4}/{total}] game_id={game_id}", end=" ", flush=True)
@@ -142,30 +160,54 @@ def main():
                             screen_assists=%(screen_assists)s,
                             screen_assist_pts=%(screen_assist_pts)s,
                             box_outs=%(box_outs)s,
-                            loose_balls_recovered=%(loose_balls_recovered)s
+                            loose_balls_recovered=%(loose_balls_recovered)s,
+                            contested_shots_2pt=%(contested_shots_2pt)s,
+                            contested_shots_3pt=%(contested_shots_3pt)s,
+                            charges_drawn=%(charges_drawn)s,
+                            loose_balls_off=%(loose_balls_off)s,
+                            loose_balls_def=%(loose_balls_def)s,
+                            box_outs_off=%(box_outs_off)s,
+                            box_outs_def=%(box_outs_def)s,
+                            box_out_team_reb=%(box_out_team_reb)s,
+                            box_out_player_reb=%(box_out_player_reb)s
                         WHERE game_id=%(game_id)s AND team_id=%(team_id)s
                     """, {**stats, "game_id": game_id, "team_id": team_id})
 
                 conn.commit()
                 updated += 1
+                consecutive_failures = 0
                 print("✓")
                 break
 
             except Exception as e:
                 conn.rollback()
+                if isinstance(e, (AttributeError, ValueError)):
+                    bad_data_games.append(game_id)
+                    print(f"⚠️  bad data — skipping (no retry): {e}")
+                    break
                 if attempt < RETRY_ATTEMPTS - 1:
                     wait = RETRY_DELAY * (2 ** attempt)
                     print(f"⚠ attempt {attempt+1} failed ({e}) — retrying in {wait}s", end=" ", flush=True)
                     time.sleep(wait)
                 else:
                     failed += 1
+                    consecutive_failures += 1
                     print(f"❌ failed after {RETRY_ATTEMPTS} attempts: {e}")
+                    if consecutive_failures >= COOLDOWN_THRESHOLD:
+                        ts_pause = datetime.now().strftime('%H:%M:%S')
+                        print(f"\n⏸  [{ts_pause}] Rate limit detected ({consecutive_failures} consecutive failures) — pausing {COOLDOWN_SECS//60} min...", flush=True)
+                        time.sleep(COOLDOWN_SECS)
+                        ts_resume = datetime.now().strftime('%H:%M:%S')
+                        print(f"▶  [{ts_resume}] Resuming...\n", flush=True)
+                        consecutive_failures = 0
 
     cur.close()
     conn.close()
 
     print(f"\n{'='*60}")
     print(f"✅ Done — updated: {updated}  failed: {failed}")
+    if bad_data_games:
+        print(f"   ⚠️  Bad data (skipped, no retry): {', '.join(bad_data_games)}")
     if failed:
         print(f"   Re-run to retry {failed} failed games")
     print(f"{'='*60}")

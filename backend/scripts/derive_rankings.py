@@ -50,6 +50,116 @@ STAT_CATEGORIES = [
     ('DEFLECT',   'deflections',       'DESC'),  # Deflections - higher is better
     ('CONTESTED', 'contested_shots',   'DESC'),  # Contested Shots - higher is better
     ('SCR_AST',   'screen_assists',    'DESC'),  # Screen Assists - higher is better
+    ('CONTESTED_2PT', 'contested_shots_2pt', 'DESC'),  # Contested 2PT shots - higher is better
+    ('CONTESTED_3PT', 'contested_shots_3pt', 'DESC'),  # Contested 3PT shots - higher is better
+    ('CHARGES',   'charges_drawn',     'DESC'),  # Charges Drawn - higher is better
+    ('BOX_OUTS',  'box_outs',          'DESC'),  # Box Outs - higher is better
+
+    # Misc new extras
+    ('OPP_PTS_OFF_TO',  'opp_pts_off_to',       'ASC'),   # Opp Pts Off Turnovers - lower is better
+    ('OPP_2ND_CHC',     'opp_pts_second_chance', 'ASC'),   # Opp 2nd Chance Pts - lower is better
+    ('BLK_AGT',         'blk_against',           'ASC'),   # Blocks Against - lower is better
+    ('FOULS_DRAWN',     'fouls_drawn',            'DESC'),  # Fouls Drawn - higher is better
+
+    # Advanced new extras
+    ('AST_TOV',       'ast_to_tov',        'DESC'),  # Assist-to-Turnover ratio - higher is better
+    ('PACE40',        'pace_per40',        'DESC'),  # Pace per 40 min - higher is better
+    ('BOX_OUT_TREB',  'box_out_team_reb',  'DESC'),  # Box Out Team Rebounds - higher is better
+    ('BOX_OUT_PREB',  'box_out_player_reb','DESC'),  # Box Out Player Rebounds - higher is better
+
+    # Traditional per-game averages (not yet exposed)
+    ('ORPG',    'oreb_avg',    'DESC'),  # Offensive Rebounds Per Game - higher is better
+    ('DRPG',    'dreb_avg',    'DESC'),  # Defensive Rebounds Per Game - higher is better
+    ('TPG',     'tov_avg',     'ASC'),   # Turnovers Per Game - lower is better
+    ('PFPG',    'pf_avg',      'ASC'),   # Personal Fouls Per Game - lower is better
+    ('PM',      'pm_avg',      'DESC'),  # Plus/Minus Per Game - higher is better
+    ('FG_PG',   'fg_avg',      'DESC'),  # Field Goals Made Per Game - higher is better
+    ('FGA_PG',  'fga_avg',     'DESC'),  # Field Goal Attempts Per Game - higher is better
+    ('THREE_PG','three_p_avg', 'DESC'),  # 3-Pointers Made Per Game - higher is better
+
+    # BoxScoreAdvancedV3 extras
+    ('POSS',      'possessions',  'DESC'),  # Possessions Per Game - higher is better
+    ('PIE',       'pie',          'DESC'),  # Player Impact Estimate - higher is better
+    ('AST_RATIO', 'ast_ratio',    'DESC'),  # Assist Ratio - higher is better
+    ('TOV_RATIO', 'tov_ratio',    'ASC'),   # Turnover Ratio - lower is better
+
+    # BoxScoreSummaryV3 extras
+    ('BIG_LEAD',   'biggest_lead',        'DESC'),  # Biggest Lead (avg) - higher is better
+    ('BENCH_PTS',  'bench_points',        'DESC'),  # Bench Points Per Game - higher is better
+    ('LEAD_CHG',   'lead_changes',        'DESC'),  # Lead Changes Per Game - higher is better
+    ('TIMES_TIED', 'times_tied',          'DESC'),  # Times Tied Per Game
+    ('BIG_RUN',    'biggest_scoring_run', 'DESC'),  # Biggest Scoring Run (avg) - higher is better
+    ('TOV_TEAM',   'tov_team',            'ASC'),   # Team Turnovers Per Game - lower is better
+    ('TOV_TOTAL',  'tov_total',           'ASC'),   # Total Turnovers Per Game - lower is better
+    ('REB_TEAM',   'reb_team',            'DESC'),  # Team Rebounds Per Game - higher is better
+
+    # BoxScoreMiscV3 extras
+    ('PTS_2ND_CHC', 'pts_second_chance', 'DESC'),  # 2nd Chance Points - higher is better
+    ('PTS_OFF_TO',  'pts_off_to',        'DESC'),  # Points Off Turnovers - higher is better
+
+    # BoxScoreHustleV2 extras
+    ('SCR_AST_PTS',  'screen_assist_pts',    'DESC'),  # Screen Assist Points - higher is better
+    ('LOOSE_BALLS',  'loose_balls_recovered', 'DESC'),  # Loose Balls Recovered - higher is better
+    ('LOOSE_BALLS_O','loose_balls_off',       'DESC'),  # Offensive Loose Balls - higher is better
+    ('LOOSE_BALLS_D','loose_balls_def',       'DESC'),  # Defensive Loose Balls - higher is better
+    ('BOX_OUTS_O',  'box_outs_off',          'DESC'),  # Offensive Box Outs - higher is better
+    ('BOX_OUTS_D',  'box_outs_def',          'DESC'),  # Defensive Box Outs - higher is better
+
+    # Starters group stats (BoxScoreTraditionalV3 DF1)
+    ('STARTERS_PPG',   'starters_pts',         'DESC'),  # Starter Points Per Game - higher is better
+    ('STARTERS_RPG',   'starters_reb',         'DESC'),  # Starter Rebounds Per Game - higher is better
+    ('STARTERS_APG',   'starters_ast',         'DESC'),  # Starter Assists Per Game - higher is better
+    ('STARTERS_SPG',   'starters_stl',         'DESC'),  # Starter Steals Per Game - higher is better
+    ('STARTERS_BPG',   'starters_blk',         'DESC'),  # Starter Blocks Per Game - higher is better
+    ('STARTERS_FG%',   'starters_fg_pct',      'DESC'),  # Starter FG% - higher is better
+    ('STARTERS_3P%',   'starters_three_p_pct', 'DESC'),  # Starter 3P% - higher is better
+    ('STARTERS_FT%',   'starters_ft_pct',      'DESC'),  # Starter FT% - higher is better
+    ('STARTERS_FG',    'starters_fg',          'DESC'),  # Starter FG Made Per Game - higher is better
+    ('STARTERS_FGA',   'starters_fga',         'DESC'),  # Starter FGA Per Game - higher is better
+    ('STARTERS_3P',    'starters_three_p',     'DESC'),  # Starter 3P Made Per Game - higher is better
+    ('STARTERS_3PA',   'starters_three_pa',    'DESC'),  # Starter 3PA Per Game - higher is better
+    ('STARTERS_OREB',  'starters_oreb',        'DESC'),  # Starter OffReb Per Game - higher is better
+    ('STARTERS_DREB',  'starters_dreb',        'DESC'),  # Starter DefReb Per Game - higher is better
+    ('STARTERS_FT',    'starters_ft',          'DESC'),  # Starter FT Made Per Game - higher is better
+    ('STARTERS_FTA',   'starters_fta',         'DESC'),  # Starter FTA Per Game - higher is better
+    ('STARTERS_TOV',   'starters_tov',         'ASC'),   # Starter Turnovers Per Game - lower is better
+    ('STARTERS_PF',    'starters_pf',          'ASC'),   # Starter Fouls Per Game - lower is better
+    ('STARTERS_PM',    'starters_pm',          'DESC'),  # Starter Plus/Minus Per Game - higher is better
+
+    # Bench group stats (BoxScoreTraditionalV3 DF1)
+    ('BENCH_PPG',   'bench_pts',         'DESC'),  # Bench Points Per Game - higher is better
+    ('BENCH_RPG',   'bench_reb',         'DESC'),  # Bench Rebounds Per Game - higher is better
+    ('BENCH_APG',   'bench_ast',         'DESC'),  # Bench Assists Per Game - higher is better
+    ('BENCH_SPG',   'bench_stl',         'DESC'),  # Bench Steals Per Game - higher is better
+    ('BENCH_BPG',   'bench_blk',         'DESC'),  # Bench Blocks Per Game - higher is better
+    ('BENCH_FG%',   'bench_fg_pct',      'DESC'),  # Bench FG% - higher is better
+    ('BENCH_3P%',   'bench_three_p_pct', 'DESC'),  # Bench 3P% - higher is better
+    ('BENCH_FT%',   'bench_ft_pct',      'DESC'),  # Bench FT% - higher is better
+    ('BENCH_FG',    'bench_fg',          'DESC'),  # Bench FG Made Per Game - higher is better
+    ('BENCH_FGA',   'bench_fga',         'DESC'),  # Bench FGA Per Game - higher is better
+    ('BENCH_3P',    'bench_three_p',     'DESC'),  # Bench 3P Made Per Game - higher is better
+    ('BENCH_3PA',   'bench_three_pa',    'DESC'),  # Bench 3PA Per Game - higher is better
+    ('BENCH_OREB',  'bench_oreb',        'DESC'),  # Bench OffReb Per Game - higher is better
+    ('BENCH_DREB',  'bench_dreb',        'DESC'),  # Bench DefReb Per Game - higher is better
+    ('BENCH_FT',    'bench_ft',          'DESC'),  # Bench FT Made Per Game - higher is better
+    ('BENCH_FTA',   'bench_fta',         'DESC'),  # Bench FTA Per Game - higher is better
+    ('BENCH_TOV',   'bench_tov',         'ASC'),   # Bench Turnovers Per Game - lower is better
+    ('BENCH_PF',    'bench_pf',          'ASC'),   # Bench Fouls Per Game - lower is better
+    ('BENCH_PM',    'bench_pm',          'DESC'),  # Bench Plus/Minus Per Game - higher is better
+
+    # Game context stats (BoxScoreSummaryV3 DF0 + DF4)
+    ('ATTEND',    'attendance',    'DESC'),  # Avg Attendance - higher is better (curiosity)
+    ('DURATION',  'duration_mins', 'DESC'),  # Avg Game Duration (mins) - higher is better
+    ('Q1_PTS',    'q1_pts',        'DESC'),  # Q1 Points Per Game - higher is better
+    ('Q2_PTS',    'q2_pts',        'DESC'),  # Q2 Points Per Game - higher is better
+    ('Q3_PTS',    'q3_pts',        'DESC'),  # Q3 Points Per Game - higher is better
+    ('Q4_PTS',    'q4_pts',        'DESC'),  # Q4 Points Per Game - higher is better
+
+    # Estimated advanced ratings (BoxScoreAdvancedV3 DF1, migration 008)
+    ('E_ORTG',    'e_ortg',        'DESC'),  # Estimated Offensive Rating - higher is better
+    ('E_DRTG',    'e_drtg',        'ASC'),   # Estimated Defensive Rating - lower is better
+    ('E_NET_RTG', 'e_net_rtg',     'DESC'),  # Estimated Net Rating - higher is better
+    ('E_PACE',    'e_pace',        'DESC'),  # Estimated Pace - higher is better
 ]
 
 def clear_cache():

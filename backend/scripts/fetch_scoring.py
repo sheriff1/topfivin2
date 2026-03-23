@@ -1,17 +1,29 @@
 #!/usr/bin/env python3
 """
-Backfill: Misc V3 stats for existing game_stats rows.
+Backfill: Scoring breakdown percentages from BoxScoreScoringV3 DF1.
 
-Calls BoxScoreMiscV3 DF1 (team-level) for every game that has
-pts_paint IS NULL, and UPDATEs those columns in game_stats.
+Calls BoxScoreScoringV3 for every game that has pct_fga_2pt IS NULL,
+and UPDATEs those columns in game_stats.
 
-Columns written:
-  pts_paint, pts_fast_break, pts_second_chance, pts_off_to,
-  opp_pts_paint, opp_pts_fast_break,
-  opp_pts_off_to, opp_pts_second_chance, blk_against, fouls_drawn
+Columns written (all FLOAT, represent percentage of team total):
+  pct_fga_2pt     ← percentageFieldGoalsAttempted2pt
+  pct_fga_3pt     ← percentageFieldGoalsAttempted3pt
+  pct_pts_2pt     ← percentagePoints2pt
+  pct_pts_2pt_mr  ← percentagePointsMidrange2pt
+  pct_pts_3pt     ← percentagePoints3pt
+  pct_pts_fb      ← percentagePointsFastBreak
+  pct_pts_ft      ← percentagePointsFreeThrow
+  pct_pts_off_tov ← percentagePointsOffTurnovers
+  pct_pts_paint   ← percentagePointsPaint
+  pct_ast_2pm     ← percentageAssisted2pt
+  pct_uast_2pm    ← percentageUnassisted2pt
+  pct_ast_3pm     ← percentageAssisted3pt
+  pct_uast_3pm    ← percentageUnassisted3pt
+  pct_ast_fgm     ← percentageAssistedFGM
+  pct_uast_fgm    ← percentageUnassistedFGM
 
-Resumable: re-running skips any game_id already filled (pts_paint IS NOT NULL).
-Run via: make fetch-misc
+Resumable: re-running skips any game_id already filled (pct_fga_2pt IS NOT NULL).
+Run via: make fetch-scoring
 """
 
 import os
@@ -56,7 +68,7 @@ def patch_headers():
 
 patch_headers()
 
-from nba_api.stats.endpoints import BoxScoreMiscV3
+from nba_api.stats.endpoints import BoxScoreScoringV3
 
 # ── Config ────────────────────────────────────────────────────────────────────
 REQUEST_DELAY  = 2.0
@@ -80,39 +92,46 @@ def delay():
     jitter = random.uniform(-REQUEST_JITTER, REQUEST_JITTER)
     time.sleep(max(0.5, REQUEST_DELAY + jitter))
 
-def _i(row, col):
+def _f(row, col):
     import pandas as pd
     val = row.get(col)
-    return int(val) if val is not None and pd.notna(val) else None
+    return float(val) if val is not None and pd.notna(val) else None
 
-def fetch_misc(game_id):
-    """Return dict of team_id -> misc stats or raise."""
-    result = BoxScoreMiscV3(game_id=game_id, timeout=60)
-    df = result.get_data_frames()[1]  # DF1 = team-level misc
+def fetch_scoring(game_id):
+    """Return dict of team_id -> {pct_fga_2pt, pct_pts_2pt, ...} or raise."""
+    result = BoxScoreScoringV3(game_id=game_id, timeout=60)
+    df = result.get_data_frames()[1]  # DF1 = team-level scoring breakdown
     out = {}
     for _, row in df.iterrows():
         team_id = int(row["teamId"])
         out[team_id] = {
-            "pts_paint":              _i(row, "pointsPaint"),
-            "pts_fast_break":         _i(row, "pointsFastBreak"),
-            "pts_second_chance":      _i(row, "pointsSecondChance"),
-            "pts_off_to":             _i(row, "pointsOffTurnovers"),
-            "opp_pts_paint":          _i(row, "oppPointsPaint"),
-            "opp_pts_fast_break":     _i(row, "oppPointsFastBreak"),
-            "opp_pts_off_to":         _i(row, "oppPointsOffTurnovers"),
-            "opp_pts_second_chance":  _i(row, "oppPointsSecondChance"),
-            "blk_against":            _i(row, "blocksAgainst"),
-            "fouls_drawn":            _i(row, "foulsDrawn"),
+            "pct_fga_2pt":     _f(row, "percentageFieldGoalsAttempted2pt"),
+            "pct_fga_3pt":     _f(row, "percentageFieldGoalsAttempted3pt"),
+            "pct_pts_2pt":     _f(row, "percentagePoints2pt"),
+            "pct_pts_2pt_mr":  _f(row, "percentagePointsMidrange2pt"),
+            "pct_pts_3pt":     _f(row, "percentagePoints3pt"),
+            "pct_pts_fb":      _f(row, "percentagePointsFastBreak"),
+            "pct_pts_ft":      _f(row, "percentagePointsFreeThrow"),
+            "pct_pts_off_tov": _f(row, "percentagePointsOffTurnovers"),
+            "pct_pts_paint":   _f(row, "percentagePointsPaint"),
+            "pct_ast_2pm":     _f(row, "percentageAssisted2pt"),
+            "pct_uast_2pm":    _f(row, "percentageUnassisted2pt"),
+            "pct_ast_3pm":     _f(row, "percentageAssisted3pt"),
+            "pct_uast_3pm":    _f(row, "percentageUnassisted3pt"),
+            "pct_ast_fgm":     _f(row, "percentageAssistedFGM"),
+            "pct_uast_fgm":    _f(row, "percentageUnassistedFGM"),
         }
     return out
 
 def main():
     print("=" * 60)
-    print("BACKFILL: fetch_misc_stats.py")
-    print("Endpoint: BoxScoreMiscV3 DF1")
-    print("Columns:  pts_paint, pts_fast_break, pts_second_chance,")
-    print("          pts_off_to, opp_pts_paint, opp_pts_fast_break,")
-    print("          opp_pts_off_to, opp_pts_second_chance, blk_against, fouls_drawn")
+    print("BACKFILL: fetch_scoring.py")
+    print("Endpoint: BoxScoreScoringV3 DF1")
+    print("Columns:  pct_fga_2pt, pct_fga_3pt,")
+    print("          pct_pts_2pt, pct_pts_2pt_mr, pct_pts_3pt,")
+    print("          pct_pts_fb, pct_pts_ft, pct_pts_off_tov, pct_pts_paint,")
+    print("          pct_ast_2pm, pct_uast_2pm, pct_ast_3pm, pct_uast_3pm,")
+    print("          pct_ast_fgm, pct_uast_fgm")
     print("=" * 60)
 
     conn = db_connect()
@@ -120,7 +139,7 @@ def main():
 
     cur.execute("""
         SELECT DISTINCT game_id FROM game_stats
-        WHERE pts_paint IS NULL OR opp_pts_off_to IS NULL
+        WHERE pct_fga_2pt IS NULL
         ORDER BY game_id
     """)
     pending = [row[0] for row in cur.fetchall()]
@@ -129,8 +148,8 @@ def main():
 
     updated = failed = consecutive_failures = 0
     bad_data_games = []
-    COOLDOWN_THRESHOLD = 2
-    COOLDOWN_SECS      = 300
+    COOLDOWN_THRESHOLD = 1
+    COOLDOWN_SECS      = 30
 
     for idx, game_id in enumerate(pending, 1):
         print(f"  [{idx:4}/{total}] game_id={game_id}", end=" ", flush=True)
@@ -138,21 +157,26 @@ def main():
         for attempt in range(RETRY_ATTEMPTS):
             try:
                 delay()
-                team_stats = fetch_misc(game_id)
+                team_stats = fetch_scoring(game_id)
 
                 for team_id, stats in team_stats.items():
                     cur.execute("""
                         UPDATE game_stats
-                        SET pts_paint=%(pts_paint)s,
-                            pts_fast_break=%(pts_fast_break)s,
-                            pts_second_chance=%(pts_second_chance)s,
-                            pts_off_to=%(pts_off_to)s,
-                            opp_pts_paint=%(opp_pts_paint)s,
-                            opp_pts_fast_break=%(opp_pts_fast_break)s,
-                            opp_pts_off_to=%(opp_pts_off_to)s,
-                            opp_pts_second_chance=%(opp_pts_second_chance)s,
-                            blk_against=%(blk_against)s,
-                            fouls_drawn=%(fouls_drawn)s
+                        SET pct_fga_2pt=%(pct_fga_2pt)s,
+                            pct_fga_3pt=%(pct_fga_3pt)s,
+                            pct_pts_2pt=%(pct_pts_2pt)s,
+                            pct_pts_2pt_mr=%(pct_pts_2pt_mr)s,
+                            pct_pts_3pt=%(pct_pts_3pt)s,
+                            pct_pts_fb=%(pct_pts_fb)s,
+                            pct_pts_ft=%(pct_pts_ft)s,
+                            pct_pts_off_tov=%(pct_pts_off_tov)s,
+                            pct_pts_paint=%(pct_pts_paint)s,
+                            pct_ast_2pm=%(pct_ast_2pm)s,
+                            pct_uast_2pm=%(pct_uast_2pm)s,
+                            pct_ast_3pm=%(pct_ast_3pm)s,
+                            pct_uast_3pm=%(pct_uast_3pm)s,
+                            pct_ast_fgm=%(pct_ast_fgm)s,
+                            pct_uast_fgm=%(pct_uast_fgm)s
                         WHERE game_id=%(game_id)s AND team_id=%(team_id)s
                     """, {**stats, "game_id": game_id, "team_id": team_id})
 
@@ -178,7 +202,14 @@ def main():
                     print(f"❌ failed after {RETRY_ATTEMPTS} attempts: {e}")
                     if consecutive_failures >= COOLDOWN_THRESHOLD:
                         ts_pause = datetime.now().strftime('%H:%M:%S')
-                        print(f"\n⏸  [{ts_pause}] Rate limit detected ({consecutive_failures} consecutive failures) — pausing {COOLDOWN_SECS//60} min...", flush=True)
+                        print(f"\n⏸  [{ts_pause}] Rate limit detected ({consecutive_failures} consecutive failures) — resetting session & pausing {COOLDOWN_SECS}s...", flush=True)
+                        try:
+                            from nba_api.stats.library import http as _sh
+                            from nba_api.library import http as _bh
+                            _sh.NBAStatsHTTP._session = None
+                            _bh.NBAHTTP._session = None
+                        except Exception:
+                            pass
                         time.sleep(COOLDOWN_SECS)
                         ts_resume = datetime.now().strftime('%H:%M:%S')
                         print(f"▶  [{ts_resume}] Resuming...\n", flush=True)
@@ -190,7 +221,7 @@ def main():
     print(f"\n{'='*60}")
     print(f"✅ Done — updated: {updated}  failed: {failed}")
     if bad_data_games:
-        print(f"   ⚠️  Bad data (skipped, no retry): {', '.join(bad_data_games)}")
+        print(f"   ⚠️  Bad data (skipped, no retry): {', '.join(map(str, bad_data_games))}")
     if failed:
         print(f"   Re-run to retry {failed} failed games")
     print(f"{'='*60}")

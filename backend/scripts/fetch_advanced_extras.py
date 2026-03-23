@@ -6,9 +6,12 @@ Calls BoxScoreAdvancedV3 DF1 (team-level) for every game that has
 ortg IS NULL, and UPDATEs those columns in game_stats.
 
 Columns written:
-  ortg, drtg, net_rtg, efg_pct, pace, possessions, pie
+  ortg, drtg, net_rtg, efg_pct, pace, possessions, pie,
+  ast_to_tov, ast_ratio, tov_ratio, pace_per40,
+  e_ortg, e_drtg, e_net_rtg, e_pace,
+  dreb_pct, reb_pct, e_tov_pct, e_usage_pct
 
-Resumable: re-running skips any game_id already filled (ortg IS NOT NULL).
+Resumable: re-running skips any game_id already filled (ortg IS NOT NULL AND e_ortg IS NOT NULL AND dreb_pct IS NOT NULL).
 Run via: make fetch-advanced-extras
 
 Note: BoxScoreAdvancedV3 is already called by fetch_nba_stats.py, but only
@@ -20,6 +23,7 @@ import os
 import re
 import sys
 import time
+from datetime import datetime
 import random
 import psycopg2
 
@@ -83,7 +87,7 @@ def delay():
     time.sleep(max(0.5, REQUEST_DELAY + jitter))
 
 def fetch_advanced(game_id):
-    """Return dict of team_id -> {ortg, drtg, ...} or raise."""
+    """Return dict of team_id -> {ortg, drtg, e_ortg, ...} or raise."""
     result = BoxScoreAdvancedV3(game_id=game_id, timeout=60)
     df = result.get_data_frames()[1]  # DF1 = team-level advanced
     out = {}
@@ -97,6 +101,18 @@ def fetch_advanced(game_id):
             "pace":        _f(row, "pace"),
             "possessions": _f(row, "possessions"),
             "pie":         _f(row, "PIE"),
+            "ast_to_tov":  _f(row, "assistToTurnover"),
+            "ast_ratio":   _f(row, "assistRatio"),
+            "tov_ratio":   _f(row, "turnoverRatio"),
+            "pace_per40":  _f(row, "pacePer40"),
+            "e_ortg":      _f(row, "estimatedOffensiveRating"),
+            "e_drtg":      _f(row, "estimatedDefensiveRating"),
+            "e_net_rtg":   _f(row, "estimatedNetRating"),
+            "e_pace":      _f(row, "estimatedPace"),
+            "dreb_pct":    _f(row, "defensiveReboundPercentage"),
+            "reb_pct":     _f(row, "reboundPercentage"),
+            "e_tov_pct":   _f(row, "estimatedTeamTurnoverPercentage"),
+            "e_usage_pct": _f(row, "estimatedUsagePercentage"),
         }
     return out
 
@@ -109,7 +125,10 @@ def main():
     print("=" * 60)
     print("BACKFILL: fetch_advanced_extras.py")
     print("Endpoint: BoxScoreAdvancedV3 DF1")
-    print("Columns:  ortg, drtg, net_rtg, efg_pct, pace, possessions, pie")
+    print("Columns:  ortg, drtg, net_rtg, efg_pct, pace, possessions, pie,")
+    print("          ast_to_tov, ast_ratio, tov_ratio, pace_per40,")
+    print("          e_ortg, e_drtg, e_net_rtg, e_pace,")
+    print("          dreb_pct, reb_pct, e_tov_pct, e_usage_pct")
     print("=" * 60)
 
     conn = db_connect()
@@ -117,14 +136,18 @@ def main():
 
     cur.execute("""
         SELECT DISTINCT game_id FROM game_stats
-        WHERE ortg IS NULL
+        WHERE ortg IS NULL OR ast_to_tov IS NULL OR pace_per40 IS NULL
+           OR e_ortg IS NULL OR dreb_pct IS NULL
         ORDER BY game_id
     """)
     pending = [row[0] for row in cur.fetchall()]
     total = len(pending)
     print(f"\n📋 Games to backfill: {total}  (already filled will be skipped automatically)\n")
 
-    skipped = updated = failed = 0
+    skipped = updated = failed = consecutive_failures = 0
+    bad_data_games = []
+    COOLDOWN_THRESHOLD = 2   # consecutive failures before auto-pause
+    COOLDOWN_SECS      = 480  # 8 minutes
 
     for idx, game_id in enumerate(pending, 1):
         print(f"  [{idx:4}/{total}] game_id={game_id}", end=" ", flush=True)
@@ -139,30 +162,51 @@ def main():
                         UPDATE game_stats
                         SET ortg=%(ortg)s, drtg=%(drtg)s, net_rtg=%(net_rtg)s,
                             efg_pct=%(efg_pct)s, pace=%(pace)s,
-                            possessions=%(possessions)s, pie=%(pie)s
+                            possessions=%(possessions)s, pie=%(pie)s,
+                            ast_to_tov=%(ast_to_tov)s, ast_ratio=%(ast_ratio)s,
+                            tov_ratio=%(tov_ratio)s, pace_per40=%(pace_per40)s,
+                            e_ortg=%(e_ortg)s, e_drtg=%(e_drtg)s,
+                            e_net_rtg=%(e_net_rtg)s, e_pace=%(e_pace)s,
+                            dreb_pct=%(dreb_pct)s, reb_pct=%(reb_pct)s,
+                            e_tov_pct=%(e_tov_pct)s, e_usage_pct=%(e_usage_pct)s
                         WHERE game_id=%(game_id)s AND team_id=%(team_id)s
                     """, {**stats, "game_id": game_id, "team_id": team_id})
 
                 conn.commit()
                 updated += 1
+                consecutive_failures = 0
                 print("✓")
                 break
 
             except Exception as e:
                 conn.rollback()
+                if isinstance(e, (AttributeError, ValueError)):
+                    bad_data_games.append(game_id)
+                    print(f"⚠️  bad data — skipping (no retry): {e}")
+                    break
                 if attempt < RETRY_ATTEMPTS - 1:
                     wait = RETRY_DELAY * (2 ** attempt)
                     print(f"⚠ attempt {attempt+1} failed ({e}) — retrying in {wait}s", end=" ", flush=True)
                     time.sleep(wait)
                 else:
                     failed += 1
+                    consecutive_failures += 1
                     print(f"❌ failed after {RETRY_ATTEMPTS} attempts: {e}")
+                    if consecutive_failures >= COOLDOWN_THRESHOLD:
+                        ts_pause = datetime.now().strftime('%H:%M:%S')
+                        print(f"\n⏸  [{ts_pause}] Rate limit detected ({consecutive_failures} consecutive failures) — pausing {COOLDOWN_SECS//60} min...", flush=True)
+                        time.sleep(COOLDOWN_SECS)
+                        ts_resume = datetime.now().strftime('%H:%M:%S')
+                        print(f"▶  [{ts_resume}] Resuming...\n", flush=True)
+                        consecutive_failures = 0
 
     cur.close()
     conn.close()
 
     print(f"\n{'='*60}")
     print(f"✅ Done — updated: {updated}  skipped: {skipped}  failed: {failed}")
+    if bad_data_games:
+        print(f"   ⚠️  Bad data (skipped, no retry): {', '.join(bad_data_games)}")
     if failed:
         print(f"   Re-run to retry {failed} failed games (IS NULL check handles resumability)")
     print(f"{'='*60}")
