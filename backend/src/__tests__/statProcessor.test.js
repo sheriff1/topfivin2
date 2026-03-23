@@ -117,6 +117,93 @@ describe("statProcessor", () => {
         expect(rankings[i].value).toBeLessThanOrEqual(rankings[i + 1].value);
       }
     });
+
+    it("should apply competition ranking for ties (same rank, skip next)", () => {
+      // Create mock data with ties
+      const teamsWithTies = [
+        { team_id: 1, team_name: "Team A", stats: { PPG: 120 } },
+        { team_id: 2, team_name: "Team B", stats: { PPG: 120 } }, // Tied with A
+        { team_id: 3, team_name: "Team C", stats: { PPG: 120 } }, // Tied with A and B
+        { team_id: 4, team_name: "Team D", stats: { PPG: 115 } }, // Next highest
+        { team_id: 5, team_name: "Team E", stats: { PPG: 110 } },
+      ];
+
+      const rankings = calculateRankings(teamsWithTies, "PPG");
+
+      // All three teams with 120 should have rank 1
+      expect(rankings[0].rank).toBe(1);
+      expect(rankings[0].value).toBe(120);
+      expect(rankings[1].rank).toBe(1);
+      expect(rankings[1].value).toBe(120);
+      expect(rankings[2].rank).toBe(1);
+      expect(rankings[2].value).toBe(120);
+
+      // Team D with 115 should have rank 4 (not 2), skipping ranks 2 and 3
+      expect(rankings[3].rank).toBe(4);
+      expect(rankings[3].value).toBe(115);
+
+      // Team E with 110 should have rank 5
+      expect(rankings[4].rank).toBe(5);
+      expect(rankings[4].value).toBe(110);
+    });
+
+    it("should correctly skip ranks after multiple ties", () => {
+      // Test scenario: 2 teams tied for 2nd, should skip to 4th
+      const teamsWithPairTie = [
+        { team_id: 1, team_name: "Team 1", stats: { PPG: 120 } },
+        { team_id: 2, team_name: "Team 2", stats: { PPG: 115 } },
+        { team_id: 3, team_name: "Team 3", stats: { PPG: 115 } }, // Tied with Team 2
+        { team_id: 4, team_name: "Team 4", stats: { PPG: 110 } },
+      ];
+
+      const rankings = calculateRankings(teamsWithPairTie, "PPG");
+
+      expect(rankings[0].rank).toBe(1); // Team 1: 120
+      expect(rankings[1].rank).toBe(2); // Team 2: 115
+      expect(rankings[2].rank).toBe(2); // Team 3: 115 (tied with Team 2)
+      expect(rankings[3].rank).toBe(4); // Team 4: 110 (skip rank 3)
+    });
+
+    it("should handle competition ranking for lower-is-better stats", () => {
+      // Test with a lower-is-better stat (e.g., DRTG - defensive rating)
+      const statsWithDRTG = [
+        { team_id: 1, team_name: "Team A", stats: { DRTG: 105 } },
+        { team_id: 2, team_name: "Team B", stats: { DRTG: 108 } },
+        { team_id: 3, team_name: "Team C", stats: { DRTG: 108 } }, // Tied with B
+        { team_id: 4, team_name: "Team D", stats: { DRTG: 110 } },
+      ];
+
+      const rankings = calculateRankings(statsWithDRTG, "DRTG");
+
+      // Lower is better, so Team A (105) should be rank 1
+      expect(rankings[0].rank).toBe(1);
+      expect(rankings[0].value).toBe(105);
+
+      // Teams B and C (108) should both be rank 2
+      expect(rankings[1].rank).toBe(2);
+      expect(rankings[1].value).toBe(108);
+      expect(rankings[2].rank).toBe(2);
+      expect(rankings[2].value).toBe(108);
+
+      // Team D (110) should be rank 4 (skip rank 3)
+      expect(rankings[3].rank).toBe(4);
+      expect(rankings[3].value).toBe(110);
+    });
+
+    it("should handle all teams with same value (all tied for rank 1)", () => {
+      const allTiedTeams = [
+        { team_id: 1, team_name: "Team A", stats: { PPG: 100 } },
+        { team_id: 2, team_name: "Team B", stats: { PPG: 100 } },
+        { team_id: 3, team_name: "Team C", stats: { PPG: 100 } },
+      ];
+
+      const rankings = calculateRankings(allTiedTeams, "PPG");
+
+      // All should be rank 1
+      expect(rankings[0].rank).toBe(1);
+      expect(rankings[1].rank).toBe(1);
+      expect(rankings[2].rank).toBe(1);
+    });
   });
 
   describe("calculateAllRankings", () => {
