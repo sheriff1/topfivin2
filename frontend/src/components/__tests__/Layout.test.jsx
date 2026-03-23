@@ -262,7 +262,7 @@ describe("Layout Component", () => {
     );
 
     const links = screen.getAllByRole("link");
-    expect(links.length).toBe(4); // Home + 3 nav tabs
+    expect(links.length).toBe(5); // Home + 4 nav tabs (Rankings, Teams, Games Count, Audit)
   });
 
   it("should have proper flexbox layout for navbar", () => {
