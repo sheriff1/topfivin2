@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import { useAllTeams } from "../hooks/useApi";
 import { formatStatValue, formatPercentageStat } from "../utils/statFormatter";
 
@@ -90,58 +91,59 @@ export function Top5Showcase({ rankings, _category, shouldAnimate = true }) {
           const backgroundColor = getCardColor(team);
 
           return (
-            <div
-              key={`${team.team_id}-${team.stat_category}`}
-              className={`card shadow-lg hover:shadow-xl transition-shadow overflow-hidden flex flex-col h-full ${
-                shouldAnimate ? "animate-fade-in-up" : ""
-              }`}
-              style={{
-                animationDelay: shouldAnimate ? `${index * 50}ms` : "0ms",
-              }}
-            >
-              {/* Top section: Logo on left, abbreviation on right */}
+            <Link key={`${team.team_id}-${team.stat_category}`} to={`/team/${abbreviation}`}>
               <div
-                className="flex items-center flex-1 relative overflow-hidden"
-                style={{ backgroundColor }}
+                className={`card shadow-lg hover:shadow-xl transition-shadow overflow-hidden flex flex-col h-full cursor-pointer ${
+                  shouldAnimate ? "animate-fade-in-up" : ""
+                }`}
+                style={{
+                  animationDelay: shouldAnimate ? `${index * 50}ms` : "0ms",
+                }}
               >
-                {/* Logo (as background, center-cropped, edge-to-edge) on left */}
+                {/* Top section: Logo on left, abbreviation on right */}
                 <div
-                  className="w-1/2 h-full"
-                  style={{
-                    backgroundImage: `url(${team.logo_url})`,
-                    backgroundSize: "150%",
-                    backgroundPosition: "center",
-                  }}
-                />
-
-                {/* Team abbreviation on right with League Gothic */}
-                <div className="w-1/2 h-full flex items-center justify-center">
-                  <span
-                    className="text-7xl font-bold text-white leading-none"
+                  className="flex items-center flex-1 relative overflow-hidden"
+                  style={{ backgroundColor }}
+                >
+                  {/* Logo (as background, center-cropped, edge-to-edge) on left */}
+                  <div
+                    className="w-1/2 h-full"
                     style={{
-                      fontFamily: '"League Gothic", sans-serif',
-                      letterSpacing: "0",
+                      backgroundImage: `url(${team.logo_url})`,
+                      backgroundSize: "150%",
+                      backgroundPosition: "center",
                     }}
-                  >
-                    {abbreviation}
-                  </span>
+                  />
+
+                  {/* Team abbreviation on right with League Gothic */}
+                  <div className="w-1/2 h-full flex items-center justify-center">
+                    <span
+                      className="text-7xl font-bold text-white leading-none"
+                      style={{
+                        fontFamily: '"League Gothic", sans-serif',
+                        letterSpacing: "0",
+                      }}
+                    >
+                      {abbreviation}
+                    </span>
+                  </div>
+
+                  {/* Rank badge */}
+                  <div className="absolute top-2 right-2">
+                    <span className="badge badge-success font-bold text-sm">#{team.rank}</span>
+                  </div>
                 </div>
 
-                {/* Rank badge */}
-                <div className="absolute top-2 right-2">
-                  <span className="badge badge-success font-bold text-sm">#{team.rank}</span>
+                {/* Bottom section: Stat value in white area */}
+                <div className="bg-white px-4 py-4 text-center">
+                  <div className="text-3xl font-bold text-gray-900">
+                    {["TS%", "ORB%", "DRB%", "TRB%", "AST%", "USG%"].includes(rankings.category)
+                      ? formatPercentageStat(team.value, rankings.label)
+                      : formatStatValue(team.value, rankings.label)}
+                  </div>
                 </div>
               </div>
-
-              {/* Bottom section: Stat value in white area */}
-              <div className="bg-white px-4 py-4 text-center">
-                <div className="text-3xl font-bold text-gray-900">
-                  {["TS%", "ORB%", "DRB%", "TRB%", "AST%", "USG%"].includes(rankings.category)
-                    ? formatPercentageStat(team.value, rankings.label)
-                    : formatStatValue(team.value, rankings.label)}
-                </div>
-              </div>
-            </div>
+            </Link>
           );
         })}
       </div>
