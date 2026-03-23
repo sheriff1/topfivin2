@@ -243,7 +243,7 @@ function calculateRankings(teamStats, statCategory) {
   }
 
   // Extract stat values and sort
-  const rankings = teamStats
+  const sortedTeams = teamStats
     .map((team) => ({
       team_id: team.team_id,
       team_name: team.team_name,
@@ -259,11 +259,28 @@ function calculateRankings(teamStats, statCategory) {
       } else {
         return b.value - a.value;
       }
-    })
-    .map((item, index) => ({
-      ...item,
-      rank: index + 1,
-    }));
+    });
+
+  // Apply competition ranking: ties get the same rank, next rank is skipped
+  // Example: if 2 teams tied for 2nd, next team is 4th (not 3rd)
+  const rankings = [];
+  for (let i = 0; i < sortedTeams.length; i++) {
+    let rank;
+    if (i === 0) {
+      rank = 1;
+    } else {
+      const currValue = sortedTeams[i].value;
+      const prevValue = sortedTeams[i - 1].value;
+      if (currValue === prevValue) {
+        // Same value as previous → same rank
+        rank = rankings[i - 1].rank;
+      } else {
+        // Different value → rank = position + 1 (skips tied ranks)
+        rank = i + 1;
+      }
+    }
+    rankings.push({ ...sortedTeams[i], rank });
+  }
 
   return rankings;
 }

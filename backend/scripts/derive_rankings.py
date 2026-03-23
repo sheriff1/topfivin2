@@ -208,13 +208,14 @@ def derive_rankings():
         for stat_name, stat_column, sort_order in STAT_CATEGORIES:
             print(f"  📊 Ranking by {stat_name} ({stat_column})...")
             
-            # Generate ranking SQL dynamically
+            # Generate ranking SQL dynamically using RANK() for competition ranking
+            # RANK() gives tied items the same rank and skips subsequent ranks
             ranking_sql = f"""
             INSERT INTO stat_rankings (team_id, stat_category, rank, value, season)
             SELECT 
                 team_id,
                 %s as stat_category,
-                ROW_NUMBER() OVER (ORDER BY {stat_column} {sort_order}) as rank,
+                RANK() OVER (ORDER BY {stat_column} {sort_order}) as rank,
                 {stat_column} as value,
                 season
             FROM team_stats
