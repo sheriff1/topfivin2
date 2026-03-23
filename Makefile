@@ -58,10 +58,13 @@ pipeline:
 	set -a && source backend/.env && set +a && \
 	cd backend && \
 	python scripts/fetch_nba_stats.py && \
+	python scripts/fetch_starters_bench.py && \
+	python scripts/fetch_scoring.py && \
+	python scripts/fetch_playertrack.py && \
 	python scripts/derive_team_stats.py && \
 	python scripts/derive_rankings.py && \
 	redis-cli FLUSHDB
-	@echo "✅ Full pipeline complete (local) — rankings updated"
+	@echo "✅ Full pipeline complete (local) — all stats backfilled + rankings updated"
 
 pipeline-prod:
 	source .venv/bin/activate && \

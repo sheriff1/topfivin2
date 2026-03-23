@@ -159,6 +159,29 @@ const STAT_CATEGORIES = {
   E_DRTG: { label: "Estimated Def. Rating", index: "E_DRTG", lower: true },
   E_NET_RTG: { label: "Estimated Net Rating", index: "E_NET_RTG", lower: false },
   E_PACE: { label: "Estimated Pace", index: "E_PACE", lower: false },
+
+  // Player Tracking stats (BoxScorePlayerTrackV3, migration 009)
+  DISTANCE: { label: "Distance Traveled (ft)", index: "DISTANCE", lower: false },
+  REB_CHANCES_OFF: { label: "Offensive Rebound Chances", index: "REB_CHANCES_OFF", lower: false },
+  REB_CHANCES_DEF: { label: "Defensive Rebound Chances", index: "REB_CHANCES_DEF", lower: false },
+  REB_CHANCES_TOT: { label: "Total Rebound Chances", index: "REB_CHANCES_TOTAL", lower: false },
+  TOUCHES: { label: "Touches Per Game", index: "TOUCHES", lower: false },
+  SECONDARY_AST: { label: "Secondary Assists Per Game", index: "SECONDARY_AST", lower: false },
+  FT_AST: { label: "Free Throw Assists Per Game", index: "FT_AST", lower: false },
+  PASSES: { label: "Passes Per Game", index: "PASSES", lower: false },
+  CONTESTED_FGM: { label: "Contested FG Made Per Game", index: "CONTESTED_FGM", lower: false },
+  CONTESTED_FGA: { label: "Contested FGA Per Game", index: "CONTESTED_FGA", lower: false },
+  "CONTESTED_FG%": { label: "Contested FG %", index: "CONTESTED_FG_PCT", lower: false },
+  UNCONTESTED_FGM: {
+    label: "Uncontested FG Made Per Game",
+    index: "UNCONTESTED_FGM",
+    lower: false,
+  },
+  UNCONTESTED_FGA: { label: "Uncontested FGA Per Game", index: "UNCONTESTED_FGA", lower: false },
+  "UNCONTESTED_FG%": { label: "Uncontested FG %", index: "UNCONTESTED_FG_PCT", lower: false },
+  DAR_FGM: { label: "Defended at Rim FG Made Per Game", index: "DAR_FGM", lower: false },
+  DAR_FGA: { label: "Defended at Rim FGA Per Game", index: "DAR_FGA", lower: false },
+  "DAR_FG%": { label: "Defended at Rim FG %", index: "DAR_FG_PCT", lower: false },
 };
 
 /**

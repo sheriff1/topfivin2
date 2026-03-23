@@ -80,7 +80,13 @@ def derive_team_stats():
             bench_pf, bench_pts, bench_pm,
             -- Game context (migration 007)
             attendance, duration_mins,
-            q1_pts, q2_pts, q3_pts, q4_pts
+            q1_pts, q2_pts, q3_pts, q4_pts,
+            -- PlayerTrack stats (BoxScorePlayerTrackV3 - migration 009)
+            distance, reb_chances_off, reb_chances_def, reb_chances_total,
+            touches, secondary_ast, ft_ast, passes,
+            contested_fgm, contested_fga, contested_fg_pct,
+            uncontested_fgm, uncontested_fga, uncontested_fg_pct,
+            dar_fgm, dar_fga, dar_fg_pct
         )
         SELECT 
             team_id, season,
@@ -244,7 +250,25 @@ def derive_team_stats():
             ROUND(AVG(COALESCE(q1_pts, 0))::numeric, 1)        as q1_pts,
             ROUND(AVG(COALESCE(q2_pts, 0))::numeric, 1)        as q2_pts,
             ROUND(AVG(COALESCE(q3_pts, 0))::numeric, 1)        as q3_pts,
-            ROUND(AVG(COALESCE(q4_pts, 0))::numeric, 1)        as q4_pts
+            ROUND(AVG(COALESCE(q4_pts, 0))::numeric, 1)        as q4_pts,
+            -- PlayerTrack stats aggregations
+            ROUND(AVG(COALESCE(distance, 0))::numeric, 2)      as distance,
+            ROUND(AVG(COALESCE(reb_chances_off, 0))::numeric, 1) as reb_chances_off,
+            ROUND(AVG(COALESCE(reb_chances_def, 0))::numeric, 1) as reb_chances_def,
+            ROUND(AVG(COALESCE(reb_chances_total, 0))::numeric, 1) as reb_chances_total,
+            ROUND(AVG(COALESCE(touches, 0))::numeric, 1)       as touches,
+            ROUND(AVG(COALESCE(secondary_ast, 0))::numeric, 1) as secondary_ast,
+            ROUND(AVG(COALESCE(ft_ast, 0))::numeric, 1)        as ft_ast,
+            ROUND(AVG(COALESCE(passes, 0))::numeric, 1)        as passes,
+            ROUND(AVG(COALESCE(contested_fgm, 0))::numeric, 1) as contested_fgm,
+            ROUND(AVG(COALESCE(contested_fga, 0))::numeric, 1) as contested_fga,
+            ROUND(AVG(COALESCE(contested_fg_pct, 0))::numeric, 3) as contested_fg_pct,
+            ROUND(AVG(COALESCE(uncontested_fgm, 0))::numeric, 1) as uncontested_fgm,
+            ROUND(AVG(COALESCE(uncontested_fga, 0))::numeric, 1) as uncontested_fga,
+            ROUND(AVG(COALESCE(uncontested_fg_pct, 0))::numeric, 3) as uncontested_fg_pct,
+            ROUND(AVG(COALESCE(dar_fgm, 0))::numeric, 1)       as dar_fgm,
+            ROUND(AVG(COALESCE(dar_fga, 0))::numeric, 1)       as dar_fga,
+            ROUND(AVG(COALESCE(dar_fg_pct, 0))::numeric, 3)    as dar_fg_pct
         FROM game_stats
         GROUP BY team_id, season
         ON CONFLICT (team_id, season) DO UPDATE SET
@@ -379,6 +403,23 @@ def derive_team_stats():
             q2_pts = EXCLUDED.q2_pts,
             q3_pts = EXCLUDED.q3_pts,
             q4_pts = EXCLUDED.q4_pts,
+            distance = EXCLUDED.distance,
+            reb_chances_off = EXCLUDED.reb_chances_off,
+            reb_chances_def = EXCLUDED.reb_chances_def,
+            reb_chances_total = EXCLUDED.reb_chances_total,
+            touches = EXCLUDED.touches,
+            secondary_ast = EXCLUDED.secondary_ast,
+            ft_ast = EXCLUDED.ft_ast,
+            passes = EXCLUDED.passes,
+            contested_fgm = EXCLUDED.contested_fgm,
+            contested_fga = EXCLUDED.contested_fga,
+            contested_fg_pct = EXCLUDED.contested_fg_pct,
+            uncontested_fgm = EXCLUDED.uncontested_fgm,
+            uncontested_fga = EXCLUDED.uncontested_fga,
+            uncontested_fg_pct = EXCLUDED.uncontested_fg_pct,
+            dar_fgm = EXCLUDED.dar_fgm,
+            dar_fga = EXCLUDED.dar_fga,
+            dar_fg_pct = EXCLUDED.dar_fg_pct,
             updated_at = CURRENT_TIMESTAMP
         """
         
