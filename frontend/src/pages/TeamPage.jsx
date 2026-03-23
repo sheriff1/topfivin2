@@ -8,6 +8,16 @@ import {
 } from "../hooks/useApi";
 import { formatStatValue, formatPercentageStat } from "../utils/statFormatter";
 
+// Helper function to format category label for display
+const getFormattedCategoryLabel = (label) => {
+  if (!label) return label;
+  // Replace "Avg " with "Average "
+  let formatted = label.replace(/^Avg /i, "Average ");
+  // Remove "(mins)" suffix
+  formatted = formatted.replace(/\s*\(mins\)\s*$/i, "");
+  return formatted;
+};
+
 export function TeamPage() {
   const { abbreviation } = useParams();
   const { data: team, isLoading: teamLoading } = useTeamByAbbreviation(abbreviation);
@@ -122,6 +132,24 @@ export function TeamPage() {
     return sortDirection === "asc" ? " ▲" : " ▼";
   };
 
+  // Get rankings by rank position
+  const getRankingsByPosition = (rankPosition) => {
+    if (!rankings?.rankings || !categories) return [];
+    return rankings.rankings
+      .filter((r) => r.rank === rankPosition)
+      .map((r) => {
+        const category = categories.find((c) => c.code === r.stat_category);
+        return {
+          ...r,
+          label: category?.label || r.stat_category,
+        };
+      });
+  };
+
+  const firstPlaceRankings = getRankingsByPosition(1);
+  const secondPlaceRankings = getRankingsByPosition(2);
+  const thirdPlaceRankings = getRankingsByPosition(3);
+
   // Get stat value from stats object and format it
   const getFormattedStatValue = (category) => {
     if (!stats) return "-";
@@ -149,12 +177,13 @@ export function TeamPage() {
 
     // Get the category label to determine formatting
     const categoryLabel = categories?.find((c) => c.code === category)?.label || category;
+    const formattedLabel = getFormattedCategoryLabel(categoryLabel);
 
     // Use formatPercentageStat for advanced percentages, formatStatValue for others
     if (["TS%", "ORB%", "DRB%", "TRB%", "AST%", "USG%"].includes(category)) {
-      return formatPercentageStat(value, categoryLabel);
+      return formatPercentageStat(value, formattedLabel);
     }
-    return formatStatValue(value, categoryLabel);
+    return formatStatValue(value, formattedLabel);
   };
 
   // Get badge styling based on rank
@@ -198,6 +227,48 @@ export function TeamPage() {
         </div>
       </div>
 
+      {/* Top 3 Stat Banners */}
+      <div className="space-y-2">
+        {/* 1st Place Banner */}
+        {firstPlaceRankings.length > 0 && (
+          <div className="alert bg-yellow-100 border-l-4 border-yellow-400 rounded">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold">🥇</span>
+              <span className="font-semibold text-yellow-800">
+                1st place in:{" "}
+                {firstPlaceRankings.map((r) => getFormattedCategoryLabel(r.label)).join(", ")}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* 2nd Place Banner */}
+        {secondPlaceRankings.length > 0 && (
+          <div className="alert bg-gray-100 border-l-4 border-gray-400 rounded">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold">🥈</span>
+              <span className="font-semibold text-gray-800">
+                2nd place in:{" "}
+                {secondPlaceRankings.map((r) => getFormattedCategoryLabel(r.label)).join(", ")}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* 3rd Place Banner */}
+        {thirdPlaceRankings.length > 0 && (
+          <div className="alert bg-amber-50 border-l-4 border-amber-600 rounded">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold">🥉</span>
+              <span className="font-semibold text-amber-900">
+                3rd place in:{" "}
+                {thirdPlaceRankings.map((r) => getFormattedCategoryLabel(r.label)).join(", ")}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Stats Rankings Table */}
       <div className="card bg-base-200 shadow-md">
         <div className="card-body">
@@ -231,7 +302,7 @@ export function TeamPage() {
                     <tr key={category.code}>
                       <td>
                         <div className="flex items-center gap-2">
-                          {category.label}
+                          {getFormattedCategoryLabel(category.label)}
                           {isTrophy && <span className="text-xl">🏆</span>}
                         </div>
                       </td>
@@ -247,8 +318,14 @@ export function TeamPage() {
                       <td className="text-right font-semibold">
                         {ranking
                           ? ["TS%", "ORB%", "DRB%", "TRB%", "AST%", "USG%"].includes(category.code)
-                            ? formatPercentageStat(ranking.value, category.label)
-                            : formatStatValue(ranking.value, category.label)
+                            ? formatPercentageStat(
+                                ranking.value,
+                                getFormattedCategoryLabel(category.label)
+                              )
+                            : formatStatValue(
+                                ranking.value,
+                                getFormattedCategoryLabel(category.label)
+                              )
                           : getFormattedStatValue(category.code)}
                       </td>
                     </tr>
