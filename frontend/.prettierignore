@@ -1,0 +1,10 @@
+# Generated build artifacts
+build/
+dist/
+
+# Dependencies
+node_modules/
+
+# Misc
+.DS_Store
+*.log
