@@ -1,8 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
-import { useApiHealth } from "../hooks/useApi";
 
 export function Layout({ children }) {
-  const { data: health } = useApiHealth();
   const location = useLocation();
 
   return (
@@ -14,13 +12,7 @@ export function Layout({ children }) {
             🏀 NBA Stats Rankings
           </Link>
         </div>
-        <div className="flex-none gap-2">
-          {health && (
-            <div className="tooltip" data-tip={`API Status: ${health.api || "unknown"}`}>
-              <span className="badge badge-success">{health.status || "healthy"}</span>
-            </div>
-          )}
-        </div>
+        <div className="flex-none gap-2"></div>
       </div>
 
       {/* Tab Navigation */}
@@ -40,6 +32,9 @@ export function Layout({ children }) {
           </Link>
           <Link to="/audit" className={`tab ${location.pathname === "/audit" ? "tab-active" : ""}`}>
             Audit
+          </Link>
+          <Link to="/about" className={`tab ${location.pathname === "/about" ? "tab-active" : ""}`}>
+            About
           </Link>
         </div>
 

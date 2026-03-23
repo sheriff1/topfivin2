@@ -141,74 +141,6 @@ describe("Layout Component", () => {
     expect(screen.getByText("Test Content")).toBeDefined();
   });
 
-  it("should display health status badge", () => {
-    render(
-      <BrowserRouter>
-        <Layout>{mockChildren}</Layout>
-      </BrowserRouter>
-    );
-
-    expect(screen.getByText("healthy")).toBeDefined();
-  });
-
-  it("should have success badge styling for healthy status", () => {
-    const { container } = render(
-      <BrowserRouter>
-        <Layout>{mockChildren}</Layout>
-      </BrowserRouter>
-    );
-
-    const badge = container.querySelector(".badge-success");
-    expect(badge).toBeDefined();
-  });
-
-  it("should have tooltip with API status", () => {
-    const { container } = render(
-      <BrowserRouter>
-        <Layout>{mockChildren}</Layout>
-      </BrowserRouter>
-    );
-
-    const tooltip = container.querySelector(".tooltip");
-    expect(tooltip).toBeDefined();
-    expect(tooltip.getAttribute("data-tip")).toContain("API Status: online");
-  });
-
-  it("should not display health badge when data is null", () => {
-    useApiHealth.mockReturnValue({
-      data: null,
-      isLoading: false,
-      error: null,
-    });
-
-    const { container } = render(
-      <BrowserRouter>
-        <Layout>{mockChildren}</Layout>
-      </BrowserRouter>
-    );
-
-    const badge = container.querySelector(".badge-success");
-    expect(badge).toBeNull();
-  });
-
-  it("should handle missing API status in health data", () => {
-    useApiHealth.mockReturnValue({
-      data: { status: "healthy" },
-      isLoading: false,
-      error: null,
-    });
-
-    const { container } = render(
-      <BrowserRouter>
-        <Layout>{mockChildren}</Layout>
-      </BrowserRouter>
-    );
-
-    // Should show "unknown" or similar fallback for api status
-    const tooltip = container.querySelector(".tooltip");
-    expect(tooltip).toBeDefined();
-  });
-
   it("should have container with proper spacing", () => {
     const { container } = render(
       <BrowserRouter>
@@ -262,7 +194,7 @@ describe("Layout Component", () => {
     );
 
     const links = screen.getAllByRole("link");
-    expect(links.length).toBe(5); // Home + 4 nav tabs (Rankings, Teams, Games Count, Audit)
+    expect(links.length).toBe(6); // Home + 5 nav tabs (Rankings, Teams, Games Count, Audit, About)
   });
 
   it("should have proper flexbox layout for navbar", () => {
