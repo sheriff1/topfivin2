@@ -227,52 +227,52 @@ export function TeamPage() {
         </div>
       </div>
 
+      {/* Top 3 Stat Banners */}
+      <div className="space-y-2">
+        {/* 1st Place Banner */}
+        {firstPlaceRankings.length > 0 && (
+          <div className="alert bg-yellow-100 border-l-4 border-yellow-400 rounded">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold">🥇</span>
+              <span className="font-semibold text-yellow-800">
+                1st place in:{" "}
+                {firstPlaceRankings.map((r) => getFormattedCategoryLabel(r.label)).join(", ")}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* 2nd Place Banner */}
+        {secondPlaceRankings.length > 0 && (
+          <div className="alert bg-gray-100 border-l-4 border-gray-400 rounded">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold">🥈</span>
+              <span className="font-semibold text-gray-800">
+                2nd place in:{" "}
+                {secondPlaceRankings.map((r) => getFormattedCategoryLabel(r.label)).join(", ")}
+              </span>
+            </div>
+          </div>
+        )}
+
+        {/* 3rd Place Banner */}
+        {thirdPlaceRankings.length > 0 && (
+          <div className="alert bg-amber-50 border-l-4 border-amber-600 rounded">
+            <div className="flex items-center gap-2">
+              <span className="text-2xl font-bold">🥉</span>
+              <span className="font-semibold text-amber-900">
+                3rd place in:{" "}
+                {thirdPlaceRankings.map((r) => getFormattedCategoryLabel(r.label)).join(", ")}
+              </span>
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Stats Rankings Table */}
       <div className="card bg-base-200 shadow-md">
         <div className="card-body">
           <h2 className="card-title mb-4">Season Stats & Rankings (2025)</h2>
-
-          {/* Top 3 Banners */}
-          <div className="mb-4 space-y-2">
-            {/* 1st Place Banner */}
-            {firstPlaceRankings.length > 0 && (
-              <div className="alert bg-yellow-100 border-l-4 border-yellow-400 rounded">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold">🥇</span>
-                  <span className="font-semibold text-yellow-800">
-                    1st place in:{" "}
-                    {firstPlaceRankings.map((r) => getFormattedCategoryLabel(r.label)).join(", ")}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* 2nd Place Banner */}
-            {secondPlaceRankings.length > 0 && (
-              <div className="alert bg-gray-100 border-l-4 border-gray-400 rounded">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold">🥈</span>
-                  <span className="font-semibold text-gray-800">
-                    2nd place in:{" "}
-                    {secondPlaceRankings.map((r) => getFormattedCategoryLabel(r.label)).join(", ")}
-                  </span>
-                </div>
-              </div>
-            )}
-
-            {/* 3rd Place Banner */}
-            {thirdPlaceRankings.length > 0 && (
-              <div className="alert bg-amber-50 border-l-4 border-amber-600 rounded">
-                <div className="flex items-center gap-2">
-                  <span className="text-2xl font-bold">🥉</span>
-                  <span className="font-semibold text-amber-900">
-                    3rd place in:{" "}
-                    {thirdPlaceRankings.map((r) => getFormattedCategoryLabel(r.label)).join(", ")}
-                  </span>
-                </div>
-              </div>
-            )}
-          </div>
 
           <div className="overflow-x-auto">
             <table className="table table-zebra w-full">
