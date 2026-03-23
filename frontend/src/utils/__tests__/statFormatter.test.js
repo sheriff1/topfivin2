@@ -107,6 +107,51 @@ describe("statFormatter Utility", () => {
         expect(formatStatValue(value, label)).toBe(expected);
       });
     });
+
+    it("should format Avg Game Duration in H:MM:SS format", () => {
+      // Convert decimal minutes to H:MM:SS
+      expect(formatStatValue(125.44, "Avg Game Duration (mins)")).toBe("2:05:26");
+      expect(formatStatValue(120.5, "Avg Game Duration (mins)")).toBe("2:00:30");
+      expect(formatStatValue(60.5, "Avg Game Duration (mins)")).toBe("1:00:30");
+      expect(formatStatValue(45.75, "Avg Game Duration (mins)")).toBe("0:45:45");
+      expect(formatStatValue(5.5, "Avg Game Duration (mins)")).toBe("0:05:30");
+    });
+
+    it("should handle Avg Game Duration edge cases", () => {
+      // Zero duration
+      expect(formatStatValue(0, "Avg Game Duration (mins)")).toBe("0:00:00");
+      // Less than 1 minute
+      expect(formatStatValue(0.5, "Avg Game Duration (mins)")).toBe("0:00:30");
+      // Exactly 1 hour
+      expect(formatStatValue(60, "Avg Game Duration (mins)")).toBe("1:00:00");
+      // More than 3 hours
+      expect(formatStatValue(200, "Avg Game Duration (mins)")).toBe("3:20:00");
+    });
+
+    it("should format Avg Attendance as integer without decimals", () => {
+      expect(formatStatValue(18736.0, "Avg Attendance")).toBe("18736");
+      expect(formatStatValue(18736.49, "Avg Attendance")).toBe("18736");
+      expect(formatStatValue(18736.5, "Avg Attendance")).toBe("18737");
+      expect(formatStatValue(18736.99, "Avg Attendance")).toBe("18737");
+      expect(formatStatValue(20000.123, "Avg Attendance")).toBe("20000");
+    });
+
+    it("should handle Avg Attendance with large numbers", () => {
+      expect(formatStatValue(22000.5, "Avg Attendance")).toBe("22001");
+      expect(formatStatValue(19282.75, "Avg Attendance")).toBe("19283");
+    });
+
+    it("should return dash for invalid Avg Game Duration values", () => {
+      expect(formatStatValue(null, "Avg Game Duration (mins)")).toBe("—");
+      expect(formatStatValue(undefined, "Avg Game Duration (mins)")).toBe("—");
+      expect(formatStatValue(NaN, "Avg Game Duration (mins)")).toBe("—");
+    });
+
+    it("should return dash for invalid Avg Attendance values", () => {
+      expect(formatStatValue(null, "Avg Attendance")).toBe("—");
+      expect(formatStatValue(undefined, "Avg Attendance")).toBe("—");
+      expect(formatStatValue(NaN, "Avg Attendance")).toBe("—");
+    });
   });
 
   describe("formatPercentageStat", () => {
