@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout";
+import { AboutPage } from "./pages/AboutPage";
 import { AuditPage } from "./pages/AuditPage";
 import { GameCountPage } from "./pages/GameCountPage";
 import { RankingsPage } from "./pages/RankingsPage";
@@ -28,6 +29,7 @@ function App() {
             <Route path="/team/:abbreviation" element={<TeamPage />} />
             <Route path="/games-count" element={<GameCountPage />} />
             <Route path="/audit" element={<AuditPage />} />
+            <Route path="/about" element={<AboutPage />} />
           </Routes>
         </Layout>
       </Router>
