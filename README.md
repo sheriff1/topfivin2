@@ -342,3 +342,72 @@ Closes #ISSUE
 | `backend/scripts/`         | Python data pipeline scripts                    |
 | `frontend/src/pages/`      | Full page views                                 |
 | `frontend/src/components/` | Reusable UI components                          |
+
+### Testing
+
+Before merging code to main, run all tests to ensure quality:
+
+#### Frontend tests (vitest)
+
+```bash
+cd frontend
+npm test              # run all tests once
+npm test -- --watch  # run in watch mode during development
+```
+
+#### Backend tests (jest)
+
+```bash
+cd backend
+npm test              # run all tests once
+npm test -- --watch  # run in watch mode during development
+```
+
+#### Run all tests
+
+```bash
+cd frontend && npm test && cd ..
+cd backend && npm test
+```
+
+### Ship it (feature branch → PR → merge)
+
+The complete workflow for merging code to main:
+
+1. **Create feature branch** (from `main`)
+
+   ```bash
+   git checkout main && git pull origin main
+   git checkout -b feature/your-feature-#ISSUE
+   ```
+
+2. **Make changes & test locally**
+   - Edit files and commit atomically
+   - Test changes in the browser (dev server running)
+   - Ensure linting passes: `npm run lint` in frontend/backend
+
+3. **Run full test suite** (required before pushing)
+
+   ```bash
+   cd frontend && npm test -- --run && cd ..
+   cd backend && npm test
+   ```
+
+   - All tests must pass before proceeding
+   - Update tests if component structure changes
+
+4. **Push feature branch**
+
+   ```bash
+   git push -u origin feature/your-feature-#ISSUE
+   ```
+
+5. **Create PR on GitHub**
+   - Link the PR to the issue with closing keyword: `Closes #ISSUE`
+   - Include description of changes made
+
+6. **After PR merge**
+   ```bash
+   git checkout main && git pull origin main
+   git branch -d feature/your-feature-#ISSUE  # clean up local branch
+   ```
