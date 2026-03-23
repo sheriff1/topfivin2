@@ -156,14 +156,7 @@ export function RankingsGrid({ category, season = "2025" }) {
                         }}
                       />
                     )}
-                    <div>
-                      {item.team_name}
-                      {item.games_count > 0 && (
-                        <span className="text-sm text-gray-500 ml-2">
-                          ({item.games_count} game{item.games_count !== 1 ? "s" : ""})
-                        </span>
-                      )}
-                    </div>
+                    <div>{item.team_name}</div>
                   </div>
                 </Link>
               </td>

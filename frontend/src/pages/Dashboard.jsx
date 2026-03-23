@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { AuditTab } from "../components/AuditTab";
+import { GameCountTab } from "../components/GameCountTab";
 import { RankingsGrid } from "../components/RankingsGrid";
 import { useCategories, useApiHealth } from "../hooks/useApi";
 
@@ -39,6 +40,12 @@ export function Dashboard() {
             onClick={() => setActiveTab("rankings")}
           >
             Rankings
+          </a>
+          <a
+            className={`tab ${activeTab === "games-count" ? "tab-active" : ""}`}
+            onClick={() => setActiveTab("games-count")}
+          >
+            Games Count
           </a>
           <a
             className={`tab ${activeTab === "audit" ? "tab-active" : ""}`}
@@ -94,6 +101,9 @@ export function Dashboard() {
             </div>
           </>
         )}
+
+        {/* Games Count Tab */}
+        {activeTab === "games-count" && <GameCountTab season={season} />}
 
         {/* Audit Tab */}
         {activeTab === "audit" && <AuditTab season={season} />}
