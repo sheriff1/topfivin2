@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { useParams } from "react-router-dom";
 import {
   useTeamByAbbreviation,
@@ -13,6 +14,10 @@ export function TeamPage() {
   const { data: stats, isLoading: statsLoading } = useTeamStats(team?.team_id, "2025");
   const { data: rankings, isLoading: rankingsLoading } = useTeamRankings(team?.team_id, "2025");
   const { data: categories } = useCategories();
+
+  // Sorting state - default to "category" ascending (A->Z)
+  const [sortColumn, setSortColumn] = useState("category");
+  const [sortDirection, setSortDirection] = useState("asc");
 
   const isLoading = teamLoading || statsLoading || rankingsLoading;
 
@@ -73,6 +78,49 @@ export function TeamPage() {
     acc[r.stat_category] = r;
     return acc;
   }, {});
+
+  // Handle sort column click
+  const handleSortClick = (column) => {
+    if (sortColumn === column) {
+      // Toggle direction if same column
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // Switch column and reset to ascending
+      setSortColumn(column);
+      setSortDirection("asc");
+    }
+  };
+
+  // Get sorted categories based on sort state
+  const getSortedCategories = () => {
+    if (!categories) return [];
+
+    const sorted = [...categories];
+
+    if (sortColumn === "category") {
+      sorted.sort((a, b) => {
+        const comparison = a.label.localeCompare(b.label);
+        return sortDirection === "asc" ? comparison : -comparison;
+      });
+    } else if (sortColumn === "rank") {
+      sorted.sort((a, b) => {
+        const rankA = rankingsByCategory[a.code]?.rank ?? Infinity;
+        const rankB = rankingsByCategory[b.code]?.rank ?? Infinity;
+        const comparison = rankA - rankB;
+        return sortDirection === "asc" ? comparison : -comparison;
+      });
+    }
+
+    return sorted;
+  };
+
+  const sortedCategories = getSortedCategories();
+
+  // Get sort indicator icon
+  const getSortIndicator = (column) => {
+    if (sortColumn !== column) return "";
+    return sortDirection === "asc" ? " ▲" : " ▼";
+  };
 
   // Get stat value from stats object and format it
   const getFormattedStatValue = (category) => {
@@ -159,13 +207,23 @@ export function TeamPage() {
             <table className="table table-zebra w-full">
               <thead>
                 <tr>
-                  <th className="w-1/3">Stat Category</th>
-                  <th className="text-right">Rank</th>
+                  <th
+                    className="w-1/3 cursor-pointer hover:bg-base-300"
+                    onClick={() => handleSortClick("category")}
+                  >
+                    Stat Category{getSortIndicator("category")}
+                  </th>
+                  <th
+                    className="text-right cursor-pointer hover:bg-base-300"
+                    onClick={() => handleSortClick("rank")}
+                  >
+                    Rank{getSortIndicator("rank")}
+                  </th>
                   <th className="text-right">Value</th>
                 </tr>
               </thead>
               <tbody>
-                {categories?.map((category) => {
+                {sortedCategories?.map((category) => {
                   const ranking = rankingsByCategory[category.code];
                   const isTrophy = ranking?.rank <= 5;
 
