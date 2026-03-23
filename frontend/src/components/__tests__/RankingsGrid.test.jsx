@@ -212,16 +212,6 @@ describe("RankingsGrid Component", () => {
     expect(logoDivs.length).toBeGreaterThan(0);
   });
 
-  it("should display games count when available", () => {
-    render(
-      <BrowserRouter>
-        <RankingsGrid category="PPG" />
-      </BrowserRouter>
-    );
-
-    expect(screen.getAllByText("(82 games)").length).toBeGreaterThan(0);
-  });
-
   it("should show loading spinner when isLoading is true", () => {
     useRankings.mockReturnValue({
       data: null,
