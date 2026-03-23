@@ -292,16 +292,17 @@ make uninstall-cron
 
 Stat rankings are computed from season averages across all collected games. A small number of games have permanently incomplete records in the NBA API:
 
-| Game ID      | Missing data source   | Affected columns                                                                    |
-| ------------ | --------------------- | ----------------------------------------------------------------------------------- |
-| `0022500259` | BoxScoreSummaryV3 DF7 | `biggest_lead`, `bench_points`, `lead_changes`, `times_tied`, `biggest_scoring_run` |
-| `0022500260` | BoxScoreSummaryV3 DF7 | same                                                                                |
-| `0022500261` | BoxScoreSummaryV3 DF7 | same                                                                                |
-| `0022500265` | BoxScoreSummaryV3 DF7 | same                                                                                |
+| Game ID      | Missing data source   | Affected columns                                                                                                                                                                                                                       |
+| ------------ | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0022500259` | BoxScoreSummaryV3 DF7 | `biggest_lead`, `bench_points`, `lead_changes`, `times_tied`, `biggest_scoring_run`, `pts_from_tov`                                                                                                                                    |
+| `0022500260` | BoxScoreSummaryV3 DF7 | same                                                                                                                                                                                                                                   |
+| `0022500261` | BoxScoreSummaryV3 DF7 | same                                                                                                                                                                                                                                   |
+| `0022500265` | BoxScoreSummaryV3 DF7 | same                                                                                                                                                                                                                                   |
+| `0022500603` | BoxScoreAdvancedV3    | `dreb_pct`, `reb_pct`, `oreb_pct`, `tm_tov_pct`, `e_tov_pct`, `ast_to_tov`, `ast_pct`, `ast_ratio`, `pace_per40`, `pie`, `poss`, `e_ortg`, `e_drtg`, `e_net_rtg`, `e_pace`, `opp_efg_pct`, `opp_tov_pct`, `opp_ft_rate`, `e_usage_pct` |
 
-**Cause:** These games appear to have incomplete records in the NBA API — likely postponed or rescheduled games that were never fully recorded.
+**Cause:** These games appear to have incomplete records in the NBA API — likely postponed or rescheduled games that were never fully recorded. All 5 failed on every retry attempt.
 
-**Impact:** Negligible. `COALESCE` treats missing values as 0 in season averages. With 70+ games per team in a season, 4 missing games shift any affected average by less than 0.1%.
+**Impact:** Negligible. `COALESCE` treats missing values as 0 in season averages. With 70+ games per team in a season, 5 missing games shift any affected average by less than 0.1%.
 
 ---
 
