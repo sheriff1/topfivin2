@@ -23,9 +23,6 @@ export function AuditTab({ season }) {
   const [expandedLoading, setExpandedLoading] = useState(false);
   const [expandedError, setExpandedError] = useState(null);
 
-  // Team games breakdown state
-  const [showTeamBreakdown, setShowTeamBreakdown] = useState(false);
-
   // Sort games by game_id in descending order (Z->A)
   const sortGamesByIdDescending = (gamesToSort) => {
     if (!Array.isArray(gamesToSort) || gamesToSort.length === 0) {
@@ -52,37 +49,6 @@ export function AuditTab({ season }) {
 
   // Memoized sorted games
   const sortedGames = useMemo(() => sortGamesByIdDescending(games), [games]);
-
-  // Calculate games count per team
-  const teamGameCounts = useMemo(() => {
-    const teamMap = {};
-    sortedGames.forEach((game) => {
-      // Count for home team
-      if (game.home_team_abbreviation) {
-        if (!teamMap[game.home_team_abbreviation]) {
-          teamMap[game.home_team_abbreviation] = {
-            abbreviation: game.home_team_abbreviation,
-            logo_url: game.home_team_logo,
-            count: 0,
-          };
-        }
-        teamMap[game.home_team_abbreviation].count += 1;
-      }
-      // Count for away team
-      if (game.away_team_abbreviation) {
-        if (!teamMap[game.away_team_abbreviation]) {
-          teamMap[game.away_team_abbreviation] = {
-            abbreviation: game.away_team_abbreviation,
-            logo_url: game.away_team_logo,
-            count: 0,
-          };
-        }
-        teamMap[game.away_team_abbreviation].count += 1;
-      }
-    });
-    // Sort by abbreviation
-    return Object.values(teamMap).sort((a, b) => a.abbreviation.localeCompare(b.abbreviation));
-  }, [sortedGames]);
 
   const fetchAuditData = useCallback(async () => {
     try {
@@ -469,53 +435,6 @@ export function AuditTab({ season }) {
                 <option value={50}>50 per page</option>
                 <option value={100}>100 per page</option>
               </select>
-            </div>
-          )}
-        </div>
-      </div>
-
-      {/* Team Games Breakdown */}
-      <div className="card bg-base-200 shadow-md">
-        <div className="card-body">
-          <div className="flex items-center justify-between">
-            <h3 className="card-title text-lg">Team Games Breakdown</h3>
-            <button
-              className="btn btn-sm btn-ghost"
-              onClick={() => setShowTeamBreakdown(!showTeamBreakdown)}
-            >
-              {showTeamBreakdown ? "▼" : "▶"}
-            </button>
-          </div>
-
-          {showTeamBreakdown && (
-            <div className="mt-4 overflow-x-auto">
-              <table className="table table-compact w-full">
-                <thead>
-                  <tr>
-                    <th>Team</th>
-                    <th className="text-right">Games Collected</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {teamGameCounts.map((team) => (
-                    <tr key={team.abbreviation}>
-                      <td>
-                        <div className="flex items-center gap-2">
-                          {team.logo_url && (
-                            <img
-                              src={team.logo_url}
-                              alt={team.abbreviation}
-                              className="h-6 w-6 object-contain"
-                            />
-                          )}
-                          <span>{team.abbreviation}</span>
-                        </div>
-                      </td>
-                      <td className="text-right font-semibold">{team.count}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
             </div>
           )}
         </div>
