@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { apiClient } from "../hooks/useApi";
 import GameStatsRow from "./GameStatsRow";
 
@@ -22,6 +22,33 @@ export function AuditTab({ season }) {
   const [expandedStats, setExpandedStats] = useState(null);
   const [expandedLoading, setExpandedLoading] = useState(false);
   const [expandedError, setExpandedError] = useState(null);
+
+  // Sort games by game_id in descending order (Z->A)
+  const sortGamesByIdDescending = (gamesToSort) => {
+    if (!Array.isArray(gamesToSort) || gamesToSort.length === 0) {
+      return gamesToSort;
+    }
+
+    return [...gamesToSort].sort((a, b) => {
+      const idA = a.game_id || "";
+      const idB = b.game_id || "";
+
+      // Try numeric sort first (extract numeric suffix)
+      const numA = parseInt(idA.match(/\d+$/)?.[0] || 0);
+      const numB = parseInt(idB.match(/\d+$/)?.[0] || 0);
+
+      if (numA !== numB) {
+        // Descending order (largest first)
+        return numB - numA;
+      }
+
+      // If numeric parts are equal, sort alphabetically (reverse)
+      return idB.localeCompare(idA);
+    });
+  };
+
+  // Memoized sorted games
+  const sortedGames = useMemo(() => sortGamesByIdDescending(games), [games]);
 
   const fetchAuditData = useCallback(async () => {
     try {
@@ -263,14 +290,14 @@ export function AuditTab({ season }) {
                 </tr>
               </thead>
               <tbody>
-                {games.length === 0 ? (
+                {sortedGames.length === 0 ? (
                   <tr>
                     <td colSpan="5" className="text-center text-gray-500">
                       No games found for season {season}
                     </td>
                   </tr>
                 ) : (
-                  games.map((game) => (
+                  sortedGames.map((game) => (
                     <React.Fragment key={game.game_id}>
                       <tr
                         onClick={() => handleRowClick(game.game_id)}
