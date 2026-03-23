@@ -4,6 +4,19 @@
  */
 
 /**
+ * Convert decimal minutes to H:MM:SS format
+ * @param {number} minutes - Decimal minutes (e.g., 125.44)
+ * @returns {string} Formatted time string (e.g., "2:05:26")
+ */
+function minutesToTimeFormat(minutes) {
+  const totalSeconds = Math.round(parseFloat(minutes) * 60);
+  const hours = Math.floor(totalSeconds / 3600);
+  const mins = Math.floor((totalSeconds % 3600) / 60);
+  const secs = totalSeconds % 60;
+  return `${hours}:${mins.toString().padStart(2, "0")}:${secs.toString().padStart(2, "0")}`;
+}
+
+/**
  * Format a stat value for display
  * @param {number} value - The raw numeric value to format
  * @param {string} categoryLabel - The category label (e.g., "Field Goal %", "Points Per Game")
@@ -13,6 +26,16 @@ export function formatStatValue(value, categoryLabel) {
   // Handle null/undefined values
   if (value === null || value === undefined || isNaN(value)) {
     return "—";
+  }
+
+  // Check if this is "Avg Game Duration" - convert to H:MM:SS format
+  if (categoryLabel && categoryLabel.includes("Avg Game Duration")) {
+    return minutesToTimeFormat(value);
+  }
+
+  // Check if this is "Avg Attendance" - format as integer (no decimals)
+  if (categoryLabel && categoryLabel === "Avg Attendance") {
+    return Math.round(parseFloat(value)).toString();
   }
 
   // Detect if this is a percentage-based stat by checking if label contains "%"
