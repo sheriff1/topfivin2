@@ -32,6 +32,12 @@ export function Layout({ children }) {
           <Link to="/teams" className={`tab ${location.pathname === "/teams" ? "tab-active" : ""}`}>
             Teams
           </Link>
+          <Link
+            to="/games-count"
+            className={`tab ${location.pathname === "/games-count" ? "tab-active" : ""}`}
+          >
+            Games Count
+          </Link>
           <Link to="/audit" className={`tab ${location.pathname === "/audit" ? "tab-active" : ""}`}>
             Audit
           </Link>
