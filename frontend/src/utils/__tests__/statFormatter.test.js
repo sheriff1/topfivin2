@@ -111,7 +111,7 @@ describe("statFormatter Utility", () => {
     it("should format Avg Game Duration in H:MM:SS format", () => {
       // Convert decimal minutes to H:MM:SS
       expect(formatStatValue(125.44, "Avg Game Duration (mins)")).toBe("2:05:26");
-      expect(formatStatValue(120.5, "Avg Game Duration (mins)")).toBe("2:01:00");
+      expect(formatStatValue(120.5, "Avg Game Duration (mins)")).toBe("2:00:30");
       expect(formatStatValue(60.5, "Avg Game Duration (mins)")).toBe("1:00:30");
       expect(formatStatValue(45.75, "Avg Game Duration (mins)")).toBe("0:45:45");
       expect(formatStatValue(5.5, "Avg Game Duration (mins)")).toBe("0:05:30");
