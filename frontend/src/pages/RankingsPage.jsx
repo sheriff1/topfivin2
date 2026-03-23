@@ -10,6 +10,10 @@ export function RankingsPage() {
   const { data: categories, isLoading: categoriesLoading } = useCategories();
   const { data: rankings } = useRankings(selectedCategory, season);
 
+  // Get the label for the selected category
+  const selectedCategoryLabel =
+    categories?.find((cat) => cat.code === selectedCategory)?.label || selectedCategory;
+
   // Track last category change time for debounce logic
   const lastCategoryChangeRef = useRef(Date.now());
 
@@ -51,7 +55,7 @@ export function RankingsPage() {
                     .sort((a, b) => a.label.localeCompare(b.label))
                     .map((cat) => (
                       <option key={cat.code} value={cat.code}>
-                        {cat.label} ({cat.code})
+                        {cat.label}
                       </option>
                     ))
                 )}
@@ -64,7 +68,9 @@ export function RankingsPage() {
       {/* Rankings Display */}
       <div className="card bg-base-200 shadow-xl">
         <div className="card-body">
-          <h2 className="card-title text-2xl mb-4">{selectedCategory} Rankings - 2025-26 Season</h2>
+          <h2 className="card-title text-2xl mb-4">
+            {selectedCategoryLabel} Rankings - 2025-26 Season
+          </h2>
 
           {/* Top 5 Showcase - above the rankings table */}
           <Top5Showcase
