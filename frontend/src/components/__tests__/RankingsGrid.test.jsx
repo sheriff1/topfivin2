@@ -6,6 +6,7 @@ import { RankingsGrid } from "../RankingsGrid";
 // Mock the useApi and statFormatter
 vi.mock("../../hooks/useApi", () => ({
   useRankings: vi.fn(),
+  useAllTeams: vi.fn(),
 }));
 
 vi.mock("../../utils/statFormatter", () => ({
@@ -13,7 +14,7 @@ vi.mock("../../utils/statFormatter", () => ({
   formatPercentageStat: vi.fn((value) => `${(value * 100).toFixed(1)}%`),
 }));
 
-import { useRankings } from "../../hooks/useApi";
+import { useRankings, useAllTeams } from "../../hooks/useApi";
 
 describe("RankingsGrid Component", () => {
   const mockRankingsData = {
@@ -53,6 +54,36 @@ describe("RankingsGrid Component", () => {
   beforeEach(() => {
     useRankings.mockReturnValue({
       data: mockRankingsData,
+      isLoading: false,
+      error: null,
+    });
+    useAllTeams.mockReturnValue({
+      data: [
+        {
+          team_id: 1610612742,
+          team_name: "Dallas Mavericks",
+          team_colors: {
+            primary: "#003DA5",
+            secondary: "#B8860B",
+          },
+        },
+        {
+          team_id: 1610612738,
+          team_name: "Boston Celtics",
+          team_colors: {
+            primary: "#007A33",
+            secondary: "#BA0021",
+          },
+        },
+        {
+          team_id: 1610612739,
+          team_name: "Cleveland Cavaliers",
+          team_colors: {
+            primary: "#6F2DA8",
+            secondary: "#041E3F",
+          },
+        },
+      ],
       isLoading: false,
       error: null,
     });
@@ -170,14 +201,15 @@ describe("RankingsGrid Component", () => {
   });
 
   it("should display team logos", () => {
-    render(
+    const { container } = render(
       <BrowserRouter>
         <RankingsGrid category="PPG" />
       </BrowserRouter>
     );
 
-    const logos = screen.getAllByAltText(/logo/);
-    expect(logos.length).toBeGreaterThan(0);
+    // Check for logo divs with background-image style and specific dimensions
+    const logoDivs = container.querySelectorAll("div.h-12.w-12[style*='background-image']");
+    expect(logoDivs.length).toBeGreaterThan(0);
   });
 
   it("should display games count when available", () => {

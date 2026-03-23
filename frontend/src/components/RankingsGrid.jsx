@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { useRankings } from "../hooks/useApi";
+import { useRankings, useAllTeams } from "../hooks/useApi";
 import { formatStatValue, formatPercentageStat } from "../utils/statFormatter";
 
 const TEAM_ID_TO_ABBR = {
@@ -37,6 +37,38 @@ const TEAM_ID_TO_ABBR = {
 
 export function RankingsGrid({ category, season = "2025" }) {
   const { data, isLoading, error } = useRankings(category, season);
+  const { data: allTeams } = useAllTeams();
+
+  // Calculate contrast ratio for white text on a given hex color
+  const getContrastRatio = (hexColor) => {
+    const hex = hexColor.replace("#", "");
+    const r = parseInt(hex.substr(0, 2), 16);
+    const g = parseInt(hex.substr(2, 2), 16);
+    const b = parseInt(hex.substr(4, 2), 16);
+
+    // Calculate relative luminance
+    const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+
+    return luminance;
+  };
+
+  // Get team's primary or secondary color based on luminance
+  const getTeamColor = (teamId) => {
+    const teamData = allTeams?.find((t) => t.team_id === teamId);
+    if (!teamData?.team_colors) return "#000000";
+
+    const primaryColor = teamData.team_colors.primary || "#000000";
+    const secondaryColor = teamData.team_colors.secondary || "#FFFFFF";
+
+    // Jazz (1610612762) and Rockets (1610612745) always use secondary color
+    if (teamId === 1610612762 || teamId === 1610612745) {
+      return secondaryColor;
+    }
+
+    // Luminance < 0.5 is dark enough for white text
+    const contrastRatio = getContrastRatio(primaryColor);
+    return contrastRatio < 0.5 ? primaryColor : secondaryColor;
+  };
 
   if (isLoading) {
     return (
@@ -106,21 +138,21 @@ export function RankingsGrid({ category, season = "2025" }) {
         </thead>
         <tbody>
           {data.rankings.map((item) => (
-            <tr key={`${item.team_id}-${item.stat_category}`}>
-              <td>
+            <tr key={`${item.team_id}-${item.stat_category}`} className="hover:bg-base-200 py-0">
+              <td className="py-0">
                 <span className={`badge badge-lg ${getRankColor(item.rank)}`}>#{item.rank}</span>
               </td>
-              <td className="font-medium">
+              <td className="py-0">
                 <Link to={`/team/${TEAM_ID_TO_ABBR[item.team_id]}`} className="link link-hover">
                   <div className="flex items-center gap-3">
                     {item.logo_url && (
-                      <img
-                        src={item.logo_url}
-                        alt={`${item.team_name} logo`}
-                        className="h-8 w-8 object-contain"
-                        onError={(e) => {
-                          // Hide image if CDN URL fails to load
-                          e.target.style.display = "none";
+                      <div
+                        className="h-12 w-12 flex-shrink-0 overflow-hidden"
+                        style={{
+                          backgroundColor: getTeamColor(item.team_id),
+                          backgroundImage: `url(${item.logo_url})`,
+                          backgroundSize: "175%",
+                          backgroundPosition: "center",
                         }}
                       />
                     )}
@@ -135,7 +167,7 @@ export function RankingsGrid({ category, season = "2025" }) {
                   </div>
                 </Link>
               </td>
-              <td className="text-right text-lg font-bold">
+              <td className="text-right text-lg font-bold py-0">
                 {["TS%", "ORB%", "DRB%", "TRB%", "AST%", "USG%"].includes(data.category)
                   ? formatPercentageStat(item.value, data.label)
                   : formatStatValue(item.value, data.label)}
