@@ -4,6 +4,10 @@
   themes: light dark;
 }
 
+@theme {
+  --font-league-gothic: "League Gothic", sans-serif;
+}
+
 @layer base {
   body {
     @apply m-0 font-sans antialiased;

@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { useAllTeams } from "../hooks/useApi";
 import { formatStatValue, formatPercentageStat } from "../utils/statFormatter";
 
@@ -93,48 +92,53 @@ export function Top5Showcase({ rankings, _category, shouldAnimate = true }) {
           return (
             <div
               key={`${team.team_id}-${team.stat_category}`}
-              className={`relative card shadow-md hover:shadow-lg transition-shadow cursor-pointer h-full flex flex-col ${
+              className={`card shadow-lg hover:shadow-xl transition-shadow overflow-hidden flex flex-col h-full ${
                 shouldAnimate ? "animate-fade-in-up" : ""
               }`}
               style={{
                 animationDelay: shouldAnimate ? `${index * 50}ms` : "0ms",
               }}
             >
-              {/* Logo area with team color - clickable */}
-              <Link
-                to={`/team/${TEAM_ID_TO_ABBR[team.team_id]}`}
-                className="aspect-video relative overflow-hidden rounded-t-lg flex items-center justify-center p-4 hover:opacity-80 transition-opacity"
+              {/* Top section: Logo on left, abbreviation on right */}
+              <div
+                className="flex items-center flex-1 relative overflow-hidden"
                 style={{ backgroundColor }}
               >
-                {team.logo_url && (
-                  <img
-                    src={team.logo_url}
-                    alt={team.team_name}
-                    className="w-full h-full object-contain"
-                  />
-                )}
-              </Link>
+                {/* Logo (as background, center-cropped, edge-to-edge) on left */}
+                <div
+                  className="w-1/2 h-full"
+                  style={{
+                    backgroundImage: `url(${team.logo_url})`,
+                    backgroundSize: "150%",
+                    backgroundPosition: "center",
+                  }}
+                />
 
-              {/* Rank badge - positioned on top-right */}
-              <div className="absolute top-2 right-2">
-                <span className="badge badge-success font-bold text-sm">#{team.rank}</span>
+                {/* Team abbreviation on right with League Gothic */}
+                <div className="w-1/2 h-full flex items-center justify-center">
+                  <span
+                    className="text-7xl font-bold text-white leading-none"
+                    style={{
+                      fontFamily: '"League Gothic", sans-serif',
+                      letterSpacing: "0",
+                    }}
+                  >
+                    {abbreviation}
+                  </span>
+                </div>
+
+                {/* Rank badge */}
+                <div className="absolute top-2 right-2">
+                  <span className="badge badge-success font-bold text-sm">#{team.rank}</span>
+                </div>
               </div>
 
-              {/* Card body */}
-              <div className="card-body p-3 bg-base-200 grow flex flex-col justify-between">
-                <div className="flex items-center justify-between gap-2">
-                  <h2 className="text-base font-semibold line-clamp-2 flex-1">
-                    <Link to={`/team/${abbreviation}`} className="link link-hover">
-                      {team.team_name}
-                    </Link>
-                  </h2>
-
-                  {/* Stat value */}
-                  <div className="text-lg font-bold whitespace-nowrap">
-                    {["TS%", "ORB%", "DRB%", "TRB%", "AST%", "USG%"].includes(rankings.category)
-                      ? formatPercentageStat(team.value, rankings.label)
-                      : formatStatValue(team.value, rankings.label)}
-                  </div>
+              {/* Bottom section: Stat value in white area */}
+              <div className="bg-white px-4 py-4 text-center">
+                <div className="text-3xl font-bold text-gray-900">
+                  {["TS%", "ORB%", "DRB%", "TRB%", "AST%", "USG%"].includes(rankings.category)
+                    ? formatPercentageStat(team.value, rankings.label)
+                    : formatStatValue(team.value, rankings.label)}
                 </div>
               </div>
             </div>
