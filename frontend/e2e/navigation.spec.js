@@ -5,11 +5,11 @@ test.beforeEach(async ({ page }) => {
   await setupApiMocks(page);
 });
 
-test("logo click navigates to home from /audit", async ({ page }) => {
-  await page.goto("/audit");
+test("logo click navigates to home from /teams", async ({ page }) => {
+  await page.goto("/teams");
 
   // Click the logo link
-  await page.getByRole("link", { name: /NBA Stats Rankings/i }).click();
+  await page.getByRole("link", { name: /NBA Top Five In/i }).click();
 
   // Should navigate to /
   await expect(page).toHaveURL("/");
@@ -39,11 +39,9 @@ test("Teams tab navigates to /teams", async ({ page }) => {
   await expect(page.getByRole("heading", { name: "Teams" })).toBeVisible();
 });
 
-test("Audit tab navigates to /audit", async ({ page }) => {
+test("dev-only tabs (Audit, Games Count) are not visible in production", async ({ page }) => {
   await page.goto("/");
 
-  await page.getByRole("link", { name: "Audit" }).click();
-
-  await expect(page).toHaveURL("/audit");
-  await expect(page.getByRole("heading", { name: "Total Games" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Audit" })).not.toBeVisible();
+  await expect(page.getByRole("link", { name: "Games Count" })).not.toBeVisible();
 });

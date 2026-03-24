@@ -1,7 +1,10 @@
 import { Link, useLocation } from "react-router-dom";
 
+const IS_DEV = !import.meta.env.PROD;
+
 export function Layout({ children }) {
   const location = useLocation();
+  const { pathname } = location;
 
   return (
     <div className="min-h-screen bg-base-100">
@@ -9,38 +12,58 @@ export function Layout({ children }) {
       <div className="navbar bg-primary text-primary-content shadow-lg">
         <div className="flex-1">
           <Link to="/" className="btn btn-ghost normal-case text-2xl font-bold">
-            🏀 NBA Stats Rankings
+            🏀 NBA Top Five In
           </Link>
         </div>
         <div className="flex-none gap-2"></div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="container mx-auto p-4 md:p-6">
-        <div className="tabs tabs-bordered mb-6">
-          <Link to="/" className={`tab ${location.pathname === "/" ? "tab-active" : ""}`}>
-            Rankings
-          </Link>
-          <Link to="/teams" className={`tab ${location.pathname === "/teams" ? "tab-active" : ""}`}>
-            Teams
-          </Link>
-          <Link
-            to="/games-count"
-            className={`tab ${location.pathname === "/games-count" ? "tab-active" : ""}`}
-          >
-            Games Count
-          </Link>
-          <Link to="/audit" className={`tab ${location.pathname === "/audit" ? "tab-active" : ""}`}>
-            Audit
-          </Link>
-          <Link to="/about" className={`tab ${location.pathname === "/about" ? "tab-active" : ""}`}>
-            About
-          </Link>
+      <div className="bg-base-200 border-b border-base-300">
+        <div className="container mx-auto px-4">
+          <div className="tabs tabs-bordered overflow-x-auto flex-nowrap">
+            <Link
+              to="/"
+              className={`tab whitespace-nowrap ${pathname === "/" ? "tab-active" : ""}`}
+            >
+              Rankings
+            </Link>
+            <Link
+              to="/teams"
+              className={`tab whitespace-nowrap ${
+                pathname === "/teams" || pathname.startsWith("/team/") ? "tab-active" : ""
+              }`}
+            >
+              Teams
+            </Link>
+            {IS_DEV && (
+              <Link
+                to="/games-count"
+                className={`tab whitespace-nowrap ${pathname === "/games-count" ? "tab-active" : ""}`}
+              >
+                Games Count
+              </Link>
+            )}
+            {IS_DEV && (
+              <Link
+                to="/audit"
+                className={`tab whitespace-nowrap ${pathname === "/audit" ? "tab-active" : ""}`}
+              >
+                Audit
+              </Link>
+            )}
+            <Link
+              to="/about"
+              className={`tab whitespace-nowrap ${pathname === "/about" ? "tab-active" : ""}`}
+            >
+              About
+            </Link>
+          </div>
         </div>
-
-        {/* Page Content */}
-        {children}
       </div>
+
+      {/* Page Content */}
+      <div className="container mx-auto p-4 md:p-6">{children}</div>
     </div>
   );
 }
