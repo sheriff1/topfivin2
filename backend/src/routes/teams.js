@@ -22,15 +22,23 @@ router.get("/teams", validateTeams, validationMiddleware, async (req, res) => {
   try {
     const { team_id } = req.query;
 
-    let query = "SELECT id, team_id, team_name, logo_url, team_colors FROM teams";
+    let query = `
+      SELECT
+        t.id, t.team_id, t.team_name, t.logo_url, t.team_colors,
+        COALESCE((
+          SELECT COUNT(*) FROM stat_rankings sr
+          WHERE sr.team_id = t.team_id AND sr.rank <= 5
+        ), 0)::int AS trophy_count
+      FROM teams t
+    `;
     const params = [];
 
     if (team_id) {
-      query += " WHERE team_id = $1";
+      query += " WHERE t.team_id = $1";
       params.push(team_id);
     }
 
-    query += " ORDER BY team_id";
+    query += " ORDER BY t.team_id";
 
     const result = await db.query(query, params);
     res.json({ success: true, data: result.rows });
@@ -72,7 +80,12 @@ router.get(
 
       // Query database for team info
       const result = await db.query(
-        "SELECT id, team_id, team_name, logo_url, team_colors FROM teams WHERE team_id = $1",
+        `SELECT t.id, t.team_id, t.team_name, t.logo_url, t.team_colors,
+          COALESCE((
+            SELECT COUNT(*) FROM stat_rankings sr
+            WHERE sr.team_id = t.team_id AND sr.rank <= 5
+          ), 0)::int AS trophy_count
+         FROM teams t WHERE t.team_id = $1`,
         [teamId]
       );
 

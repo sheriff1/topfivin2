@@ -10,6 +10,7 @@ const TeamRowSchema = z.object({
   team_name: z.string(),
   logo_url: z.string().nullable(),
   team_colors: z.unknown().nullable(),
+  trophy_count: z.number().int(),
 });
 
 const RankingItemSchema = z.object({
