@@ -209,6 +209,8 @@ export function TeamPage() {
         "PCT_UAST_3PM",
         "PCT_AST_FGM",
         "PCT_UAST_FGM",
+        // Win percentage stored as 0-1 in DB
+        "WIN_PCT",
       ].includes(category)
     ) {
       return formatPercentageStat(value, formattedLabel);
@@ -373,6 +375,8 @@ export function TeamPage() {
                               "PCT_UAST_3PM",
                               "PCT_AST_FGM",
                               "PCT_UAST_FGM",
+                              // Win percentage stored as 0-1 in DB
+                              "WIN_PCT",
                             ].includes(category.code)
                             ? formatPercentageStat(
                                 ranking.value,

@@ -160,6 +160,8 @@ export function Top5Showcase({ rankings, _category, shouldAnimate = true }) {
                       "PCT_UAST_3PM",
                       "PCT_AST_FGM",
                       "PCT_UAST_FGM",
+                      // Win percentage stored as 0-1 in DB
+                      "WIN_PCT",
                     ].includes(rankings.category)
                       ? formatPercentageStat(team.value, rankings.label)
                       : formatStatValue(team.value, rankings.label)}
