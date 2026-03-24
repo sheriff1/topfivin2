@@ -65,7 +65,7 @@ describe("Layout Component", () => {
       </BrowserRouter>
     );
 
-    expect(screen.getByText(/🏀 NBA Stats Rankings/)).toBeDefined();
+    expect(screen.getByText(/🏀 NBA Top Five In/)).toBeDefined();
   });
 
   it("should have link to home page", () => {
@@ -75,7 +75,7 @@ describe("Layout Component", () => {
       </BrowserRouter>
     );
 
-    const homeLink = screen.getByRole("link", { name: /🏀 NBA Stats Rankings/ });
+    const homeLink = screen.getByRole("link", { name: /🏀 NBA Top Five In/ });
     expect(homeLink.href).toContain("/");
   });
 
@@ -148,7 +148,7 @@ describe("Layout Component", () => {
       </BrowserRouter>
     );
 
-    const contentContainer = container.querySelector(".container");
+    const contentContainer = container.querySelectorAll(".container")[1];
     expect(contentContainer.className).toContain("mx-auto");
     expect(contentContainer.className).toContain("p-4");
   });
@@ -160,7 +160,7 @@ describe("Layout Component", () => {
       </BrowserRouter>
     );
 
-    const contentContainer = container.querySelector(".container");
+    const contentContainer = container.querySelectorAll(".container")[1];
     expect(contentContainer.className).toMatch(/md:p-6/);
   });
 
@@ -194,7 +194,7 @@ describe("Layout Component", () => {
     );
 
     const links = screen.getAllByRole("link");
-    expect(links.length).toBe(6); // Home + 5 nav tabs (Rankings, Teams, Games Count, Audit, About)
+    expect(links.length).toBe(6); // Home + 5 nav tabs (Rankings, Teams, Games Count, Audit, About) — dev mode
   });
 
   it("should have proper flexbox layout for navbar", () => {
