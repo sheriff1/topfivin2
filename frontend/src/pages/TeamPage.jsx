@@ -184,7 +184,33 @@ export function TeamPage() {
     const formattedLabel = getFormattedCategoryLabel(categoryLabel);
 
     // Use formatPercentageStat for advanced percentages, formatStatValue for others
-    if (["TS%", "ORB%", "DRB%", "TRB%", "AST%", "USG%"].includes(category)) {
+    // Advanced percentages stored as 0-1 range in DB, need x100 multiplication
+    if (
+      [
+        "TS%",
+        "ORB%",
+        "DRB%",
+        "TRB%",
+        "AST%",
+        "USG%",
+        // Scoring breakdown percentages from BoxScoreScoringV3
+        "PCT_FGA_2PT",
+        "PCT_FGA_3PT",
+        "PCT_PTS_2PT",
+        "PCT_PTS_2PT_MR",
+        "PCT_PTS_3PT",
+        "PCT_PTS_FB",
+        "PCT_PTS_FT",
+        "PCT_PTS_OFF_TOV",
+        "PCT_PTS_PAINT",
+        "PCT_AST_2PM",
+        "PCT_UAST_2PM",
+        "PCT_AST_3PM",
+        "PCT_UAST_3PM",
+        "PCT_AST_FGM",
+        "PCT_UAST_FGM",
+      ].includes(category)
+    ) {
       return formatPercentageStat(value, formattedLabel);
     }
     return formatStatValue(value, formattedLabel);
