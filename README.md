@@ -19,11 +19,15 @@ A full-stack web app that fetches NBA team statistics from the official NBA.com 
 
 ```
 nba_api (Python — run locally)
-  └─ fetch_nba_stats.py         → games + game_stats tables
-       ├─ fetch_advanced_extras.py  ┐
-       ├─ fetch_summary_extras.py   ├─ backfill (one-time, resumable — post-migration only)
-       ├─ fetch_misc_stats.py       │
-       └─ fetch_hustle_stats.py     ┘
+  └─ fetch_nba_stats.py           → games + game_stats tables
+       ├─ fetch_advanced_extras.py   ┐
+       ├─ fetch_summary.py           │
+       ├─ fetch_fourfactors.py       │
+       ├─ fetch_scoring.py           ├─ daily pipeline (resumable via IS NULL guards)
+       ├─ fetch_starters_bench.py    │
+       ├─ fetch_playertrack.py       │
+       ├─ fetch_misc_stats.py        │
+       └─ fetch_hustle_stats.py      ┘
             └─ derive_team_stats.py     → team_stats table
                  └─ derive_rankings.py      → stat_rankings table
                                                   │

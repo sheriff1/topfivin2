@@ -1,4 +1,4 @@
-.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod backup backup-clean archive-season k6-smoke k6-load k6-stress fetch-advanced-extras fetch-summary-extras fetch-misc fetch-hustle fetch-summary fetch-fourfactors fetch-scoring fetch-starters-bench fetch-playertrack backfill backfill-prod backfill-missing sync-advanced-prod sync-missing-prod sync-prod migrate-prod check-progress check-progress-prod install-cron uninstall-cron logs-clean
+.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod backup backup-clean archive-season k6-smoke k6-load k6-stress fetch-advanced-extras fetch-misc fetch-hustle fetch-summary fetch-fourfactors fetch-scoring fetch-starters-bench fetch-playertrack backfill backfill-prod backfill-missing sync-advanced-prod sync-missing-prod sync-prod migrate-prod check-progress check-progress-prod install-cron uninstall-cron logs-clean
 
 # ── Infrastructure ───────────────────────────────────────────────────────────
 services:
@@ -20,7 +20,7 @@ frontend:
 
 # ── Data pipeline ─────────────────────────────────────────────────────────────
 # Local targets (fetch, derive, pipeline) use backend/.env → localhost postgres
-# Production targets (fetch-prod, derive-prod, pipeline-prod) use backend/.env.production → Railway# pipeline-prod: fetch → backfill (4 V3 scripts, IS NULL guard) → derive → rankings → backup# backup / backup-clean always target production
+# Production targets (fetch-prod, derive-prod, pipeline-prod) use backend/.env.production → Railway# pipeline-prod: fetch → 9 V3 scripts (IS NULL guard) → derive → rankings → backup# backup / backup-clean always target production
 
 fetch:
 	source .venv/bin/activate && \
@@ -41,8 +41,7 @@ derive:
 	set -a && source backend/.env && set +a && \
 	cd backend && \
 	python scripts/derive_team_stats.py && \
-	python scripts/derive_rankings.py && \
-	redis-cli FLUSHDB
+	python scripts/derive_rankings.py
 	@echo "✅ Derive + Rankings complete (local)"
 
 derive-prod:
@@ -50,8 +49,7 @@ derive-prod:
 	set -a && source backend/.env.production && set +a && \
 	cd backend && \
 	python scripts/derive_team_stats.py && \
-	python scripts/derive_rankings.py && \
-	redis-cli FLUSHDB
+	python scripts/derive_rankings.py
 	@echo "✅ Derive + Rankings complete (production)"
 
 pipeline:
@@ -60,17 +58,15 @@ pipeline:
 	cd backend && \
 	python scripts/fetch_nba_stats.py && \
 	python scripts/fetch_advanced_extras.py && \
-	python scripts/fetch_summary_extras.py && \
 	python scripts/fetch_summary.py && \
-	python scripts/fetch_misc_stats.py && \
-	python scripts/fetch_hustle_stats.py && \
 	python scripts/fetch_fourfactors.py && \
 	python scripts/fetch_scoring.py && \
 	python scripts/fetch_starters_bench.py && \
 	python scripts/fetch_playertrack.py && \
+	python scripts/fetch_misc_stats.py && \
+	python scripts/fetch_hustle_stats.py && \
 	python scripts/derive_team_stats.py && \
-	python scripts/derive_rankings.py && \
-	redis-cli FLUSHDB
+	python scripts/derive_rankings.py
 	@echo "✅ Full pipeline complete (local) — all stats backfilled + rankings updated"
 
 pipeline-prod:
@@ -82,12 +78,12 @@ pipeline-prod:
 	python scripts/fetch_summary.py && \
 	python scripts/fetch_fourfactors.py && \
 	python scripts/fetch_scoring.py && \
+	python scripts/fetch_starters_bench.py && \
 	python scripts/fetch_playertrack.py && \
 	python scripts/fetch_misc_stats.py && \
 	python scripts/fetch_hustle_stats.py && \
 	python scripts/derive_team_stats.py && \
-	python scripts/derive_rankings.py && \
-	redis-cli FLUSHDB
+	python scripts/derive_rankings.py
 	@$(MAKE) backup
 	@echo "✅ Full pipeline complete (production) — ranked updated + backup saved"
 
@@ -105,14 +101,6 @@ fetch-advanced-extras:
 	cd backend && \
 	python scripts/fetch_advanced_extras.py 2>&1 | tee $(LOGS_DIR)/backfill_advanced.log
 	@echo "✅ Advanced extras backfill complete (local)"
-
-fetch-summary-extras:
-	mkdir -p $(LOGS_DIR)
-	source .venv/bin/activate && \
-	set -a && source backend/.env && set +a && \
-	cd backend && \
-	python scripts/fetch_summary_extras.py 2>&1 | tee $(LOGS_DIR)/backfill_summary.log
-	@echo "✅ Summary extras backfill complete (local)"
 
 fetch-misc:
 	mkdir -p $(LOGS_DIR)
@@ -172,7 +160,7 @@ fetch-playertrack:
 
 backfill:
 	$(MAKE) fetch-advanced-extras
-	$(MAKE) fetch-summary-extras
+	$(MAKE) fetch-summary
 	$(MAKE) fetch-misc
 	$(MAKE) fetch-hustle
 	@echo "✅ All backfill scripts complete — run: make derive"
@@ -182,7 +170,7 @@ backfill:
 # Each script uses IS NULL guard — safe to re-run.
 backfill-missing:
 	$(MAKE) fetch-advanced-extras
-	$(MAKE) fetch-summary-extras
+	$(MAKE) fetch-summary
 	$(MAKE) fetch-misc
 	$(MAKE) fetch-hustle
 	@echo "✅ Migration-005 backfill complete — run: make derive"
@@ -199,7 +187,7 @@ backfill-prod:
 	source .venv/bin/activate && \
 	set -a && source backend/.env.production && set +a && \
 	cd backend && \
-	python scripts/fetch_summary_extras.py 2>&1 | tee $(LOGS_DIR)/backfill_prod_summary.log
+	python scripts/fetch_summary.py 2>&1 | tee $(LOGS_DIR)/backfill_prod_summary.log
 	source .venv/bin/activate && \
 	set -a && source backend/.env.production && set +a && \
 	cd backend && \
