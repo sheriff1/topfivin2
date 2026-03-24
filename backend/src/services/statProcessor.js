@@ -159,7 +159,7 @@ const STAT_CATEGORIES = {
   E_PACE: { label: "Estimated Pace", index: "E_PACE", lower: false },
 
   // Player Tracking stats (BoxScorePlayerTrackV3, migration 009)
-  DISTANCE: { label: "Distance Traveled (ft)", index: "DISTANCE", lower: false },
+  DISTANCE: { label: "Distance Traveled (mi)", index: "DISTANCE", lower: false },
   REB_CHANCES_OFF: { label: "Offensive Rebound Chances", index: "REB_CHANCES_OFF", lower: false },
   REB_CHANCES_DEF: { label: "Defensive Rebound Chances", index: "REB_CHANCES_DEF", lower: false },
   REB_CHANCES_TOT: { label: "Total Rebound Chances", index: "REB_CHANCES_TOTAL", lower: false },
