@@ -256,9 +256,10 @@ describe("statFormatter Utility", () => {
 
   describe("Cross-function edge cases", () => {
     it("should handle the same value differently based on function used", () => {
-      // formatStatValue for 0.5 as percentage: "0.50%"
-      // formatPercentageStat for 0.5: "50.00%"
-      expect(formatStatValue(0.5, "Field Goal %")).toBe("0.50%");
+      // Both functions now normalize 0-1 decimals to 0-100 for percentage stats
+      // formatStatValue for 0.5 as percentage: "50.00%" (auto-detects 0-1 range)
+      // formatPercentageStat for 0.5: "50.00%" (always multiplies by 100)
+      expect(formatStatValue(0.5, "Field Goal %")).toBe("50.00%");
       expect(formatPercentageStat(0.5, "Field Goal %")).toBe("50.00%");
     });
 

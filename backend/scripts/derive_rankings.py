@@ -186,13 +186,13 @@ STAT_CATEGORIES = [
     ('PASSES',           'passes',               'DESC'),  # Passes Per Game - higher is better
     ('CONTESTED_FGM',    'contested_fgm',        'DESC'),  # Contested FG Made - higher is better
     ('CONTESTED_FGA',    'contested_fga',        'DESC'),  # Contested FG Attempted - higher is better
-    ('CONTESTED_FG_PCT', 'contested_fg_pct',     'DESC'),  # Contested FG% - higher is better
+    ('CONTESTED_FG%',    'contested_fg_pct',     'DESC'),  # Contested FG% - higher is better
     ('UNCONTESTED_FGM',  'uncontested_fgm',      'DESC'),  # Uncontested FG Made - higher is better
     ('UNCONTESTED_FGA',  'uncontested_fga',      'DESC'),  # Uncontested FG Attempted - higher is better
-    ('UNCONTESTED_FG_PCT','uncontested_fg_pct',  'DESC'),  # Uncontested FG% - higher is better
+    ('UNCONTESTED_FG%',  'uncontested_fg_pct',   'DESC'),  # Uncontested FG% - higher is better
     ('DAR_FGM',          'dar_fgm',              'DESC'),  # Defended At Rim FG Made - higher is better
     ('DAR_FGA',          'dar_fga',              'DESC'),  # Defended At Rim FG Attempted - higher is better
-    ('DAR_FG_PCT',       'dar_fg_pct',          'DESC'),  # Defended At Rim FG% - higher is better
+    ('DAR_FG%',          'dar_fg_pct',          'DESC'),  # Defended At Rim FG% - higher is better
 
     # Scoring breakdown percentages (BoxScoreScoringV3 DF1)
     ('PCT_FGA_2PT',     'pct_fga_2pt',       'DESC'),  # % of FGA from 2PT - higher is better
