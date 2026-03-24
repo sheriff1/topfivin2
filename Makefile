@@ -59,8 +59,14 @@ pipeline:
 	set -a && source backend/.env && set +a && \
 	cd backend && \
 	python scripts/fetch_nba_stats.py && \
-	python scripts/fetch_starters_bench.py && \
+	python scripts/fetch_advanced_extras.py && \
+	python scripts/fetch_summary_extras.py && \
+	python scripts/fetch_summary.py && \
+	python scripts/fetch_misc_stats.py && \
+	python scripts/fetch_hustle_stats.py && \
+	python scripts/fetch_fourfactors.py && \
 	python scripts/fetch_scoring.py && \
+	python scripts/fetch_starters_bench.py && \
 	python scripts/fetch_playertrack.py && \
 	python scripts/derive_team_stats.py && \
 	python scripts/derive_rankings.py && \

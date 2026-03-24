@@ -131,7 +131,7 @@ def main():
     updated = failed = consecutive_failures = 0
     bad_data_games = []
     COOLDOWN_THRESHOLD = 2
-    COOLDOWN_SECS      = 300
+    COOLDOWN_SECS      = 30
 
     for idx, game_id in enumerate(pending, 1):
         print(f"  [{idx:4}/{total}] game_id={game_id}", end=" ", flush=True)
@@ -177,7 +177,7 @@ def main():
                     print(f"❌ failed after {RETRY_ATTEMPTS} attempts: {e}")
                     if consecutive_failures >= COOLDOWN_THRESHOLD:
                         ts_pause = datetime.now().strftime('%H:%M:%S')
-                        print(f"\n⏸  [{ts_pause}] Rate limit detected ({consecutive_failures} consecutive failures) — pausing {COOLDOWN_SECS//60} min...", flush=True)
+                        print(f"\n⏸  [{ts_pause}] Rate limit detected ({consecutive_failures} consecutive failures) — pausing {COOLDOWN_SECS}s...", flush=True)
                         time.sleep(COOLDOWN_SECS)
                         ts_resume = datetime.now().strftime('%H:%M:%S')
                         print(f"▶  [{ts_resume}] Resuming...\n", flush=True)
