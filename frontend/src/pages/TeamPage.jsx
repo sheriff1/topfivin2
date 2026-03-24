@@ -89,6 +89,11 @@ export function TeamPage() {
     return acc;
   }, {});
 
+  // Stats to exclude from all views (unavailable from NBA API)
+  const EXCLUDED_STATS = ["BENCH_PM", "STARTERS_PM"];
+
+  const isExcludedStat = (statCategory) => EXCLUDED_STATS.includes(statCategory);
+
   // Handle sort column click
   const handleSortClick = (column) => {
     if (sortColumn === column) {
@@ -133,11 +138,6 @@ export function TeamPage() {
     if (sortColumn !== column) return "";
     return sortDirection === "asc" ? " ▲" : " ▼";
   };
-
-  // Stats to exclude from all views (unavailable from NBA API)
-  const EXCLUDED_STATS = ["BENCH_PM", "STARTERS_PM"];
-
-  const isExcludedStat = (statCategory) => EXCLUDED_STATS.includes(statCategory);
 
   // Get rankings by rank position
   const getRankingsByPosition = (rankPosition) => {
