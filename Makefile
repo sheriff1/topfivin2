@@ -2,8 +2,9 @@
 
 # ── Infrastructure ───────────────────────────────────────────────────────────
 services:
-	brew services start postgresql@16
-	brew services start redis
+	@echo "Starting services..."
+	@(lsof -i :5432 > /dev/null 2>&1 && echo "✓ PostgreSQL already running on 5432") || (brew services start postgresql@16 || true)
+	@(lsof -i :6379 > /dev/null 2>&1 && echo "✓ Redis already running on 6379") || (brew services start redis || true)
 
 # ── Application ──────────────────────────────────────────────────────────────
 dev:
