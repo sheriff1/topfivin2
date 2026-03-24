@@ -183,7 +183,7 @@ const STAT_CATEGORIES = {
   "UNCONTESTED_FG%": { label: "Uncontested FG %", index: "UNCONTESTED_FG_PCT", lower: false },
   DAR_FGM: { label: "Defended at Rim FG Made Per Game", index: "DAR_FGM", lower: false },
   DAR_FGA: { label: "Defended at Rim FGA Per Game", index: "DAR_FGA", lower: false },
-  DAR_FG_PCT: { label: "Defended at Rim FG %", index: "DAR_FG_PCT", lower: false },
+  "DAR_FG%": { label: "Defended at Rim FG %", index: "DAR_FG_PCT", lower: false },
 
   // Scoring breakdown percentages (BoxScoreScoringV3 DF1)
   PCT_FGA_2PT: { label: "FGA % from 2PT", index: "PCT_FGA_2PT", lower: false },
