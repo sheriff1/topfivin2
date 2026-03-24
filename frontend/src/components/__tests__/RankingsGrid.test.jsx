@@ -208,7 +208,7 @@ describe("RankingsGrid Component", () => {
     );
 
     // Check for logo divs with background-image style and specific dimensions
-    const logoDivs = container.querySelectorAll("div.h-12.w-12[style*='background-image']");
+    const logoDivs = container.querySelectorAll("div[style*='background-image']");
     expect(logoDivs.length).toBeGreaterThan(0);
   });
 

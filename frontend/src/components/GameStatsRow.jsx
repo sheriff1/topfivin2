@@ -54,9 +54,11 @@ const GameStatsRow = ({ homeStats, awayStats, isLoading, error, onRetry }) => {
   };
 
   const StatRow = ({ label, homeValue, awayValue }) => (
-    <div className="grid grid-cols-[1fr_auto_1fr] gap-4 py-2 border-b border-base-300 last:border-0 px-4">
+    <div className="grid grid-cols-[1fr_auto_1fr] gap-2 sm:gap-4 py-1 sm:py-2 border-b border-base-300 last:border-0 px-2 sm:px-4">
       <div className="text-right font-semibold">{homeValue}</div>
-      <div className="text-center text-sm font-medium min-w-35">{label}</div>
+      <div className="text-center text-xs sm:text-sm font-medium min-w-[80px] sm:min-w-[140px]">
+        {label}
+      </div>
       <div className="text-left font-semibold">{awayValue}</div>
     </div>
   );
@@ -64,9 +66,9 @@ const GameStatsRow = ({ homeStats, awayStats, isLoading, error, onRetry }) => {
   return (
     <tr className="bg-base-200">
       <td colSpan="5" className="p-0">
-        <div className="p-6 space-y-1 max-w-lg mx-auto">
+        <div className="p-2 sm:p-6 space-y-1">
           {/* Team Names with Logos */}
-          <div className="grid grid-cols-[1fr_auto_1fr] gap-4 py-2 border-b border-base-300 px-4">
+          <div className="grid grid-cols-[1fr_auto_1fr] gap-2 sm:gap-4 py-1 sm:py-2 border-b border-base-300 px-2 sm:px-4">
             <div className="text-right font-semibold flex items-center justify-end gap-2">
               {homeStats.logo_url && (
                 <img
@@ -80,7 +82,9 @@ const GameStatsRow = ({ homeStats, awayStats, isLoading, error, onRetry }) => {
               )}
               <span>{homeStats.abbreviation || "—"}</span>
             </div>
-            <div className="text-center text-sm font-medium min-w-35">Team</div>
+            <div className="text-center text-xs sm:text-sm font-medium min-w-[80px] sm:min-w-[140px]">
+              Team
+            </div>
             <div className="text-left font-semibold flex items-center gap-2">
               <span>{awayStats.abbreviation || "—"}</span>
               {awayStats.logo_url && (

@@ -236,20 +236,20 @@ export function TeamPage() {
         }}
       >
         <div className="card-body">
-          <div className="flex items-center justify-between gap-6">
-            <div className="flex items-center gap-6">
+          <div className="flex flex-wrap items-center gap-4">
+            <div className="flex items-center gap-4">
               {team.logo_url && (
                 <img
                   src={team.logo_url}
                   alt={team.team_name}
-                  className="h-24 w-24 object-contain"
+                  className="h-16 w-16 sm:h-24 sm:w-24 object-contain"
                 />
               )}
               <div>
-                <h1 className="text-4xl font-bold text-white">{team.team_name}</h1>
+                <h1 className="text-2xl sm:text-4xl font-bold text-white">{team.team_name}</h1>
               </div>
             </div>
-            <div className="flex items-center gap-1 text-2xl">
+            <div className="flex items-center gap-1 text-2xl w-full sm:w-auto justify-end sm:justify-normal">
               <span>🏆</span>
               <span className="font-semibold text-white">
                 ×

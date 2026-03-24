@@ -40,9 +40,9 @@ export function TeamsPage() {
           <h1 className="text-3xl font-bold">Teams</h1>
           <p className="text-base-content/70 mt-2">Explore team stats and rankings</p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex gap-2 w-full sm:w-auto">
           <button
-            className={`btn btn-sm ${
+            className={`btn btn-sm flex-1 sm:flex-initial ${
               sortOrder === "alpha" ? "btn-primary" : "btn-ghost border border-base-300"
             }`}
             onClick={() => setSortOrder("alpha")}
@@ -50,7 +50,7 @@ export function TeamsPage() {
             Alphabetical
           </button>
           <button
-            className={`btn btn-sm ${
+            className={`btn btn-sm flex-1 sm:flex-initial ${
               sortOrder === "trophies" ? "btn-primary" : "btn-ghost border border-base-300"
             }`}
             onClick={() => setSortOrder("trophies")}

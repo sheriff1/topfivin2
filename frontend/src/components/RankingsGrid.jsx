@@ -147,7 +147,7 @@ export function RankingsGrid({ category, season = "2025" }) {
                   <div className="flex items-center gap-3">
                     {item.logo_url && (
                       <div
-                        className="h-12 w-12 flex-shrink-0 overflow-hidden"
+                        className="h-8 w-8 sm:h-12 sm:w-12 flex-shrink-0 overflow-hidden"
                         style={{
                           backgroundColor: getTeamColor(item.team_id),
                           backgroundImage: `url(${item.logo_url})`,
@@ -156,11 +156,11 @@ export function RankingsGrid({ category, season = "2025" }) {
                         }}
                       />
                     )}
-                    <div>{item.team_name}</div>
+                    <div className="text-sm sm:text-base">{item.team_name}</div>
                   </div>
                 </Link>
               </td>
-              <td className="text-right text-lg font-bold py-0">
+              <td className="text-right text-base sm:text-lg font-bold py-0">
                 {[
                   "TS%",
                   "ORB%",

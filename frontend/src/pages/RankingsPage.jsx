@@ -257,7 +257,7 @@ export function RankingsPage() {
             <div className="mt-1">
               <button
                 type="button"
-                className="btn btn-secondary btn-sm"
+                className="btn btn-secondary btn-sm w-full sm:w-auto"
                 onClick={handleSurpriseMe}
                 disabled={categoriesLoading}
               >
