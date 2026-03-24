@@ -12,15 +12,23 @@
         <string>cd __REPO_DIR__ && /usr/bin/make pipeline-prod >> __REPO_DIR__/logs/pipeline_prod.log 2>&1</string>
     </array>
 
-    <!-- Run daily at 09:00 UTC (before GitHub Actions derive job at 10:00 UTC).
+    <!-- Run daily at 05:00 local (= 09:00 UTC on EDT / 10:00 UTC on EST),
+         1 hour before the GitHub Actions derive job at 10:00 UTC.
          StartCalendarInterval automatically re-runs a missed job on next wake
          if the machine was asleep or off at scheduled time. -->
     <key>StartCalendarInterval</key>
     <dict>
         <key>Hour</key>
-        <integer>9</integer>
+        <integer>5</integer>
         <key>Minute</key>
         <integer>0</integer>
+    </dict>
+
+    <!-- Provide PATH so launchd can find Homebrew tools (redis-cli, pg_dump, python3). -->
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PATH</key>
+        <string>/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin</string>
     </dict>
 
     <!-- Do NOT run immediately on launchctl load — only at scheduled time. -->
