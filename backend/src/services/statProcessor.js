@@ -15,6 +15,11 @@ const STAT_CATEGORIES = {
   SPG: { label: "Steals Per Game", index: "STL", lower: false },
   BPG: { label: "Blocks Per Game", index: "BLK", lower: false },
 
+  // Win/Loss record (migration 011)
+  W: { label: "Wins", index: "W", lower: false },
+  L: { label: "Losses", index: "L", lower: true },
+  WIN_PCT: { label: "Win %", index: "WIN_PCT", lower: false },
+
   // Advanced Stats (Available from BoxScoreMiscV3)
   "TS%": { label: "True Shooting %", index: "TS_PCT", lower: false },
   "ORB%": { label: "Offensive Rebound %", index: "ORB_PCT", lower: false },

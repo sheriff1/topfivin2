@@ -30,6 +30,11 @@ load_env()
 
 # Define the stat categories to rank (traditional + advanced)
 STAT_CATEGORIES = [
+    # Win/Loss record (migration 011)
+    ('W',       'wins',    'DESC'),    # Wins - higher is better
+    ('L',       'losses',  'ASC'),     # Losses - lower is better
+    ('WIN_PCT', 'win_pct', 'DESC'),    # Win % - higher is better
+
     # Traditional Stats
     ('PPG', 'pts_avg', 'DESC'),        # Points Per Game - higher is better
     ('RPG', 'reb_avg', 'DESC'),        # Rebounds Per Game - higher is better

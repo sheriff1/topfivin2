@@ -112,7 +112,9 @@ def derive_team_stats():
             touches, secondary_ast, ft_ast, passes,
             contested_fgm, contested_fga, contested_fg_pct,
             uncontested_fgm, uncontested_fga, uncontested_fg_pct,
-            dar_fgm, dar_fga, dar_fg_pct
+            dar_fgm, dar_fga, dar_fg_pct,
+            -- Wins/losses (migration 011)
+            wins, losses, win_pct
         )
         SELECT 
             team_id, season,
@@ -325,7 +327,11 @@ def derive_team_stats():
             ROUND(AVG(COALESCE(uncontested_fg_pct, 0))::numeric, 3) as uncontested_fg_pct,
             ROUND(AVG(COALESCE(dar_fgm, 0))::numeric, 1)       as dar_fgm,
             ROUND(AVG(COALESCE(dar_fga, 0))::numeric, 1)       as dar_fga,
-            ROUND(AVG(COALESCE(dar_fg_pct, 0))::numeric, 3)    as dar_fg_pct
+            ROUND(AVG(COALESCE(dar_fg_pct, 0))::numeric, 3)    as dar_fg_pct,
+            -- Wins/losses derived from game_stats.win column
+            SUM(COALESCE(win, 0))                               as wins,
+            COUNT(*) - SUM(COALESCE(win, 0))                    as losses,
+            ROUND(SUM(COALESCE(win, 0))::numeric / NULLIF(COUNT(*), 0), 3) as win_pct
         FROM game_stats
         GROUP BY team_id, season
         ON CONFLICT (team_id, season) DO UPDATE SET
@@ -504,9 +510,28 @@ def derive_team_stats():
             dar_fgm = EXCLUDED.dar_fgm,
             dar_fga = EXCLUDED.dar_fga,
             dar_fg_pct = EXCLUDED.dar_fg_pct,
+            wins = EXCLUDED.wins,
+            losses = EXCLUDED.losses,
+            win_pct = EXCLUDED.win_pct,
             updated_at = CURRENT_TIMESTAMP
         """
         
+        # Precompute win column: 1 if team scored more than opponent in same game
+        update_wins_sql = """
+        UPDATE game_stats gs1
+        SET win = CASE WHEN gs1.pts > gs2.pts THEN 1 ELSE 0 END
+        FROM game_stats gs2
+        WHERE gs1.game_id = gs2.game_id
+          AND gs1.team_id != gs2.team_id
+          AND gs1.pts IS NOT NULL
+          AND gs2.pts IS NOT NULL
+        """
+        cursor.execute(update_wins_sql)
+        conn.commit()
+        cursor.execute("SELECT COUNT(*) FROM game_stats WHERE win IS NOT NULL")
+        win_count = cursor.fetchone()[0]
+        print(f"  ✓ Precomputed win column for {win_count} game rows")
+
         cursor.execute(insert_stats_sql)
         conn.commit()
         

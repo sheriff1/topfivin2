@@ -44,6 +44,11 @@ export function formatStatValue(value, categoryLabel) {
     return Math.round(parseFloat(value)).toString();
   }
 
+  // Wins and Losses are always whole numbers
+  if (categoryLabel && (categoryLabel === "Wins" || categoryLabel === "Losses")) {
+    return Math.round(parseFloat(value)).toString();
+  }
+
   // Detect if this is a percentage-based stat by checking if label contains "%"
   const isPercentage = categoryLabel && categoryLabel.includes("%");
 

@@ -7,6 +7,9 @@ const CATEGORY_GROUPS = [
   {
     label: "Basic",
     codes: [
+      "W",
+      "L",
+      "WIN_PCT",
       "PPG",
       "FG_PG",
       "FGA_PG",
