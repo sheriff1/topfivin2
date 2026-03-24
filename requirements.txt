@@ -2,8 +2,8 @@ async-timeout==5.0.1
 certifi==2026.2.25
 charset-normalizer==3.4.6
 idna==3.11
-nba_api==1.10.2
-numpy==2.0.2
+nba_api @ git+https://github.com/swar/nba_api.git@15eb0edeedb12671bb2b41367e3b9fa80941fc74
+numpy==2.4.3
 pandas==2.3.3
 psycopg2-binary==2.9.11
 python-dateutil==2.9.0.post0
