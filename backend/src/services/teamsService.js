@@ -1,3 +1,5 @@
+const { STAT_CATEGORIES } = require("./statProcessor");
+
 async function getTeamStats(teamId, season, db) {
   const query = `
     SELECT
@@ -88,6 +90,7 @@ async function getTeamRankings(teamId, season, db) {
     team_name: result.rows[0].team_name,
     rankings: result.rows.map((r) => ({
       stat_category: r.stat_category,
+      label: STAT_CATEGORIES[r.stat_category]?.label || r.stat_category,
       rank: r.rank,
       value: r.value,
     })),

@@ -306,6 +306,43 @@ Stat rankings are computed from season averages across all collected games. A sm
 
 ---
 
+## Data Completeness Status
+
+### Recently Backfilled (Issue #135)
+
+The following stat categories were previously unavailable (0.0 for all teams) but are now fully populated:
+
+**Team Plus-Minus:**
+
+- `pm_avg` (Plus/Minus Per Game) — Team-level point differential per game
+- **Source:** BoxScoreTraditionalV3 DF2 via `fetch_starters_bench.py`
+- **Status:** ✅ Fully populated as of Issue #135
+
+**⚠️ API Limitation - Unavailable Stats:**
+
+- `starters_pm` (Starter Plus/Minus Per Game) — NOT AVAILABLE from NBA API
+- `bench_pm` (Bench Plus/Minus Per Game) — NOT AVAILABLE from NBA API
+- **Reason:** The NBA Stats API (BoxScoreTraditionalV3) does not provide per-group (Starters vs Bench) plus/minus metrics. Only team-level plus/minus is available. These stats have been removed from the frontend.
+
+**Scoring Breakdown Percentages:**
+
+- `pct_fga_*` — Percentage of FGA by type (2PT, 3PT)
+- `pct_pts_*` — Percentage of team points by source (2PT, 3PT, FT, paint, fast break, off turnovers)
+- `pct_ast_*` — Percentage of team assists (assisted/unassisted FG breakdown)
+- **Source:** BoxScoreScoringV3 via `fetch_scoring.py`
+- **Status:** ✅ Fully populated as of Issue #135
+
+**Player Tracking Stats:**
+
+- Distance traveled, touches, passes, secondary assists, free throw assists
+- Contested shots (2PT/3PT), uncontested shots, shooter/defender matchup percentages
+- Defensive Assist Ratio (DAR) — defended vs undefended FG attempts
+- Rebound chances (offensive, defensive, total)
+- **Source:** BoxScorePlayerTrackV3 DF1 via `fetch_playertrack.py`
+- **Status:** ✅ Fully populated as of Issue #135
+
+---
+
 ## Contributing
 
 ### Branching

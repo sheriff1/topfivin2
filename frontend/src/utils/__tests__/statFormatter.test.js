@@ -108,30 +108,30 @@ describe("statFormatter Utility", () => {
       });
     });
 
-    it("should format Avg Game Duration in H:MM:SS format", () => {
+    it("should format Average Game Duration in H:MM:SS format", () => {
       // Convert decimal minutes to H:MM:SS
-      expect(formatStatValue(125.44, "Avg Game Duration (mins)")).toBe("2:05:26");
-      expect(formatStatValue(120.5, "Avg Game Duration (mins)")).toBe("2:00:30");
-      expect(formatStatValue(60.5, "Avg Game Duration (mins)")).toBe("1:00:30");
-      expect(formatStatValue(45.75, "Avg Game Duration (mins)")).toBe("0:45:45");
-      expect(formatStatValue(5.5, "Avg Game Duration (mins)")).toBe("0:05:30");
+      expect(formatStatValue(125.44, "Average Game Duration")).toBe("2:05:26");
+      expect(formatStatValue(120.5, "Average Game Duration")).toBe("2:00:30");
+      expect(formatStatValue(60.5, "Average Game Duration")).toBe("1:00:30");
+      expect(formatStatValue(45.75, "Average Game Duration")).toBe("0:45:45");
+      expect(formatStatValue(5.5, "Average Game Duration")).toBe("0:05:30");
     });
 
-    it("should handle Avg Game Duration edge cases", () => {
+    it("should handle Average Game Duration edge cases", () => {
       // Zero duration
-      expect(formatStatValue(0, "Avg Game Duration (mins)")).toBe("0:00:00");
+      expect(formatStatValue(0, "Average Game Duration")).toBe("0:00:00");
       // Less than 1 minute
-      expect(formatStatValue(0.5, "Avg Game Duration (mins)")).toBe("0:00:30");
+      expect(formatStatValue(0.5, "Average Game Duration")).toBe("0:00:30");
       // Exactly 1 hour
-      expect(formatStatValue(60, "Avg Game Duration (mins)")).toBe("1:00:00");
+      expect(formatStatValue(60, "Average Game Duration")).toBe("1:00:00");
       // More than 3 hours
-      expect(formatStatValue(200, "Avg Game Duration (mins)")).toBe("3:20:00");
+      expect(formatStatValue(200, "Average Game Duration")).toBe("3:20:00");
     });
 
-    it("should format Avg Attendance as integer without decimals", () => {
-      expect(formatStatValue(18736.0, "Avg Attendance")).toBe("18736");
-      expect(formatStatValue(18736.49, "Avg Attendance")).toBe("18736");
-      expect(formatStatValue(18736.5, "Avg Attendance")).toBe("18737");
+    it("should format Average Attendance as integer without decimals", () => {
+      expect(formatStatValue(18736.0, "Average Attendance")).toBe("18736");
+      expect(formatStatValue(18736.49, "Average Attendance")).toBe("18736");
+      expect(formatStatValue(18736.5, "Average Attendance")).toBe("18737");
       expect(formatStatValue(18736.99, "Avg Attendance")).toBe("18737");
       expect(formatStatValue(20000.123, "Avg Attendance")).toBe("20000");
     });
@@ -256,9 +256,10 @@ describe("statFormatter Utility", () => {
 
   describe("Cross-function edge cases", () => {
     it("should handle the same value differently based on function used", () => {
-      // formatStatValue for 0.5 as percentage: "0.50%"
-      // formatPercentageStat for 0.5: "50.00%"
-      expect(formatStatValue(0.5, "Field Goal %")).toBe("0.50%");
+      // Both functions now normalize 0-1 decimals to 0-100 for percentage stats
+      // formatStatValue for 0.5 as percentage: "50.00%" (auto-detects 0-1 range)
+      // formatPercentageStat for 0.5: "50.00%" (always multiplies by 100)
+      expect(formatStatValue(0.5, "Field Goal %")).toBe("50.00%");
       expect(formatPercentageStat(0.5, "Field Goal %")).toBe("50.00%");
     });
 

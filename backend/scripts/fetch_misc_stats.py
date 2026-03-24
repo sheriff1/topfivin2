@@ -130,7 +130,7 @@ def main():
     updated = failed = consecutive_failures = 0
     bad_data_games = []
     COOLDOWN_THRESHOLD = 2
-    COOLDOWN_SECS      = 300
+    COOLDOWN_SECS      = 30
 
     for idx, game_id in enumerate(pending, 1):
         print(f"  [{idx:4}/{total}] game_id={game_id}", end=" ", flush=True)

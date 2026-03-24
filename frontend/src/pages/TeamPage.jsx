@@ -89,6 +89,11 @@ export function TeamPage() {
     return acc;
   }, {});
 
+  // Stats to exclude from all views (unavailable from NBA API)
+  const EXCLUDED_STATS = ["BENCH_PM", "STARTERS_PM"];
+
+  const isExcludedStat = (statCategory) => EXCLUDED_STATS.includes(statCategory);
+
   // Handle sort column click
   const handleSortClick = (column) => {
     if (sortColumn === column) {
@@ -105,7 +110,9 @@ export function TeamPage() {
   const getSortedCategories = () => {
     if (!categories) return [];
 
-    const sorted = [...categories];
+    // Filter out excluded stats
+    const filtered = categories.filter((cat) => !isExcludedStat(cat.code));
+    const sorted = [...filtered];
 
     if (sortColumn === "category") {
       sorted.sort((a, b) => {
@@ -134,16 +141,13 @@ export function TeamPage() {
 
   // Get rankings by rank position
   const getRankingsByPosition = (rankPosition) => {
-    if (!rankings?.rankings || !categories) return [];
+    if (!rankings?.rankings) return [];
     return rankings.rankings
-      .filter((r) => r.rank === rankPosition)
-      .map((r) => {
-        const category = categories.find((c) => c.code === r.stat_category);
-        return {
-          ...r,
-          label: category?.label || r.stat_category,
-        };
-      });
+      .filter((r) => r.rank === rankPosition && !isExcludedStat(r.stat_category))
+      .map((r) => ({
+        ...r,
+        label: r.label || r.stat_category, // Use label from API, fallback to stat_category if missing
+      }));
   };
 
   const firstPlaceRankings = getRankingsByPosition(1);
@@ -180,7 +184,33 @@ export function TeamPage() {
     const formattedLabel = getFormattedCategoryLabel(categoryLabel);
 
     // Use formatPercentageStat for advanced percentages, formatStatValue for others
-    if (["TS%", "ORB%", "DRB%", "TRB%", "AST%", "USG%"].includes(category)) {
+    // Advanced percentages stored as 0-1 range in DB, need x100 multiplication
+    if (
+      [
+        "TS%",
+        "ORB%",
+        "DRB%",
+        "TRB%",
+        "AST%",
+        "USG%",
+        // Scoring breakdown percentages from BoxScoreScoringV3
+        "PCT_FGA_2PT",
+        "PCT_FGA_3PT",
+        "PCT_PTS_2PT",
+        "PCT_PTS_2PT_MR",
+        "PCT_PTS_3PT",
+        "PCT_PTS_FB",
+        "PCT_PTS_FT",
+        "PCT_PTS_OFF_TOV",
+        "PCT_PTS_PAINT",
+        "PCT_AST_2PM",
+        "PCT_UAST_2PM",
+        "PCT_AST_3PM",
+        "PCT_UAST_3PM",
+        "PCT_AST_FGM",
+        "PCT_UAST_FGM",
+      ].includes(category)
+    ) {
       return formatPercentageStat(value, formattedLabel);
     }
     return formatStatValue(value, formattedLabel);
@@ -220,7 +250,10 @@ export function TeamPage() {
             <div className="flex items-center gap-1 text-2xl">
               <span>🏆</span>
               <span className="font-semibold text-white">
-                ×{(rankings?.rankings || []).filter((r) => r.rank <= 5).length || 0}
+                ×
+                {(rankings?.rankings || []).filter(
+                  (r) => r.rank <= 5 && !isExcludedStat(r.stat_category)
+                ).length || 0}
               </span>
             </div>
           </div>
@@ -317,7 +350,30 @@ export function TeamPage() {
                       </td>
                       <td className="text-right font-semibold">
                         {ranking
-                          ? ["TS%", "ORB%", "DRB%", "TRB%", "AST%", "USG%"].includes(category.code)
+                          ? [
+                              "TS%",
+                              "ORB%",
+                              "DRB%",
+                              "TRB%",
+                              "AST%",
+                              "USG%",
+                              // Scoring breakdown percentages from BoxScoreScoringV3
+                              "PCT_FGA_2PT",
+                              "PCT_FGA_3PT",
+                              "PCT_PTS_2PT",
+                              "PCT_PTS_2PT_MR",
+                              "PCT_PTS_3PT",
+                              "PCT_PTS_FB",
+                              "PCT_PTS_FT",
+                              "PCT_PTS_OFF_TOV",
+                              "PCT_PTS_PAINT",
+                              "PCT_AST_2PM",
+                              "PCT_UAST_2PM",
+                              "PCT_AST_3PM",
+                              "PCT_UAST_3PM",
+                              "PCT_AST_FGM",
+                              "PCT_UAST_FGM",
+                            ].includes(category.code)
                             ? formatPercentageStat(
                                 ranking.value,
                                 getFormattedCategoryLabel(category.label)

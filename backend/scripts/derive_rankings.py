@@ -12,6 +12,22 @@ import psycopg2
 import redis
 from datetime import datetime
 
+# ── Load .env configuration ───────────────────────────────────────────────────
+def load_env():
+    try:
+        env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+        if os.path.exists(env_path):
+            with open(env_path) as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#'):
+                        key, val = line.split('=', 1)
+                        os.environ.setdefault(key, val)
+    except Exception as e:
+        print(f"⚠️  .env load failed: {e}")
+
+load_env()
+
 # Define the stat categories to rank (traditional + advanced)
 STAT_CATEGORIES = [
     # Traditional Stats
@@ -124,7 +140,6 @@ STAT_CATEGORIES = [
     ('STARTERS_FTA',   'starters_fta',         'DESC'),  # Starter FTA Per Game - higher is better
     ('STARTERS_TOV',   'starters_tov',         'ASC'),   # Starter Turnovers Per Game - lower is better
     ('STARTERS_PF',    'starters_pf',          'ASC'),   # Starter Fouls Per Game - lower is better
-    ('STARTERS_PM',    'starters_pm',          'DESC'),  # Starter Plus/Minus Per Game - higher is better
 
     # Bench group stats (BoxScoreTraditionalV3 DF1)
     ('BENCH_PPG',   'bench_pts',         'DESC'),  # Bench Points Per Game - higher is better
@@ -145,11 +160,10 @@ STAT_CATEGORIES = [
     ('BENCH_FTA',   'bench_fta',         'DESC'),  # Bench FTA Per Game - higher is better
     ('BENCH_TOV',   'bench_tov',         'ASC'),   # Bench Turnovers Per Game - lower is better
     ('BENCH_PF',    'bench_pf',          'ASC'),   # Bench Fouls Per Game - lower is better
-    ('BENCH_PM',    'bench_pm',          'DESC'),  # Bench Plus/Minus Per Game - higher is better
 
     # Game context stats (BoxScoreSummaryV3 DF0 + DF4)
-    ('ATTEND',    'attendance',    'DESC'),  # Avg Attendance - higher is better (curiosity)
-    ('DURATION',  'duration_mins', 'DESC'),  # Avg Game Duration (mins) - higher is better
+    ('ATTEND',    'attendance',    'DESC'),  # Average Attendance - higher is better (curiosity)
+    ('DURATION',  'duration_mins', 'DESC'),  # Average Game Duration - higher is better
     ('Q1_PTS',    'q1_pts',        'DESC'),  # Q1 Points Per Game - higher is better
     ('Q2_PTS',    'q2_pts',        'DESC'),  # Q2 Points Per Game - higher is better
     ('Q3_PTS',    'q3_pts',        'DESC'),  # Q3 Points Per Game - higher is better
@@ -160,6 +174,42 @@ STAT_CATEGORIES = [
     ('E_DRTG',    'e_drtg',        'ASC'),   # Estimated Defensive Rating - lower is better
     ('E_NET_RTG', 'e_net_rtg',     'DESC'),  # Estimated Net Rating - higher is better
     ('E_PACE',    'e_pace',        'DESC'),  # Estimated Pace - higher is better
+
+    # PlayerTrack stats (BoxScorePlayerTrackV3 DF1)
+    ('DISTANCE',         'distance',              'DESC'),  # Distance Traveled (miles) - higher is better
+    ('TOUCHES',          'touches',               'DESC'),  # Touches Per Game - higher is better
+    ('REB_CHANCES_OFF',  'reb_chances_off',      'DESC'),  # Offensive Rebound Chances - higher is better
+    ('REB_CHANCES_DEF',  'reb_chances_def',      'DESC'),  # Defensive Rebound Chances - higher is better
+    ('REB_CHANCES_TOT',  'reb_chances_total',    'DESC'),  # Total Rebound Chances - higher is better
+    ('SECONDARY_AST',    'secondary_ast',        'DESC'),  # Secondary Assists - higher is better
+    ('FT_AST',           'ft_ast',               'DESC'),  # Free Throw Assists - higher is better
+    ('PASSES',           'passes',               'DESC'),  # Passes Per Game - higher is better
+    ('CONTESTED_FGM',    'contested_fgm',        'DESC'),  # Contested FG Made - higher is better
+    ('CONTESTED_FGA',    'contested_fga',        'DESC'),  # Contested FG Attempted - higher is better
+    ('CONTESTED_FG%',    'contested_fg_pct',     'DESC'),  # Contested FG% - higher is better
+    ('UNCONTESTED_FGM',  'uncontested_fgm',      'DESC'),  # Uncontested FG Made - higher is better
+    ('UNCONTESTED_FGA',  'uncontested_fga',      'DESC'),  # Uncontested FG Attempted - higher is better
+    ('UNCONTESTED_FG%',  'uncontested_fg_pct',   'DESC'),  # Uncontested FG% - higher is better
+    ('DAR_FGM',          'dar_fgm',              'DESC'),  # Defended At Rim FG Made - higher is better
+    ('DAR_FGA',          'dar_fga',              'DESC'),  # Defended At Rim FG Attempted - higher is better
+    ('DAR_FG%',          'dar_fg_pct',          'DESC'),  # Defended At Rim FG% - higher is better
+
+    # Scoring breakdown percentages (BoxScoreScoringV3 DF1)
+    ('PCT_FGA_2PT',     'pct_fga_2pt',       'DESC'),  # % of FGA from 2PT - higher is better
+    ('PCT_FGA_3PT',     'pct_fga_3pt',       'DESC'),  # % of FGA from 3PT - higher is better
+    ('PCT_PTS_2PT',     'pct_pts_2pt',       'DESC'),  # % of PTS from 2PT - higher is better
+    ('PCT_PTS_2PT_MR',  'pct_pts_2pt_mr',    'DESC'),  # % of PTS from 2PT midrange - higher is better
+    ('PCT_PTS_3PT',     'pct_pts_3pt',       'DESC'),  # % of PTS from 3PT - higher is better
+    ('PCT_PTS_FB',      'pct_pts_fb',        'DESC'),  # % of PTS from fast break - higher is better
+    ('PCT_PTS_FT',      'pct_pts_ft',        'DESC'),  # % of PTS from free throws - higher is better
+    ('PCT_PTS_OFF_TOV', 'pct_pts_off_tov',   'DESC'),  # % of PTS from turnovers - higher is better
+    ('PCT_PTS_PAINT',   'pct_pts_paint',     'DESC'),  # % of PTS from paint - higher is better
+    ('PCT_AST_2PM',     'pct_ast_2pm',       'DESC'),  # % of 2PM assisted - higher is better
+    ('PCT_UAST_2PM',    'pct_uast_2pm',      'DESC'),  # % of 2PM unassisted - higher is better
+    ('PCT_AST_3PM',     'pct_ast_3pm',       'DESC'),  # % of 3PM assisted - higher is better
+    ('PCT_UAST_3PM',    'pct_uast_3pm',      'DESC'),  # % of 3PM unassisted - higher is better
+    ('PCT_AST_FGM',     'pct_ast_fgm',       'DESC'),  # % of FGM assisted - higher is better
+    ('PCT_UAST_FGM',    'pct_uast_fgm',      'DESC'),  # % of FGM unassisted - higher is better
 ]
 
 def clear_cache():

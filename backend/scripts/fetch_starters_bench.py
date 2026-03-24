@@ -29,6 +29,22 @@ from datetime import datetime
 import random
 import psycopg2
 
+# ── Load .env configuration ───────────────────────────────────────────────────
+def load_env():
+    try:
+        env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+        if os.path.exists(env_path):
+            with open(env_path) as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#'):
+                        key, val = line.split('=', 1)
+                        os.environ.setdefault(key, val)
+    except Exception as e:
+        print(f"⚠️  .env load failed: {e}")
+
+load_env()
+
 # ── Header patch ─────────────────────────────────────────────────────────────
 NBA_STATS_HEADERS = {
     "Accept": "application/json, text/plain, */*",
@@ -179,7 +195,7 @@ def main():
     updated = failed = consecutive_failures = 0
     bad_data_games = []
     COOLDOWN_THRESHOLD = 2
-    COOLDOWN_SECS      = 480  # 8 minutes
+    COOLDOWN_SECS      = 30  # 30 seconds
 
     for idx, game_id in enumerate(pending, 1):
         print(f"  [{idx:4}/{total}] game_id={game_id}", end=" ", flush=True)

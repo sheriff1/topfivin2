@@ -10,6 +10,22 @@ import re
 import psycopg2
 from datetime import datetime
 
+# ── Load .env configuration ───────────────────────────────────────────────────
+def load_env():
+    try:
+        env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+        if os.path.exists(env_path):
+            with open(env_path) as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#'):
+                        key, val = line.split('=', 1)
+                        os.environ.setdefault(key, val)
+    except Exception as e:
+        print(f"⚠️  .env load failed: {e}")
+
+load_env()
+
 def derive_team_stats():
     """Derive aggregated team stats from game stats"""
     print("\n" + "=" * 60)
@@ -80,7 +96,23 @@ def derive_team_stats():
             bench_pf, bench_pts, bench_pm,
             -- Game context (migration 007)
             attendance, duration_mins,
-            q1_pts, q2_pts, q3_pts, q4_pts
+            q1_pts, q2_pts, q3_pts, q4_pts,
+            -- BoxScoreAdvancedV3 extras (migration 009)
+            dreb_pct, reb_pct, e_tov_pct, e_usage_pct,
+            -- BoxScoreFourFactorsV3 (migration 009)
+            ft_rate, tm_tov_pct, oreb_pct, opp_efg_pct, opp_ft_rate, opp_tov_pct, opp_oreb_pct,
+            -- BoxScoreSummaryV3 extra (migration 009)
+            pts_from_tov,
+            -- BoxScoreScoringV3 scoring % distribution (migration 009)
+            pct_fga_2pt, pct_fga_3pt,
+            pct_pts_2pt, pct_pts_2pt_mr, pct_pts_3pt, pct_pts_fb, pct_pts_ft, pct_pts_off_tov, pct_pts_paint,
+            pct_ast_2pm, pct_uast_2pm, pct_ast_3pm, pct_uast_3pm, pct_ast_fgm, pct_uast_fgm,
+            -- PlayerTrack stats (BoxScorePlayerTrackV3 - migration 009)
+            distance, reb_chances_off, reb_chances_def, reb_chances_total,
+            touches, secondary_ast, ft_ast, passes,
+            contested_fgm, contested_fga, contested_fg_pct,
+            uncontested_fgm, uncontested_fga, uncontested_fg_pct,
+            dar_fgm, dar_fga, dar_fg_pct
         )
         SELECT 
             team_id, season,
@@ -244,7 +276,56 @@ def derive_team_stats():
             ROUND(AVG(COALESCE(q1_pts, 0))::numeric, 1)        as q1_pts,
             ROUND(AVG(COALESCE(q2_pts, 0))::numeric, 1)        as q2_pts,
             ROUND(AVG(COALESCE(q3_pts, 0))::numeric, 1)        as q3_pts,
-            ROUND(AVG(COALESCE(q4_pts, 0))::numeric, 1)        as q4_pts
+            ROUND(AVG(COALESCE(q4_pts, 0))::numeric, 1)        as q4_pts,
+            -- BoxScoreAdvancedV3 extras (migration 009)
+            ROUND(AVG(COALESCE(dreb_pct, 0))::numeric, 4)      as dreb_pct,
+            ROUND(AVG(COALESCE(reb_pct, 0))::numeric, 4)       as reb_pct,
+            ROUND(AVG(COALESCE(e_tov_pct, 0))::numeric, 1)     as e_tov_pct,
+            ROUND(AVG(COALESCE(e_usage_pct, 0))::numeric, 4)   as e_usage_pct,
+            -- BoxScoreFourFactorsV3 (migration 009)
+            ROUND(AVG(COALESCE(ft_rate, 0))::numeric, 4)       as ft_rate,
+            ROUND(AVG(COALESCE(tm_tov_pct, 0))::numeric, 1)    as tm_tov_pct,
+            ROUND(AVG(COALESCE(oreb_pct, 0))::numeric, 4)      as oreb_pct,
+            ROUND(AVG(COALESCE(opp_efg_pct, 0))::numeric, 4)   as opp_efg_pct,
+            ROUND(AVG(COALESCE(opp_ft_rate, 0))::numeric, 4)   as opp_ft_rate,
+            ROUND(AVG(COALESCE(opp_tov_pct, 0))::numeric, 1)   as opp_tov_pct,
+            ROUND(AVG(COALESCE(opp_oreb_pct, 0))::numeric, 4)  as opp_oreb_pct,
+            -- BoxScoreSummaryV3 extra (migration 009)
+            ROUND(AVG(COALESCE(pts_from_tov, 0))::numeric, 1)  as pts_from_tov,
+            -- BoxScoreScoringV3 scoring % distribution (migration 009)
+            ROUND(AVG(COALESCE(pct_fga_2pt, 0))::numeric, 4)   as pct_fga_2pt,
+            ROUND(AVG(COALESCE(pct_fga_3pt, 0))::numeric, 4)   as pct_fga_3pt,
+            ROUND(AVG(COALESCE(pct_pts_2pt, 0))::numeric, 4)   as pct_pts_2pt,
+            ROUND(AVG(COALESCE(pct_pts_2pt_mr, 0))::numeric, 4) as pct_pts_2pt_mr,
+            ROUND(AVG(COALESCE(pct_pts_3pt, 0))::numeric, 4)   as pct_pts_3pt,
+            ROUND(AVG(COALESCE(pct_pts_fb, 0))::numeric, 4)    as pct_pts_fb,
+            ROUND(AVG(COALESCE(pct_pts_ft, 0))::numeric, 4)    as pct_pts_ft,
+            ROUND(AVG(COALESCE(pct_pts_off_tov, 0))::numeric, 4) as pct_pts_off_tov,
+            ROUND(AVG(COALESCE(pct_pts_paint, 0))::numeric, 4) as pct_pts_paint,
+            ROUND(AVG(COALESCE(pct_ast_2pm, 0))::numeric, 4)   as pct_ast_2pm,
+            ROUND(AVG(COALESCE(pct_uast_2pm, 0))::numeric, 4)  as pct_uast_2pm,
+            ROUND(AVG(COALESCE(pct_ast_3pm, 0))::numeric, 4)   as pct_ast_3pm,
+            ROUND(AVG(COALESCE(pct_uast_3pm, 0))::numeric, 4)  as pct_uast_3pm,
+            ROUND(AVG(COALESCE(pct_ast_fgm, 0))::numeric, 4)   as pct_ast_fgm,
+            ROUND(AVG(COALESCE(pct_uast_fgm, 0))::numeric, 4)  as pct_uast_fgm,
+            -- PlayerTrack stats aggregations
+            ROUND(AVG(COALESCE(distance, 0))::numeric, 2)      as distance,
+            ROUND(AVG(COALESCE(reb_chances_off, 0))::numeric, 1) as reb_chances_off,
+            ROUND(AVG(COALESCE(reb_chances_def, 0))::numeric, 1) as reb_chances_def,
+            ROUND(AVG(COALESCE(reb_chances_total, 0))::numeric, 1) as reb_chances_total,
+            ROUND(AVG(COALESCE(touches, 0))::numeric, 1)       as touches,
+            ROUND(AVG(COALESCE(secondary_ast, 0))::numeric, 1) as secondary_ast,
+            ROUND(AVG(COALESCE(ft_ast, 0))::numeric, 1)        as ft_ast,
+            ROUND(AVG(COALESCE(passes, 0))::numeric, 1)        as passes,
+            ROUND(AVG(COALESCE(contested_fgm, 0))::numeric, 1) as contested_fgm,
+            ROUND(AVG(COALESCE(contested_fga, 0))::numeric, 1) as contested_fga,
+            ROUND(AVG(COALESCE(contested_fg_pct, 0))::numeric, 3) as contested_fg_pct,
+            ROUND(AVG(COALESCE(uncontested_fgm, 0))::numeric, 1) as uncontested_fgm,
+            ROUND(AVG(COALESCE(uncontested_fga, 0))::numeric, 1) as uncontested_fga,
+            ROUND(AVG(COALESCE(uncontested_fg_pct, 0))::numeric, 3) as uncontested_fg_pct,
+            ROUND(AVG(COALESCE(dar_fgm, 0))::numeric, 1)       as dar_fgm,
+            ROUND(AVG(COALESCE(dar_fga, 0))::numeric, 1)       as dar_fga,
+            ROUND(AVG(COALESCE(dar_fg_pct, 0))::numeric, 3)    as dar_fg_pct
         FROM game_stats
         GROUP BY team_id, season
         ON CONFLICT (team_id, season) DO UPDATE SET
@@ -379,6 +460,50 @@ def derive_team_stats():
             q2_pts = EXCLUDED.q2_pts,
             q3_pts = EXCLUDED.q3_pts,
             q4_pts = EXCLUDED.q4_pts,
+            dreb_pct = EXCLUDED.dreb_pct,
+            reb_pct = EXCLUDED.reb_pct,
+            e_tov_pct = EXCLUDED.e_tov_pct,
+            e_usage_pct = EXCLUDED.e_usage_pct,
+            ft_rate = EXCLUDED.ft_rate,
+            tm_tov_pct = EXCLUDED.tm_tov_pct,
+            oreb_pct = EXCLUDED.oreb_pct,
+            opp_efg_pct = EXCLUDED.opp_efg_pct,
+            opp_ft_rate = EXCLUDED.opp_ft_rate,
+            opp_tov_pct = EXCLUDED.opp_tov_pct,
+            opp_oreb_pct = EXCLUDED.opp_oreb_pct,
+            pts_from_tov = EXCLUDED.pts_from_tov,
+            pct_fga_2pt = EXCLUDED.pct_fga_2pt,
+            pct_fga_3pt = EXCLUDED.pct_fga_3pt,
+            pct_pts_2pt = EXCLUDED.pct_pts_2pt,
+            pct_pts_2pt_mr = EXCLUDED.pct_pts_2pt_mr,
+            pct_pts_3pt = EXCLUDED.pct_pts_3pt,
+            pct_pts_fb = EXCLUDED.pct_pts_fb,
+            pct_pts_ft = EXCLUDED.pct_pts_ft,
+            pct_pts_off_tov = EXCLUDED.pct_pts_off_tov,
+            pct_pts_paint = EXCLUDED.pct_pts_paint,
+            pct_ast_2pm = EXCLUDED.pct_ast_2pm,
+            pct_uast_2pm = EXCLUDED.pct_uast_2pm,
+            pct_ast_3pm = EXCLUDED.pct_ast_3pm,
+            pct_uast_3pm = EXCLUDED.pct_uast_3pm,
+            pct_ast_fgm = EXCLUDED.pct_ast_fgm,
+            pct_uast_fgm = EXCLUDED.pct_uast_fgm,
+            distance = EXCLUDED.distance,
+            reb_chances_off = EXCLUDED.reb_chances_off,
+            reb_chances_def = EXCLUDED.reb_chances_def,
+            reb_chances_total = EXCLUDED.reb_chances_total,
+            touches = EXCLUDED.touches,
+            secondary_ast = EXCLUDED.secondary_ast,
+            ft_ast = EXCLUDED.ft_ast,
+            passes = EXCLUDED.passes,
+            contested_fgm = EXCLUDED.contested_fgm,
+            contested_fga = EXCLUDED.contested_fga,
+            contested_fg_pct = EXCLUDED.contested_fg_pct,
+            uncontested_fgm = EXCLUDED.uncontested_fgm,
+            uncontested_fga = EXCLUDED.uncontested_fga,
+            uncontested_fg_pct = EXCLUDED.uncontested_fg_pct,
+            dar_fgm = EXCLUDED.dar_fgm,
+            dar_fga = EXCLUDED.dar_fga,
+            dar_fg_pct = EXCLUDED.dar_fg_pct,
             updated_at = CURRENT_TIMESTAMP
         """
         

@@ -1,9 +1,10 @@
-.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod backup backup-clean archive-season k6-smoke k6-load k6-stress fetch-advanced-extras fetch-summary-extras fetch-misc fetch-hustle fetch-summary fetch-fourfactors fetch-scoring fetch-playertrack backfill backfill-prod backfill-missing sync-advanced-prod sync-missing-prod sync-prod migrate-prod check-progress check-progress-prod install-cron uninstall-cron logs-clean
+.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod backup backup-clean archive-season k6-smoke k6-load k6-stress fetch-advanced-extras fetch-summary-extras fetch-misc fetch-hustle fetch-summary fetch-fourfactors fetch-scoring fetch-starters-bench fetch-playertrack backfill backfill-prod backfill-missing sync-advanced-prod sync-missing-prod sync-prod migrate-prod check-progress check-progress-prod install-cron uninstall-cron logs-clean
 
 # ── Infrastructure ───────────────────────────────────────────────────────────
 services:
-	brew services start postgresql@16
-	brew services start redis
+	@echo "Starting services..."
+	@(lsof -i :5432 > /dev/null 2>&1 && echo "✓ PostgreSQL already running on 5432") || (brew services start postgresql@16 || true)
+	@(lsof -i :6379 > /dev/null 2>&1 && echo "✓ Redis already running on 6379") || (brew services start redis || true)
 
 # ── Application ──────────────────────────────────────────────────────────────
 dev:
@@ -58,10 +59,19 @@ pipeline:
 	set -a && source backend/.env && set +a && \
 	cd backend && \
 	python scripts/fetch_nba_stats.py && \
+	python scripts/fetch_advanced_extras.py && \
+	python scripts/fetch_summary_extras.py && \
+	python scripts/fetch_summary.py && \
+	python scripts/fetch_misc_stats.py && \
+	python scripts/fetch_hustle_stats.py && \
+	python scripts/fetch_fourfactors.py && \
+	python scripts/fetch_scoring.py && \
+	python scripts/fetch_starters_bench.py && \
+	python scripts/fetch_playertrack.py && \
 	python scripts/derive_team_stats.py && \
 	python scripts/derive_rankings.py && \
 	redis-cli FLUSHDB
-	@echo "✅ Full pipeline complete (local) — rankings updated"
+	@echo "✅ Full pipeline complete (local) — all stats backfilled + rankings updated"
 
 pipeline-prod:
 	source .venv/bin/activate && \
@@ -143,6 +153,14 @@ fetch-scoring:
 	cd backend && \
 	python scripts/fetch_scoring.py 2>&1 | tee $(LOGS_DIR)/backfill_scoring.log
 	@echo "✅ Scoring breakdown backfill complete (local)"
+
+fetch-starters-bench:
+	mkdir -p $(LOGS_DIR)
+	source .venv/bin/activate && \
+	set -a && source backend/.env && set +a && \
+	cd backend && \
+	python scripts/fetch_starters_bench.py 2>&1 | tee $(LOGS_DIR)/backfill_starters_bench.log
+	@echo "✅ Starters/Bench backfill complete (local)"
 
 fetch-playertrack:
 	mkdir -p $(LOGS_DIR)

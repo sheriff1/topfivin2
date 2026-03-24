@@ -147,7 +147,7 @@ def main():
     skipped = updated = failed = consecutive_failures = 0
     bad_data_games = []
     COOLDOWN_THRESHOLD = 2   # consecutive failures before auto-pause
-    COOLDOWN_SECS      = 480  # 8 minutes
+    COOLDOWN_SECS      = 30  # 30 seconds
 
     for idx, game_id in enumerate(pending, 1):
         print(f"  [{idx:4}/{total}] game_id={game_id}", end=" ", flush=True)

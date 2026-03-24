@@ -48,8 +48,13 @@ export function formatStatValue(value, categoryLabel) {
   const isPercentage = categoryLabel && categoryLabel.includes("%");
 
   if (isPercentage) {
-    // Format as percentage with 2 decimal places and % symbol
-    return `${parseFloat(value).toFixed(2)}%`;
+    // Some stats come from the API as 0-1 decimals (e.g., TS%, EFG%, contested_fg_pct)
+    // while others are already 0-100 (e.g., FG%, 3P%). Normalize to 0-100 range.
+    let pctValue = parseFloat(value);
+    if (pctValue > 0 && pctValue < 1) {
+      pctValue *= 100;
+    }
+    return `${pctValue.toFixed(2)}%`;
   } else {
     // Format as regular number with 2 decimal places
     return parseFloat(value).toFixed(2);
