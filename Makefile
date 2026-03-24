@@ -51,7 +51,7 @@ derive-prod:
 	cd backend && \
 	python scripts/derive_team_stats.py && \
 	python scripts/derive_rankings.py && \
-	redis-cli FLUSHDB
+	redis-cli -u "$$REDIS_URL" FLUSHDB
 	@echo "✅ Derive + Rankings complete (production)"
 
 pipeline:
@@ -87,7 +87,7 @@ pipeline-prod:
 	python scripts/fetch_hustle_stats.py && \
 	python scripts/derive_team_stats.py && \
 	python scripts/derive_rankings.py && \
-	redis-cli FLUSHDB
+	redis-cli -u "$$REDIS_URL" FLUSHDB
 	@$(MAKE) backup
 	@echo "✅ Full pipeline complete (production) — ranked updated + backup saved"
 
