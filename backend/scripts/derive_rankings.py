@@ -101,7 +101,6 @@ STAT_CATEGORIES = [
 
     # BoxScoreSummaryV3 extras
     ('BIG_LEAD',   'biggest_lead',        'DESC'),  # Biggest Lead (avg) - higher is better
-    ('BENCH_PTS',  'bench_points',        'DESC'),  # Bench Points Per Game - higher is better
     ('LEAD_CHG',   'lead_changes',        'DESC'),  # Lead Changes Per Game - higher is better
     ('TIMES_TIED', 'times_tied',          'DESC'),  # Times Tied Per Game
     ('BIG_RUN',    'biggest_scoring_run', 'DESC'),  # Biggest Scoring Run (avg) - higher is better
