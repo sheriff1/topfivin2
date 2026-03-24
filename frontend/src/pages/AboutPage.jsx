@@ -7,14 +7,14 @@ export function AboutPage() {
           <h2 className="card-title text-3xl mb-4">NBA Top Five In</h2>
           <p className="text-lg mb-4">
             A comprehensive NBA statistics dashboard providing live rankings and team performance
-            metrics for the 2025-26 NBA season. Explore how teams stack up across 115+ statistical
+            metrics for the 2025-26 NBA season. Explore how teams stack up across 147 statistical
             categories, from basic stats like points per game to advanced metrics like effective
             field goal percentage and player tracking data.
           </p>
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Features:</h3>
             <ul className="list-disc list-inside space-y-2 ml-2">
-              <li>Real-time rankings for 115+ NBA statistical categories</li>
+              <li>Real-time rankings for 147 NBA statistical categories</li>
               <li>Team-by-team performance breakdowns and comparisons</li>
               <li>Advanced metrics: ORtg, DRtg, pace, true shooting %, and more</li>
               <li>Sortable team statistics and rankings by category</li>

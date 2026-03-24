@@ -128,9 +128,27 @@ const validateGameStats = [
     .withMessage("Game ID contains invalid characters"),
 ];
 
+// GET /api/rankings/random-facts
+const validateRandomFacts = [
+  query("count")
+    .optional()
+    .isInt({ min: 1, max: 30 })
+    .withMessage("Count must be between 1 and 30"),
+  query("season")
+    .optional()
+    .trim()
+    .isString()
+    .withMessage("Season must be a string")
+    .isLength({ min: 4, max: 4 })
+    .withMessage("Season must be 4 digits")
+    .isNumeric()
+    .withMessage("Season must be numeric"),
+];
+
 module.exports = {
   validateCategories,
   validateRankings,
+  validateRandomFacts,
   validateTeams,
   validateTeamByAbbr,
   validateTeamStats,

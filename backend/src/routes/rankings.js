@@ -1,8 +1,17 @@
 const express = require("express");
 const db = require("../db/postgresClient");
 const cache = require("../cache/redisClient");
-const { getCategories, getRankings, STAT_CATEGORIES } = require("../services/rankingsService");
-const { validateCategories, validateRankings } = require("../middleware/validationSchemas");
+const {
+  getCategories,
+  getRankings,
+  getRandomFacts,
+  STAT_CATEGORIES,
+} = require("../services/rankingsService");
+const {
+  validateCategories,
+  validateRankings,
+  validateRandomFacts,
+} = require("../middleware/validationSchemas");
 const { validationMiddleware } = require("../middleware/validation");
 const logger = require("../utils/logger");
 
@@ -84,5 +93,39 @@ router.get("/rankings", validateRankings, validationMiddleware, async (req, res)
     });
   }
 });
+
+/**
+ * GET /api/rankings/random-facts
+ * Returns random top-5 facts for the "Did You Know" carousel
+ * Query params: ?count=10&season=2025
+ */
+router.get(
+  "/rankings/random-facts",
+  validateRandomFacts,
+  validationMiddleware,
+  async (req, res) => {
+    try {
+      const count = parseInt(req.query.count, 10) || 10;
+      const season = req.query.season || process.env.CURRENT_SEASON || "2025";
+
+      const facts = await getRandomFacts(count, season, db);
+
+      res.json({
+        success: true,
+        facts,
+      });
+    } catch (error) {
+      logger.error("[API] /rankings/random-facts - Error:", {
+        message: error.message,
+        stack: error.stack,
+        requestId: req.id,
+      });
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch random facts",
+      });
+    }
+  }
+);
 
 module.exports = router;

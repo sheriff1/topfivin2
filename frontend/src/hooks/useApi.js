@@ -98,6 +98,21 @@ export function useTeamByAbbreviation(abbreviation) {
   });
 }
 
+// Hook for fetching random top-5 facts
+export function useRandomFacts(count = 10, season = "2025") {
+  return useQuery({
+    queryKey: ["randomFacts", count, season],
+    queryFn: async () => {
+      const response = await apiClient.get("/rankings/random-facts", {
+        params: { count, season },
+      });
+      return response.data.facts;
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 2,
+  });
+}
+
 // Hook for API health check
 export function useApiHealth() {
   return useQuery({
