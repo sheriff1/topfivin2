@@ -161,7 +161,30 @@ export function RankingsGrid({ category, season = "2025" }) {
                 </Link>
               </td>
               <td className="text-right text-lg font-bold py-0">
-                {["TS%", "ORB%", "DRB%", "TRB%", "AST%", "USG%"].includes(data.category)
+                {[
+                  "TS%",
+                  "ORB%",
+                  "DRB%",
+                  "TRB%",
+                  "AST%",
+                  "USG%",
+                  // Scoring breakdown percentages from BoxScoreScoringV3
+                  "PCT_FGA_2PT",
+                  "PCT_FGA_3PT",
+                  "PCT_PTS_2PT",
+                  "PCT_PTS_2PT_MR",
+                  "PCT_PTS_3PT",
+                  "PCT_PTS_FB",
+                  "PCT_PTS_FT",
+                  "PCT_PTS_OFF_TOV",
+                  "PCT_PTS_PAINT",
+                  "PCT_AST_2PM",
+                  "PCT_UAST_2PM",
+                  "PCT_AST_3PM",
+                  "PCT_UAST_3PM",
+                  "PCT_AST_FGM",
+                  "PCT_UAST_FGM",
+                ].includes(data.category)
                   ? formatPercentageStat(item.value, data.label)
                   : formatStatValue(item.value, data.label)}
               </td>

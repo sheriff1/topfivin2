@@ -350,7 +350,30 @@ export function TeamPage() {
                       </td>
                       <td className="text-right font-semibold">
                         {ranking
-                          ? ["TS%", "ORB%", "DRB%", "TRB%", "AST%", "USG%"].includes(category.code)
+                          ? [
+                              "TS%",
+                              "ORB%",
+                              "DRB%",
+                              "TRB%",
+                              "AST%",
+                              "USG%",
+                              // Scoring breakdown percentages from BoxScoreScoringV3
+                              "PCT_FGA_2PT",
+                              "PCT_FGA_3PT",
+                              "PCT_PTS_2PT",
+                              "PCT_PTS_2PT_MR",
+                              "PCT_PTS_3PT",
+                              "PCT_PTS_FB",
+                              "PCT_PTS_FT",
+                              "PCT_PTS_OFF_TOV",
+                              "PCT_PTS_PAINT",
+                              "PCT_AST_2PM",
+                              "PCT_UAST_2PM",
+                              "PCT_AST_3PM",
+                              "PCT_UAST_3PM",
+                              "PCT_AST_FGM",
+                              "PCT_UAST_FGM",
+                            ].includes(category.code)
                             ? formatPercentageStat(
                                 ranking.value,
                                 getFormattedCategoryLabel(category.label)

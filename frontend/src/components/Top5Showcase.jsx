@@ -137,7 +137,30 @@ export function Top5Showcase({ rankings, _category, shouldAnimate = true }) {
                 {/* Bottom section: Stat value in white area */}
                 <div className="bg-white px-4 py-4 text-center">
                   <div className="text-3xl font-bold text-gray-900">
-                    {["TS%", "ORB%", "DRB%", "TRB%", "AST%", "USG%"].includes(rankings.category)
+                    {[
+                      "TS%",
+                      "ORB%",
+                      "DRB%",
+                      "TRB%",
+                      "AST%",
+                      "USG%",
+                      // Scoring breakdown percentages from BoxScoreScoringV3
+                      "PCT_FGA_2PT",
+                      "PCT_FGA_3PT",
+                      "PCT_PTS_2PT",
+                      "PCT_PTS_2PT_MR",
+                      "PCT_PTS_3PT",
+                      "PCT_PTS_FB",
+                      "PCT_PTS_FT",
+                      "PCT_PTS_OFF_TOV",
+                      "PCT_PTS_PAINT",
+                      "PCT_AST_2PM",
+                      "PCT_UAST_2PM",
+                      "PCT_AST_3PM",
+                      "PCT_UAST_3PM",
+                      "PCT_AST_FGM",
+                      "PCT_UAST_FGM",
+                    ].includes(rankings.category)
                       ? formatPercentageStat(team.value, rankings.label)
                       : formatStatValue(team.value, rankings.label)}
                   </div>
