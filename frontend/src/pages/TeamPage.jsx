@@ -134,16 +134,13 @@ export function TeamPage() {
 
   // Get rankings by rank position
   const getRankingsByPosition = (rankPosition) => {
-    if (!rankings?.rankings || !categories) return [];
+    if (!rankings?.rankings) return [];
     return rankings.rankings
       .filter((r) => r.rank === rankPosition)
-      .map((r) => {
-        const category = categories.find((c) => c.code === r.stat_category);
-        return {
-          ...r,
-          label: category?.label || r.stat_category,
-        };
-      });
+      .map((r) => ({
+        ...r,
+        label: r.label || r.stat_category, // Use label from API, fallback to stat_category if missing
+      }));
   };
 
   const firstPlaceRankings = getRankingsByPosition(1);

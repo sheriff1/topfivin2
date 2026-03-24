@@ -162,8 +162,8 @@ STAT_CATEGORIES = [
     ('BENCH_PF',    'bench_pf',          'ASC'),   # Bench Fouls Per Game - lower is better
 
     # Game context stats (BoxScoreSummaryV3 DF0 + DF4)
-    ('ATTEND',    'attendance',    'DESC'),  # Avg Attendance - higher is better (curiosity)
-    ('DURATION',  'duration_mins', 'DESC'),  # Avg Game Duration (mins) - higher is better
+    ('ATTEND',    'attendance',    'DESC'),  # Average Attendance - higher is better (curiosity)
+    ('DURATION',  'duration_mins', 'DESC'),  # Average Game Duration - higher is better
     ('Q1_PTS',    'q1_pts',        'DESC'),  # Q1 Points Per Game - higher is better
     ('Q2_PTS',    'q2_pts',        'DESC'),  # Q2 Points Per Game - higher is better
     ('Q3_PTS',    'q3_pts',        'DESC'),  # Q3 Points Per Game - higher is better

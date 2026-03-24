@@ -145,8 +145,8 @@ const STAT_CATEGORIES = {
   BENCH_PF: { label: "Bench Fouls Per Game", index: "BENCH_PF", lower: true },
 
   // Game context stats (BoxScoreSummaryV3 DF0 + DF4)
-  ATTEND: { label: "Avg Attendance", index: "ATTEND", lower: false },
-  DURATION: { label: "Avg Game Duration (mins)", index: "DURATION", lower: false },
+  ATTEND: { label: "Average Attendance", index: "ATTEND", lower: false },
+  DURATION: { label: "Average Game Duration", index: "DURATION", lower: false },
   Q1_PTS: { label: "Q1 Points Per Game", index: "Q1_PTS", lower: false },
   Q2_PTS: { label: "Q2 Points Per Game", index: "Q2_PTS", lower: false },
   Q3_PTS: { label: "Q3 Points Per Game", index: "Q3_PTS", lower: false },
@@ -180,6 +180,23 @@ const STAT_CATEGORIES = {
   DAR_FGM: { label: "Defended at Rim FG Made Per Game", index: "DAR_FGM", lower: false },
   DAR_FGA: { label: "Defended at Rim FGA Per Game", index: "DAR_FGA", lower: false },
   "DAR_FG%": { label: "Defended at Rim FG %", index: "DAR_FG_PCT", lower: false },
+
+  // Scoring breakdown percentages (BoxScoreScoringV3 DF1)
+  PCT_FGA_2PT: { label: "FGA % from 2PT", index: "PCT_FGA_2PT", lower: false },
+  PCT_FGA_3PT: { label: "FGA % from 3PT", index: "PCT_FGA_3PT", lower: false },
+  PCT_PTS_2PT: { label: "Points % from 2PT", index: "PCT_PTS_2PT", lower: false },
+  PCT_PTS_2PT_MR: { label: "Points % from 2PT Midrange", index: "PCT_PTS_2PT_MR", lower: false },
+  PCT_PTS_3PT: { label: "Points % from 3PT", index: "PCT_PTS_3PT", lower: false },
+  PCT_PTS_FB: { label: "Points % from Fast Break", index: "PCT_PTS_FB", lower: false },
+  PCT_PTS_FT: { label: "Points % from Free Throws", index: "PCT_PTS_FT", lower: false },
+  PCT_PTS_OFF_TOV: { label: "Points % from Turnovers", index: "PCT_PTS_OFF_TOV", lower: false },
+  PCT_PTS_PAINT: { label: "Points % from Paint", index: "PCT_PTS_PAINT", lower: false },
+  PCT_AST_2PM: { label: "Assisted 2PM %", index: "PCT_AST_2PM", lower: false },
+  PCT_UAST_2PM: { label: "Unassisted 2PM %", index: "PCT_UAST_2PM", lower: false },
+  PCT_AST_3PM: { label: "Assisted 3PM %", index: "PCT_AST_3PM", lower: false },
+  PCT_UAST_3PM: { label: "Unassisted 3PM %", index: "PCT_UAST_3PM", lower: false },
+  PCT_AST_FGM: { label: "Assisted FGM %", index: "PCT_AST_FGM", lower: false },
+  PCT_UAST_FGM: { label: "Unassisted FGM %", index: "PCT_UAST_FGM", lower: false },
 };
 
 /**
