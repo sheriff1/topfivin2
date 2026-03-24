@@ -10,6 +10,22 @@ import re
 import psycopg2
 from datetime import datetime
 
+# ── Load .env configuration ───────────────────────────────────────────────────
+def load_env():
+    try:
+        env_path = os.path.join(os.path.dirname(__file__), '..', '.env')
+        if os.path.exists(env_path):
+            with open(env_path) as f:
+                for line in f:
+                    line = line.strip()
+                    if line and not line.startswith('#'):
+                        key, val = line.split('=', 1)
+                        os.environ.setdefault(key, val)
+    except Exception as e:
+        print(f"⚠️  .env load failed: {e}")
+
+load_env()
+
 def derive_team_stats():
     """Derive aggregated team stats from game stats"""
     print("\n" + "=" * 60)
