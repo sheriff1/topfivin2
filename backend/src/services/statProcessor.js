@@ -76,7 +76,6 @@ const STAT_CATEGORIES = {
 
   // BoxScoreSummaryV3 extras
   BIG_LEAD: { label: "Biggest Lead (avg)", index: "BIG_LEAD", lower: false },
-  BENCH_PTS: { label: "Bench Points Per Game", index: "BENCH_PTS", lower: false },
   LEAD_CHG: { label: "Lead Changes Per Game", index: "LEAD_CHG", lower: false },
   TIMES_TIED: { label: "Times Tied Per Game", index: "TIMES_TIED", lower: false },
   BIG_RUN: { label: "Biggest Scoring Run (avg)", index: "BIG_RUN", lower: false },
