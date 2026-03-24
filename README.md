@@ -312,13 +312,17 @@ Stat rankings are computed from season averages across all collected games. A sm
 
 The following stat categories were previously unavailable (0.0 for all teams) but are now fully populated:
 
-**Starters/Bench Plus-Minus:**
+**Team Plus-Minus:**
 
 - `pm_avg` (Plus/Minus Per Game) — Team-level point differential per game
-- `starters_pm` (Starter Plus/Minus Per Game) — Starter group differential
-- `bench_pm` (Bench Plus/Minus Per Game) — Bench group differential
 - **Source:** BoxScoreTraditionalV3 DF2 via `fetch_starters_bench.py`
 - **Status:** ✅ Fully populated as of Issue #135
+
+**⚠️ API Limitation - Unavailable Stats:**
+
+- `starters_pm` (Starter Plus/Minus Per Game) — NOT AVAILABLE from NBA API
+- `bench_pm` (Bench Plus/Minus Per Game) — NOT AVAILABLE from NBA API
+- **Reason:** The NBA Stats API (BoxScoreTraditionalV3) does not provide per-group (Starters vs Bench) plus/minus metrics. Only team-level plus/minus is available. These stats have been removed from the frontend.
 
 **Scoring Breakdown Percentages:**
 

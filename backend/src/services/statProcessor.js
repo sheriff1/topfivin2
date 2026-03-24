@@ -123,7 +123,6 @@ const STAT_CATEGORIES = {
   STARTERS_FTA: { label: "Starter FTA Per Game", index: "STARTERS_FTA", lower: false },
   STARTERS_TOV: { label: "Starter Turnovers Per Game", index: "STARTERS_TOV", lower: true },
   STARTERS_PF: { label: "Starter Fouls Per Game", index: "STARTERS_PF", lower: true },
-  STARTERS_PM: { label: "Starter Plus/Minus Per Game", index: "STARTERS_PM", lower: false },
 
   // Bench group stats (BoxScoreTraditionalV3 DF1)
   BENCH_PPG: { label: "Bench Points Per Game", index: "BENCH_PPG", lower: false },
@@ -144,7 +143,6 @@ const STAT_CATEGORIES = {
   BENCH_FTA: { label: "Bench FTA Per Game", index: "BENCH_FTA", lower: false },
   BENCH_TOV: { label: "Bench Turnovers Per Game", index: "BENCH_TOV", lower: true },
   BENCH_PF: { label: "Bench Fouls Per Game", index: "BENCH_PF", lower: true },
-  BENCH_PM: { label: "Bench Plus/Minus Per Game", index: "BENCH_PM", lower: false },
 
   // Game context stats (BoxScoreSummaryV3 DF0 + DF4)
   ATTEND: { label: "Avg Attendance", index: "ATTEND", lower: false },

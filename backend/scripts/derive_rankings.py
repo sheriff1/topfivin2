@@ -140,7 +140,6 @@ STAT_CATEGORIES = [
     ('STARTERS_FTA',   'starters_fta',         'DESC'),  # Starter FTA Per Game - higher is better
     ('STARTERS_TOV',   'starters_tov',         'ASC'),   # Starter Turnovers Per Game - lower is better
     ('STARTERS_PF',    'starters_pf',          'ASC'),   # Starter Fouls Per Game - lower is better
-    ('STARTERS_PM',    'starters_pm',          'DESC'),  # Starter Plus/Minus Per Game - higher is better
 
     # Bench group stats (BoxScoreTraditionalV3 DF1)
     ('BENCH_PPG',   'bench_pts',         'DESC'),  # Bench Points Per Game - higher is better
@@ -161,7 +160,6 @@ STAT_CATEGORIES = [
     ('BENCH_FTA',   'bench_fta',         'DESC'),  # Bench FTA Per Game - higher is better
     ('BENCH_TOV',   'bench_tov',         'ASC'),   # Bench Turnovers Per Game - lower is better
     ('BENCH_PF',    'bench_pf',          'ASC'),   # Bench Fouls Per Game - lower is better
-    ('BENCH_PM',    'bench_pm',          'DESC'),  # Bench Plus/Minus Per Game - higher is better
 
     # Game context stats (BoxScoreSummaryV3 DF0 + DF4)
     ('ATTEND',    'attendance',    'DESC'),  # Avg Attendance - higher is better (curiosity)
