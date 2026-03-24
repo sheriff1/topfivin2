@@ -292,17 +292,19 @@ make uninstall-cron
 
 Stat rankings are computed from season averages across all collected games. A small number of games have permanently incomplete records in the NBA API:
 
-| Game ID      | Missing data source   | Affected columns                                                                                                                                                                                                                       |
-| ------------ | --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0022500259` | BoxScoreSummaryV3 DF7 | `biggest_lead`, `bench_points`, `lead_changes`, `times_tied`, `biggest_scoring_run`, `pts_from_tov`                                                                                                                                    |
-| `0022500260` | BoxScoreSummaryV3 DF7 | same                                                                                                                                                                                                                                   |
-| `0022500261` | BoxScoreSummaryV3 DF7 | same                                                                                                                                                                                                                                   |
-| `0022500265` | BoxScoreSummaryV3 DF7 | same                                                                                                                                                                                                                                   |
-| `0022500603` | BoxScoreAdvancedV3    | `dreb_pct`, `reb_pct`, `oreb_pct`, `tm_tov_pct`, `e_tov_pct`, `ast_to_tov`, `ast_pct`, `ast_ratio`, `pace_per40`, `pie`, `poss`, `e_ortg`, `e_drtg`, `e_net_rtg`, `e_pace`, `opp_efg_pct`, `opp_tov_pct`, `opp_ft_rate`, `e_usage_pct` |
+| Game ID      | Missing data source       | Affected columns                                                                                                                                                                                                                                                            |
+| ------------ | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `0022500259` | BoxScoreSummaryV3 DF7     | `biggest_lead`, `bench_points`, `lead_changes`, `times_tied`, `biggest_scoring_run`, `pts_from_tov`                                                                                                                                                                         |
+| `0022500260` | BoxScoreSummaryV3 DF7     | same                                                                                                                                                                                                                                                                        |
+| `0022500261` | BoxScoreSummaryV3 DF7     | same                                                                                                                                                                                                                                                                        |
+| `0022500265` | BoxScoreSummaryV3 DF7     | same                                                                                                                                                                                                                                                                        |
+| `0022501026` | BoxScorePlayerTrackV3 DF1 | `distance`, `touches`, `passes`, `reb_chances_off`, `reb_chances_def`, `reb_chances_total`, `secondary_ast`, `ft_ast`, `contested_fgm`, `contested_fga`, `contested_fg_pct`, `uncontested_fgm`, `uncontested_fga`, `uncontested_fg_pct`, `dar_fgm`, `dar_fga`, `dar_fg_pct` |
+| `0022501035` | BoxScorePlayerTrackV3 DF1 | same                                                                                                                                                                                                                                                                        |
+| `0022501036` | BoxScorePlayerTrackV3 DF1 | same                                                                                                                                                                                                                                                                        |
 
-**Cause:** These games appear to have incomplete records in the NBA API — likely postponed or rescheduled games that were never fully recorded. All 5 failed on every retry attempt.
+**Cause:** These games appear to have incomplete records in the NBA API — likely postponed or rescheduled games that were never fully recorded. All 7 failed on every retry attempt.
 
-**Impact:** Negligible. `COALESCE` treats missing values as 0 in season averages. With 70+ games per team in a season, 5 missing games shift any affected average by less than 0.1%.
+**Impact:** Negligible. `COALESCE` treats missing values as 0 in season averages. With 70+ games per team in a season, 7 missing games shift any affected average by less than 0.1%.
 
 ---
 

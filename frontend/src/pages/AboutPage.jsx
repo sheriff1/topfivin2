@@ -33,12 +33,22 @@ export function AboutPage() {
             <div className="bg-warning/10 p-4 rounded-lg border border-warning">
               <h3 className="font-semibold text-warning mb-2">⚠️ Known Data Gaps</h3>
               <p className="text-sm mb-3">
-                Some games may be missing from the database due to API availability limitations:
+                7 games have permanently incomplete records in the NBA Stats API and are excluded
+                from certain stat averages:
               </p>
               <ul className="list-disc list-inside space-y-1 text-sm ml-2">
-                <li>Early season games (before backfill completion)</li>
-                <li>Games affected by stats.nba.com API rate limiting during initial data fetch</li>
+                <li>
+                  4 games missing BoxScoreSummaryV3 data (bench points, lead changes, pts from
+                  turnovers)
+                </li>
+                <li>
+                  3 games missing BoxScorePlayerTrackV3 data (distance, touches, contested shots)
+                </li>
               </ul>
+              <p className="text-sm mt-2">
+                Impact is negligible — missing values are treated as 0 and represent less than 0.1%
+                of each team&apos;s season average.
+              </p>
             </div>
 
             <div>
