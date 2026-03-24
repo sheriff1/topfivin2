@@ -105,7 +105,9 @@ export function TeamPage() {
   const getSortedCategories = () => {
     if (!categories) return [];
 
-    const sorted = [...categories];
+    // Filter out excluded stats
+    const filtered = categories.filter((cat) => !isExcludedStat(cat.code));
+    const sorted = [...filtered];
 
     if (sortColumn === "category") {
       sorted.sort((a, b) => {
@@ -132,11 +134,16 @@ export function TeamPage() {
     return sortDirection === "asc" ? " ▲" : " ▼";
   };
 
+  // Stats to exclude from all views (unavailable from NBA API)
+  const EXCLUDED_STATS = ["BENCH_PM", "STARTERS_PM"];
+
+  const isExcludedStat = (statCategory) => EXCLUDED_STATS.includes(statCategory);
+
   // Get rankings by rank position
   const getRankingsByPosition = (rankPosition) => {
     if (!rankings?.rankings) return [];
     return rankings.rankings
-      .filter((r) => r.rank === rankPosition)
+      .filter((r) => r.rank === rankPosition && !isExcludedStat(r.stat_category))
       .map((r) => ({
         ...r,
         label: r.label || r.stat_category, // Use label from API, fallback to stat_category if missing
@@ -217,7 +224,10 @@ export function TeamPage() {
             <div className="flex items-center gap-1 text-2xl">
               <span>🏆</span>
               <span className="font-semibold text-white">
-                ×{(rankings?.rankings || []).filter((r) => r.rank <= 5).length || 0}
+                ×
+                {(rankings?.rankings || []).filter(
+                  (r) => r.rank <= 5 && !isExcludedStat(r.stat_category)
+                ).length || 0}
               </span>
             </div>
           </div>
