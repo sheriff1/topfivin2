@@ -41,8 +41,7 @@ derive:
 	set -a && source backend/.env && set +a && \
 	cd backend && \
 	python scripts/derive_team_stats.py && \
-	python scripts/derive_rankings.py && \
-	redis-cli FLUSHDB
+	python scripts/derive_rankings.py
 	@echo "✅ Derive + Rankings complete (local)"
 
 derive-prod:
@@ -50,8 +49,7 @@ derive-prod:
 	set -a && source backend/.env.production && set +a && \
 	cd backend && \
 	python scripts/derive_team_stats.py && \
-	python scripts/derive_rankings.py && \
-	python -c "import redis, os; r = redis.Redis.from_url(os.environ['REDIS_URL']); r.flushdb(); print('Redis cache cleared')"
+	python scripts/derive_rankings.py
 	@echo "✅ Derive + Rankings complete (production)"
 
 pipeline:
@@ -68,8 +66,7 @@ pipeline:
 	python scripts/fetch_misc_stats.py && \
 	python scripts/fetch_hustle_stats.py && \
 	python scripts/derive_team_stats.py && \
-	python scripts/derive_rankings.py && \
-	redis-cli FLUSHDB
+	python scripts/derive_rankings.py
 	@echo "✅ Full pipeline complete (local) — all stats backfilled + rankings updated"
 
 pipeline-prod:
@@ -86,8 +83,7 @@ pipeline-prod:
 	python scripts/fetch_misc_stats.py && \
 	python scripts/fetch_hustle_stats.py && \
 	python scripts/derive_team_stats.py && \
-	python scripts/derive_rankings.py && \
-	python -c "import redis, os; r = redis.Redis.from_url(os.environ['REDIS_URL']); r.flushdb(); print('Redis cache cleared')"
+	python scripts/derive_rankings.py
 	@$(MAKE) backup
 	@echo "✅ Full pipeline complete (production) — ranked updated + backup saved"
 
