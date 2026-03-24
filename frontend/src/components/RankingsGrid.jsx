@@ -128,23 +128,25 @@ export function RankingsGrid({ category, season = "2025" }) {
 
   return (
     <div className="overflow-x-auto">
-      <table className="table table-zebra w-full">
+      <table className="table table-xs sm:table-md table-zebra w-full">
         <thead>
           <tr>
             <th>Rank</th>
             <th>Team</th>
-            <th className="text-right">{data.label}</th>
+            <th className="text-right whitespace-normal sm:whitespace-nowrap w-px">{data.label}</th>
           </tr>
         </thead>
         <tbody>
           {data.rankings.map((item) => (
             <tr key={`${item.team_id}-${item.stat_category}`} className="hover:bg-base-200 py-0">
-              <td className="py-0">
-                <span className={`badge badge-lg ${getRankColor(item.rank)}`}>#{item.rank}</span>
+              <td className="py-0 w-px whitespace-nowrap">
+                <span className={`badge badge-md sm:badge-lg ${getRankColor(item.rank)}`}>
+                  #{item.rank}
+                </span>
               </td>
               <td className="py-0">
                 <Link to={`/team/${TEAM_ID_TO_ABBR[item.team_id]}`} className="link link-hover">
-                  <div className="flex items-center gap-3">
+                  <div className="flex items-center gap-2 sm:gap-3">
                     {item.logo_url && (
                       <div
                         className="h-8 w-8 sm:h-12 sm:w-12 flex-shrink-0 overflow-hidden"
@@ -160,7 +162,7 @@ export function RankingsGrid({ category, season = "2025" }) {
                   </div>
                 </Link>
               </td>
-              <td className="text-right text-base sm:text-lg font-bold py-0">
+              <td className="text-right text-sm sm:text-lg font-bold py-0 w-px whitespace-nowrap">
                 {[
                   "TS%",
                   "ORB%",
