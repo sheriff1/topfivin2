@@ -51,7 +51,7 @@ derive-prod:
 	cd backend && \
 	python scripts/derive_team_stats.py && \
 	python scripts/derive_rankings.py && \
-	redis-cli -u "$$REDIS_URL" FLUSHDB
+	python -c "import redis, os; r = redis.Redis.from_url(os.environ['REDIS_URL']); r.flushdb(); print('Redis cache cleared')"
 	@echo "✅ Derive + Rankings complete (production)"
 
 pipeline:
@@ -87,7 +87,7 @@ pipeline-prod:
 	python scripts/fetch_hustle_stats.py && \
 	python scripts/derive_team_stats.py && \
 	python scripts/derive_rankings.py && \
-	redis-cli -u "$$REDIS_URL" FLUSHDB
+	python -c "import redis, os; r = redis.Redis.from_url(os.environ['REDIS_URL']); r.flushdb(); print('Redis cache cleared')"
 	@$(MAKE) backup
 	@echo "✅ Full pipeline complete (production) — ranked updated + backup saved"
 
