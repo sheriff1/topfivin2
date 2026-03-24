@@ -92,7 +92,7 @@ describe("AuditTab Component", () => {
     render(<AuditTab season="2025" />);
 
     await waitFor(() => {
-      expect(screen.getByText("Collected")).toBeDefined();
+      expect(screen.getAllByText("Collected").length).toBeGreaterThan(0);
     });
   });
 
