@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAllTeams } from "../hooks/useApi";
 import { formatStatValue, formatPercentageStat } from "../utils/statFormatter";
@@ -38,12 +39,47 @@ const TEAM_ID_TO_ABBR = {
 
 export function Top5Showcase({ rankings, _category, shouldAnimate = true }) {
   const { data: allTeams } = useAllTeams();
-  if (!rankings || !rankings.rankings || rankings.rankings.length === 0) {
-    return null;
-  }
+  const prevTop5Ref = useRef(null);
+  const [prevTop5, setPrevTop5] = useState(null);
+  const [isAnimating, setIsAnimating] = useState(false);
 
   // Get top 5 teams
-  const top5 = rankings.rankings.slice(0, 5);
+  const top5 =
+    rankings && rankings.rankings && rankings.rankings.length > 0
+      ? rankings.rankings.slice(0, 5)
+      : [];
+
+  // Track previous top5 for slide transition
+  useEffect(() => {
+    if (top5.length === 0) {
+      return undefined;
+    }
+
+    if (shouldAnimate && prevTop5Ref.current) {
+      setPrevTop5(prevTop5Ref.current);
+      setIsAnimating(true);
+
+      const timer = window.setTimeout(() => {
+        setPrevTop5(null);
+        setIsAnimating(false);
+      }, 1000); // stagger (400ms) + animation (500ms) + buffer
+      return () => window.clearTimeout(timer);
+    }
+
+    prevTop5Ref.current = top5;
+    return undefined;
+  }, [rankings]);
+
+  // Update ref after animation starts (so next change has correct prev)
+  useEffect(() => {
+    if (top5.length > 0) {
+      prevTop5Ref.current = top5;
+    }
+  }, [top5]);
+
+  if (top5.length === 0) {
+    return null;
+  }
 
   // Calculate contrast ratio for white text on a given hex color
   const getContrastRatio = (hexColor) => {
@@ -78,64 +114,80 @@ export function Top5Showcase({ rankings, _category, shouldAnimate = true }) {
     return contrastRatio < 0.5 ? primaryColor : secondaryColor;
   };
 
+  // Renders the colored content (logo + abbreviation + badge) for a team
+  const renderTeamContent = (team) => {
+    const abbreviation = TEAM_ID_TO_ABBR[team.team_id];
+    const backgroundColor = getCardColor(team);
+
+    return (
+      <div
+        className="flex items-center w-full relative"
+        style={{ backgroundColor, height: "100%" }}
+      >
+        <div
+          className="w-1/2 h-full"
+          style={{
+            backgroundImage: `url(${team.logo_url})`,
+            backgroundSize: "150%",
+            backgroundPosition: "center",
+          }}
+        />
+        <div className="w-1/2 h-full flex items-center justify-center">
+          <span
+            className="text-7xl font-bold text-white leading-none"
+            style={{
+              fontFamily: '"League Gothic", sans-serif',
+              letterSpacing: "0",
+            }}
+          >
+            {abbreviation}
+          </span>
+        </div>
+        <div className="absolute top-2 right-2">
+          <span className="badge badge-success font-bold text-sm">#{team.rank}</span>
+        </div>
+      </div>
+    );
+  };
+
   return (
     <div className="mb-8">
       <h3 className="text-xl font-bold mb-4">Top 5 Teams</h3>
 
       {/* Responsive grid: 5 cols → 3 cols → 2 cols → 1 col */}
-      <div
-        className={`grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 transition-all duration-300 ${shouldAnimate ? "opacity-100 translate-y-0" : "opacity-100 translate-y-0"}`}
-      >
+      <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 transition-all duration-300">
         {top5.map((team, index) => {
           const abbreviation = TEAM_ID_TO_ABBR[team.team_id];
-          const backgroundColor = getCardColor(team);
+          const prevTeam = prevTop5?.[index];
+          const hasTransition = isAnimating && prevTeam;
 
           return (
-            <Link key={`${team.team_id}-${team.stat_category}`} to={`/team/${abbreviation}`}>
-              <div
-                className={`card shadow-lg hover:shadow-xl transition-shadow overflow-hidden flex flex-col h-full cursor-pointer ${
-                  shouldAnimate ? "animate-fade-in-up" : ""
-                }`}
-                style={{
-                  animationDelay: shouldAnimate ? `${index * 50}ms` : "0ms",
-                }}
-              >
-                {/* Top section: Logo on left, abbreviation on right */}
-                <div
-                  className="flex items-center flex-1 relative overflow-hidden"
-                  style={{ backgroundColor }}
-                >
-                  {/* Logo (as background, center-cropped, edge-to-edge) on left */}
-                  <div
-                    className="w-1/2 h-full"
-                    style={{
-                      backgroundImage: `url(${team.logo_url})`,
-                      backgroundSize: "150%",
-                      backgroundPosition: "center",
-                    }}
-                  />
-
-                  {/* Team abbreviation on right with League Gothic */}
-                  <div className="w-1/2 h-full flex items-center justify-center">
-                    <span
-                      className="text-7xl font-bold text-white leading-none"
+            <Link key={`slot-${index}`} to={`/team/${abbreviation}`}>
+              <div className="card shadow-lg hover:shadow-xl transition-shadow overflow-hidden flex flex-col h-full cursor-pointer">
+                {/* Colored section container - clips the sliding content */}
+                <div className="relative overflow-hidden z-0" style={{ height: "8rem" }}>
+                  {hasTransition ? (
+                    /* Sliding wrapper: old team on top, new team below */
+                    <div
+                      className="card-slide-transition"
                       style={{
-                        fontFamily: '"League Gothic", sans-serif',
-                        letterSpacing: "0",
+                        height: "200%",
+                        animationDelay: `${index * 100}ms`,
                       }}
                     >
-                      {abbreviation}
-                    </span>
-                  </div>
-
-                  {/* Rank badge */}
-                  <div className="absolute top-2 right-2">
-                    <span className="badge badge-success font-bold text-sm">#{team.rank}</span>
-                  </div>
+                      {/* Previous team - top half */}
+                      <div style={{ height: "50%" }}>{renderTeamContent(prevTeam)}</div>
+                      {/* Current team - bottom half */}
+                      <div style={{ height: "50%" }}>{renderTeamContent(team)}</div>
+                    </div>
+                  ) : (
+                    /* No animation - just show current team */
+                    <div style={{ height: "100%" }}>{renderTeamContent(team)}</div>
+                  )}
                 </div>
 
                 {/* Bottom section: Stat value in white area */}
-                <div className="bg-white px-4 py-4 text-center">
+                <div className="bg-white px-4 py-4 text-center relative z-10">
                   <div className="text-3xl font-bold text-gray-900">
                     {[
                       "TS%",
@@ -144,7 +196,6 @@ export function Top5Showcase({ rankings, _category, shouldAnimate = true }) {
                       "TRB%",
                       "AST%",
                       "USG%",
-                      // Scoring breakdown percentages from BoxScoreScoringV3
                       "PCT_FGA_2PT",
                       "PCT_FGA_3PT",
                       "PCT_PTS_2PT",
@@ -160,7 +211,6 @@ export function Top5Showcase({ rankings, _category, shouldAnimate = true }) {
                       "PCT_UAST_3PM",
                       "PCT_AST_FGM",
                       "PCT_UAST_FGM",
-                      // Win percentage stored as 0-1 in DB
                       "WIN_PCT",
                     ].includes(rankings.category)
                       ? formatPercentageStat(team.value, rankings.label)
@@ -175,19 +225,17 @@ export function Top5Showcase({ rankings, _category, shouldAnimate = true }) {
 
       {/* Custom animation styles */}
       <style>{`
-        @keyframes fadeInUp {
+        @keyframes cardSlideTransition {
           from {
-            opacity: 0;
-            transform: translateY(10px);
+            transform: translateY(0);
           }
           to {
-            opacity: 1;
-            transform: translateY(0);
+            transform: translateY(-50%);
           }
         }
         
-        .animate-fade-in-up {
-          animation: fadeInUp 0.4s ease-out forwards;
+        .card-slide-transition {
+          animation: cardSlideTransition 0.5s ease-out forwards;
         }
       `}</style>
     </div>
