@@ -2,7 +2,7 @@ import { useState, useRef } from "react";
 import { DidYouKnow } from "../components/DidYouKnow";
 import { RankingsGrid } from "../components/RankingsGrid";
 import { Top5Showcase } from "../components/Top5Showcase";
-import { useCategories, useRankings } from "../hooks/useApi";
+import { useCategories, useRankings, CURRENT_SEASON } from "../hooks/useApi";
 
 const CATEGORY_GROUPS = [
   {
@@ -187,7 +187,7 @@ const CATEGORY_GROUPS = [
 export function RankingsPage() {
   const [selectedCategory, setSelectedCategory] = useState("PPG");
   const [shouldAnimate, setShouldAnimate] = useState(true);
-  const season = import.meta.env.VITE_CURRENT_SEASON || "2025";
+  const season = CURRENT_SEASON;
   const { data: categories, isLoading: categoriesLoading } = useCategories();
   const { data: rankings } = useRankings(selectedCategory, season);
 

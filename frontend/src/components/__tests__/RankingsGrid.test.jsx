@@ -292,14 +292,14 @@ describe("RankingsGrid Component", () => {
     expect(links.some((link) => link.href.includes("/team/BOS"))).toBe(true);
   });
 
-  it("should use default season prop of 2025", () => {
+  it("should pass season prop to useRankings", () => {
     render(
       <BrowserRouter>
         <RankingsGrid category="PPG" />
       </BrowserRouter>
     );
 
-    expect(useRankings).toHaveBeenCalledWith("PPG", "2025");
+    expect(useRankings).toHaveBeenCalledWith("PPG", undefined);
   });
 
   it("should use custom season prop when provided", () => {

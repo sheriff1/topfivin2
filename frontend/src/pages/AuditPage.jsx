@@ -1,7 +1,6 @@
 import { AuditTab } from "../components/AuditTab";
+import { CURRENT_SEASON } from "../hooks/useApi";
 
 export function AuditPage() {
-  const season = "2025"; // Only 2025-26 season available
-
-  return <AuditTab season={season} />;
+  return <AuditTab season={CURRENT_SEASON} />;
 }

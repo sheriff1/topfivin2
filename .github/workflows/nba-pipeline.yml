@@ -32,7 +32,7 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           REDIS_URL: ${{ secrets.REDIS_URL }}
-          CURRENT_SEASON: ${{ secrets.CURRENT_SEASON }}
+          CURRENT_SEASON: ${{ vars.CURRENT_SEASON }}
         run: python scripts/derive_team_stats.py
 
       - name: Derive rankings and clear cache
@@ -40,5 +40,5 @@ jobs:
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
           REDIS_URL: ${{ secrets.REDIS_URL }}
-          CURRENT_SEASON: ${{ secrets.CURRENT_SEASON }}
+          CURRENT_SEASON: ${{ vars.CURRENT_SEASON }}
         run: python scripts/derive_rankings.py

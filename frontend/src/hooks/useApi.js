@@ -2,13 +2,14 @@ import { useQuery } from "@tanstack/react-query";
 import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
+const CURRENT_SEASON = import.meta.env.VITE_CURRENT_SEASON || "2025";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
 });
 
-export { apiClient, API_BASE_URL };
+export { apiClient, API_BASE_URL, CURRENT_SEASON };
 
 // Hook for fetching available categories
 export function useCategories() {
@@ -24,7 +25,7 @@ export function useCategories() {
 }
 
 // Hook for fetching rankings for a specific category
-export function useRankings(category, season = "2025") {
+export function useRankings(category, season = CURRENT_SEASON) {
   return useQuery({
     queryKey: ["rankings", category, season],
     queryFn: async () => {
@@ -40,7 +41,7 @@ export function useRankings(category, season = "2025") {
 }
 
 // Hook for fetching team stats
-export function useTeamStats(teamId, season = "2025") {
+export function useTeamStats(teamId, season = CURRENT_SEASON) {
   return useQuery({
     queryKey: ["teamStats", teamId, season],
     queryFn: async () => {
@@ -56,7 +57,7 @@ export function useTeamStats(teamId, season = "2025") {
 }
 
 // Hook for fetching team rankings
-export function useTeamRankings(teamId, season = "2025") {
+export function useTeamRankings(teamId, season = CURRENT_SEASON) {
   return useQuery({
     queryKey: ["teamRankings", teamId, season],
     queryFn: async () => {
@@ -99,7 +100,7 @@ export function useTeamByAbbreviation(abbreviation) {
 }
 
 // Hook for fetching random top-5 facts
-export function useRandomFacts(count = 10, season = "2025") {
+export function useRandomFacts(count = 10, season = CURRENT_SEASON) {
   return useQuery({
     queryKey: ["randomFacts", count, season],
     queryFn: async () => {
