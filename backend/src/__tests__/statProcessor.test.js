@@ -278,5 +278,18 @@ describe("statProcessor", () => {
         expect(category).toHaveProperty("index");
       });
     });
+
+    it("should include BENCH_PTS as legacy alias for BENCH_PPG", () => {
+      expect(STAT_CATEGORIES).toHaveProperty("BENCH_PTS");
+      expect(STAT_CATEGORIES.BENCH_PTS.label).toBe("Bench Points Per Game");
+      expect(STAT_CATEGORIES.BENCH_PTS.index).toBe("BENCH_PTS");
+      expect(STAT_CATEGORIES.BENCH_PTS.lower).toBe(false);
+    });
+
+    it("should have both BENCH_PPG and BENCH_PTS with matching labels", () => {
+      expect(STAT_CATEGORIES).toHaveProperty("BENCH_PPG");
+      expect(STAT_CATEGORIES).toHaveProperty("BENCH_PTS");
+      expect(STAT_CATEGORIES.BENCH_PPG.label).toBe(STAT_CATEGORIES.BENCH_PTS.label);
+    });
   });
 });

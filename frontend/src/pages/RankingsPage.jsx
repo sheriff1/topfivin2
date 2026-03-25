@@ -245,18 +245,17 @@ export function RankingsPage() {
             <h2 className="text-lg sm:text-xl font-bold mb-3">🏀 Welcome to NBA Top Five In</h2>
             <div className="text-sm sm:text-base leading-relaxed space-y-3">
               <p>
-                Your team didn&apos;t make it to the finals this year? Didn&apos;t make it to the
-                playoffs? Didn&apos;t even get a lottery pick? Have you ever found yourself in
-                despair of trying to justify your NBA fandom towards a team? Or found yourself in a
-                situation where a friend is trying to convince you that your team is trash? Mourn no
-                longer; NBA Top Five In is here. Now you can remind yourself, or tell off your
-                friend with a &ldquo;Hey bruh; we were top five in ties per game, so watch your
-                mouth!&rdquo; with ease. Just search a team below, and find out what statistical
+                Your team not doing so hot this season? Have you ever found yourself in the group
+                chat justifying your fandom towards your favorite team, trying to convince everyone
+                that your team isn&apos;t trash? Mourn no longer; NBA Top Five In is here. Now you
+                can quickly see what your team does best and hit your friend with a &ldquo;Hey;
+                we&apos;re top five in lead changes per game, so watch your mouth!&rdquo; with ease.
+                View teaming by ranking or explore rankings below and find out what statistical
                 categories the team ranks top five in:
               </p>
               <p className="text-xs opacity-75 italic">
                 Disclaimer: not every team is fortunate enough to be top five in a statistical
-                category... I ain&apos;t make the rules!
+                category... I didn&apos;t make the rules!
               </p>
             </div>
           </div>
@@ -265,60 +264,70 @@ export function RankingsPage() {
 
       {/* Filters + Did You Know */}
       <div className="bg-base-200">
-        <div className="lg:container lg:mx-auto grid grid-cols-1 lg:grid-cols-[1fr_1fr]">
-          {/* Did You Know - above on mobile, right on desktop */}
-          <div className="order-first lg:order-last lg:-mr-[calc((100vw-100%)/2)]">
-            <DidYouKnow />
-          </div>
-
+        <div className="container mx-auto px-4 md:px-6 py-4 md:py-6 grid grid-cols-1 lg:grid-cols-2 gap-4">
           {/* Controls Section */}
-          <div className="px-4 md:px-6 py-4 md:py-6">
-            <p className="text-sm text-base-content/70 mb-2">
-              Choose a stat category to see which teams rank in the top 5.
-            </p>
+          <div className="flex flex-col gap-3">
+            <div className="flex flex-col sm:flex-row gap-0 flex-1">
+              {/* Choose a category card */}
+              <div className="card bg-base-100 shadow-sm flex-1">
+                <div className="card-body p-4 gap-1 justify-center [&>*]:grow-0">
+                  <p className="text-sm text-base-content/70">
+                    Choose a stat category to see which teams rank in the top 5.
+                  </p>
+                  <span className="text-sm font-semibold">Stat Category</span>
+                  <select
+                    className="select select-bordered w-full"
+                    value={selectedCategory}
+                    onChange={(e) => handleCategoryChange(e.target.value)}
+                    disabled={categoriesLoading}
+                  >
+                    {categoriesLoading ? (
+                      <option>Loading categories...</option>
+                    ) : (
+                      CATEGORY_GROUPS.map((group) => {
+                        const opts = group.codes
+                          .filter((code) => categoryMap.has(code))
+                          .map((code) => (
+                            <option key={code} value={code}>
+                              {categoryMap.get(code)}
+                            </option>
+                          ));
+                        return opts.length > 0 ? (
+                          <optgroup key={group.label} label={group.label}>
+                            {opts}
+                          </optgroup>
+                        ) : null;
+                      })
+                    )}
+                  </select>
+                </div>
+              </div>
 
-            {/* Category Selector */}
-            <div className="flex flex-col gap-2">
-              <span className="text-sm font-semibold">Stat Category</span>
-              <select
-                className="select select-bordered w-full sm:max-w-sm"
-                value={selectedCategory}
-                onChange={(e) => handleCategoryChange(e.target.value)}
-                disabled={categoriesLoading}
-              >
-                {categoriesLoading ? (
-                  <option>Loading categories...</option>
-                ) : (
-                  CATEGORY_GROUPS.map((group) => {
-                    const opts = group.codes
-                      .filter((code) => categoryMap.has(code))
-                      .map((code) => (
-                        <option key={code} value={code}>
-                          {categoryMap.get(code)}
-                        </option>
-                      ));
-                    return opts.length > 0 ? (
-                      <optgroup key={group.label} label={group.label}>
-                        {opts}
-                      </optgroup>
-                    ) : null;
-                  })
-                )}
-              </select>
-              <div className="mt-1 flex flex-wrap gap-2">
-                <button
-                  type="button"
-                  className="btn btn-secondary btn-sm w-full sm:w-auto"
-                  onClick={handleSurpriseMe}
-                  disabled={categoriesLoading}
-                >
-                  🎲 Surprise me
-                </button>
-                <Link to="/teams" className="btn btn-primary btn-sm w-full sm:w-auto">
-                  View Rankings By Team
-                </Link>
+              {/* OR divider */}
+              <div className="divider sm:divider-horizontal my-1 sm:my-0">OR</div>
+
+              {/* Surprise me card */}
+              <div className="card bg-base-100 shadow-sm">
+                <div className="card-body p-4 items-center justify-center">
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-md w-full sm:w-auto"
+                    onClick={handleSurpriseMe}
+                    disabled={categoriesLoading}
+                  >
+                    🎲 Surprise me
+                  </button>
+                </div>
               </div>
             </div>
+          </div>
+
+          {/* Did You Know + View Rankings By Team */}
+          <div className="order-first lg:order-last flex flex-col gap-3">
+            <DidYouKnow />
+            <Link to="/teams" className="btn btn-primary btn-md w-full">
+              View Rankings By Team
+            </Link>
           </div>
         </div>
       </div>

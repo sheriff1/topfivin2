@@ -1,4 +1,5 @@
-import { useState, useEffect } from "react";
+/* global requestAnimationFrame, cancelAnimationFrame */
+import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useRandomFacts, useAllTeams, CURRENT_SEASON } from "../hooks/useApi";
 
@@ -63,14 +64,31 @@ export function DidYouKnow() {
   const { data: facts } = useRandomFacts(10, season);
   const { data: allTeams } = useAllTeams();
   const [activeIndex, setActiveIndex] = useState(0);
+  const [progress, setProgress] = useState(0);
+  const startTimeRef = useRef(Date.now());
+  const SLIDE_DURATION = 5000;
 
+  // Progress animation + auto-advance
   useEffect(() => {
     if (!facts || facts.length === 0) return undefined;
-    const timer = window.setInterval(() => {
-      setActiveIndex((prev) => (prev + 1) % facts.length);
-    }, 5000);
-    return () => window.clearInterval(timer);
-  }, [facts]);
+    startTimeRef.current = Date.now();
+    setProgress(0);
+
+    let rafId;
+    const animate = () => {
+      const elapsed = Date.now() - startTimeRef.current;
+      const pct = Math.min(elapsed / SLIDE_DURATION, 1);
+      setProgress(pct);
+
+      if (pct >= 1) {
+        setActiveIndex((prev) => (prev + 1) % facts.length);
+        return;
+      }
+      rafId = requestAnimationFrame(animate);
+    };
+    rafId = requestAnimationFrame(animate);
+    return () => cancelAnimationFrame(rafId);
+  }, [facts, activeIndex]);
 
   if (!facts || facts.length === 0) return null;
 
@@ -107,15 +125,15 @@ export function DidYouKnow() {
             >
               DID YOU KNOW...
             </span>
-            <p className="text-white text-lg sm:text-xl font-bold leading-snug">
+            <p className="text-white text-lg sm:text-xl font-bold leading-snug break-words">
               The {fact.team_name} are ranked{" "}
               <span className="text-yellow-300">{ORDINAL[fact.rank] || `#${fact.rank}`}</span> in{" "}
               {fact.label}
             </p>
           </div>
 
-          {/* Dot indicators */}
-          <div className="absolute bottom-2 left-5 z-20 flex gap-1">
+          {/* Dot indicators with progress */}
+          <div className="absolute bottom-2 left-5 z-20 flex gap-1.5 items-center">
             {facts.map((_, i) => (
               <button
                 key={i}
@@ -123,11 +141,21 @@ export function DidYouKnow() {
                   e.preventDefault();
                   setActiveIndex(i);
                 }}
-                className={`w-1.5 h-1.5 rounded-full transition-colors ${
-                  i === activeIndex ? "bg-white" : "bg-white/30"
-                }`}
+                className="relative h-1.5 rounded-full overflow-hidden transition-all duration-300"
+                style={{ width: i === activeIndex ? "1.5rem" : "0.375rem" }}
                 aria-label={`Go to fact ${i + 1}`}
-              />
+              >
+                {/* Background track */}
+                <div className="absolute inset-0 rounded-full bg-white/30" />
+                {/* Fill */}
+                {i === activeIndex && (
+                  <div
+                    className="absolute inset-y-0 left-0 rounded-full bg-white"
+                    style={{ width: `${progress * 100}%` }}
+                  />
+                )}
+                {i !== activeIndex && <div className="absolute inset-0 rounded-full bg-white/30" />}
+              </button>
             ))}
           </div>
         </div>

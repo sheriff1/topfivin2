@@ -1,10 +1,15 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { TeamCard } from "../components/TeamCard";
 import { useAllTeams } from "../hooks/useApi";
 
 export function TeamsPage() {
   const { data: teams, isLoading, error } = useAllTeams();
   const [sortOrder, setSortOrder] = useState("alpha");
+
+  // Scroll to top on navigation
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
 
   if (isLoading) {
     return (

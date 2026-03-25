@@ -39,6 +39,10 @@ test("ranks are displayed in the rankings table", async ({ page }) => {
 
   await expect(page.getByRole("heading", { name: /Rankings$/i }).first()).toBeVisible();
 
+  // Select PPG to ensure deterministic ranks (#1, #2)
+  await page.locator("select.select-bordered").selectOption("PPG");
+  await expect(page.getByRole("heading", { name: /Points Per Game Rankings/i })).toBeVisible();
+
   // Rank badges visible in table (rendered as #1, #2)
   await expect(page.getByText("#1").first()).toBeVisible();
   await expect(page.getByText("#2").first()).toBeVisible();

@@ -186,9 +186,9 @@ export function Top5Showcase({ rankings, _category, shouldAnimate = true }) {
                   )}
                 </div>
 
-                {/* Bottom section: Stat value in white area */}
-                <div className="bg-white px-4 py-4 text-center relative z-10">
-                  <div className="text-3xl font-bold text-gray-900">
+                {/* Bottom section: Stat value */}
+                <div className="bg-base-100 px-4 py-4 text-center relative z-10">
+                  <div className="text-3xl font-bold text-base-content">
                     {[
                       "TS%",
                       "ORB%",
