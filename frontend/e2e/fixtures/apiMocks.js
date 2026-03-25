@@ -266,8 +266,17 @@ export async function setupApiMocks(page) {
     })
   );
 
+  // /api/rankings/random-facts — must be registered before /api/rankings*
+  await page.route("**/api/rankings/random-facts*", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, facts: [] }),
+    })
+  );
+
   // /api/rankings?category=...  (matches all query param variants)
-  await page.route("**/api/rankings*", (route) => {
+  await page.route("**/api/rankings?**", (route) => {
     const url = new URL(route.request().url());
     const category = url.searchParams.get("category");
     const data = category === "RPG" ? mockRankingsRPG : mockRankingsPPG;
