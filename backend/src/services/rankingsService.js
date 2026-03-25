@@ -53,4 +53,50 @@ async function getRankings(category, season, db, cache) {
   };
 }
 
-module.exports = { getCategories, getRankings, STAT_CATEGORIES };
+// Basic stat codes to exclude from random facts
+const BASIC_CODES = [
+  "W",
+  "L",
+  "WIN_PCT",
+  "PPG",
+  "FG_PG",
+  "FGA_PG",
+  "FG%",
+  "THREE_PG",
+  "3P%",
+  "FT%",
+  "RPG",
+  "APG",
+  "SPG",
+  "BPG",
+  "TPG",
+  "PFPG",
+];
+
+async function getRandomFacts(count, season, db) {
+  const query = `
+    SELECT
+      sr.team_id,
+      sr.stat_category,
+      sr.rank,
+      sr.value,
+      t.team_name,
+      t.logo_url
+    FROM stat_rankings sr
+    LEFT JOIN teams t ON sr.team_id = t.team_id
+    WHERE sr.rank <= 5
+      AND sr.season = $1
+      AND sr.stat_category != ALL($2)
+    ORDER BY RANDOM()
+    LIMIT $3
+  `;
+
+  const result = await db.query(query, [season, BASIC_CODES, count]);
+
+  return result.rows.map((row) => ({
+    ...row,
+    label: STAT_CATEGORIES[row.stat_category]?.label || row.stat_category,
+  }));
+}
+
+module.exports = { getCategories, getRankings, getRandomFacts, STAT_CATEGORIES };
