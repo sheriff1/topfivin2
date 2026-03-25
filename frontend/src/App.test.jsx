@@ -3,6 +3,6 @@ import App from "./App";
 
 test("renders app header", () => {
   render(<App />);
-  const heading = screen.getByText(/NBA Top Five In/i);
+  const heading = screen.getByRole("link", { name: /NBA Top Five In/i });
   expect(heading).toBeInTheDocument();
 });
