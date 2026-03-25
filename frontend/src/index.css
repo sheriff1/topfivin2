@@ -1,12 +1,15 @@
 /* stylelint-disable at-rule-no-unknown */
 @import "tailwindcss";
 @plugin "daisyui" {
-  themes: light dark;
+  themes:
+    light --default,
+    dark --prefersdark;
 }
 
-/* NBA color theme overrides */
+/* NBA color theme overrides (applied to both light and dark) */
 :root,
-[data-theme="light"] {
+[data-theme="light"],
+[data-theme="dark"] {
   --color-primary: oklch(30.14% 0.14 252.63); /* NBA blue #17408b */
   --color-primary-content: oklch(100% 0 0); /* white */
   --color-secondary: oklch(38.56% 0.21 26.41); /* NBA red #c9082a */

@@ -1,4 +1,11 @@
+import { useEffect } from "react";
+
 export function AboutPage() {
+  // Scroll to top on navigation
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, []);
+
   return (
     <>
       {/* About App */}

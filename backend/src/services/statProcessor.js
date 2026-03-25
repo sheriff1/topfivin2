@@ -130,6 +130,7 @@ const STAT_CATEGORIES = {
 
   // Bench group stats (BoxScoreTraditionalV3 DF1)
   BENCH_PPG: { label: "Bench Points Per Game", index: "BENCH_PPG", lower: false },
+  BENCH_PTS: { label: "Bench Points Per Game", index: "BENCH_PTS", lower: false }, // legacy alias
   BENCH_RPG: { label: "Bench Rebounds Per Game", index: "BENCH_RPG", lower: false },
   BENCH_APG: { label: "Bench Assists Per Game", index: "BENCH_APG", lower: false },
   BENCH_SPG: { label: "Bench Steals Per Game", index: "BENCH_SPG", lower: false },

@@ -1,6 +1,7 @@
 import { render, screen } from "@testing-library/react";
 import { BrowserRouter } from "react-router-dom";
 import { describe, it, expect, vi, beforeEach } from "vitest";
+import { useAllTeams } from "../../hooks/useApi";
 import { Top5Showcase } from "../Top5Showcase";
 
 // Mock the useApi hook
@@ -12,8 +13,6 @@ vi.mock("../../utils/statFormatter", () => ({
   formatStatValue: vi.fn((value) => `${value.toFixed(1)}`),
   formatPercentageStat: vi.fn((value) => `${(value * 100).toFixed(1)}%`),
 }));
-
-import { useAllTeams } from "../../hooks/useApi";
 
 describe("Top5Showcase Component", () => {
   const mockRankings = {
@@ -386,5 +385,34 @@ describe("Top5Showcase Component", () => {
 
     const badges = container.querySelectorAll(".badge-success");
     expect(badges.length).toBe(5);
+  });
+
+  describe("Dark mode support", () => {
+    it("should use bg-base-100 instead of hardcoded bg-white for stat values", () => {
+      const { container } = render(
+        <BrowserRouter>
+          <Top5Showcase rankings={mockRankings} category="PPG" />
+        </BrowserRouter>
+      );
+
+      // Stat value sections should use theme-aware bg-base-100
+      const base100Elements = container.querySelectorAll(".bg-base-100");
+      expect(base100Elements.length).toBeGreaterThan(0);
+
+      // Should NOT have hardcoded bg-white
+      const bgWhiteElements = container.querySelectorAll(".bg-white");
+      expect(bgWhiteElements.length).toBe(0);
+    });
+
+    it("should use text-base-content for stat value text", () => {
+      const { container } = render(
+        <BrowserRouter>
+          <Top5Showcase rankings={mockRankings} category="PPG" />
+        </BrowserRouter>
+      );
+
+      const baseContentElements = container.querySelectorAll(".text-base-content");
+      expect(baseContentElements.length).toBeGreaterThan(0);
+    });
   });
 });

@@ -1,4 +1,4 @@
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, keepPreviousData } from "@tanstack/react-query";
 import axios from "axios";
 
 const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
@@ -37,6 +37,7 @@ export function useRankings(category, season = CURRENT_SEASON) {
     staleTime: 1000 * 60 * 10, // 10 minutes
     retry: 3,
     enabled: Boolean(category),
+    placeholderData: keepPreviousData,
   });
 }
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import {
   useTeamByAbbreviation,
@@ -26,8 +26,13 @@ export function TeamPage() {
   const { data: rankings, isLoading: rankingsLoading } = useTeamRankings(team?.team_id);
   const { data: categories } = useCategories();
 
-  // Sorting state - default to "category" ascending (A->Z)
-  const [sortColumn, setSortColumn] = useState("category");
+  // Sorting state - default to "rank" ascending (1, 2, 3...)
+  const [sortColumn, setSortColumn] = useState("rank");
+
+  // Scroll to top on navigation
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [abbreviation]);
   const [sortDirection, setSortDirection] = useState("asc");
 
   const isLoading = teamLoading || statsLoading || rankingsLoading;
@@ -230,12 +235,29 @@ export function TeamPage() {
     <>
       {/* Team Header */}
       <div
+        className="relative overflow-hidden"
         style={{
           backgroundColor: getHeaderColor(),
           color: "white",
         }}
       >
-        <div className="container mx-auto px-4 md:px-6 py-4 md:py-6">
+        {/* Zoomed logo background */}
+        {team.logo_url && (
+          <div
+            className="absolute inset-0 opacity-15"
+            style={{
+              backgroundImage: `url(${team.logo_url})`,
+              backgroundSize: "175%",
+              backgroundPosition: "center",
+              backgroundRepeat: "no-repeat",
+            }}
+          />
+        )}
+
+        {/* Dark overlay for text readability */}
+        <div className="absolute inset-0 bg-black/25" />
+
+        <div className="relative z-10 container mx-auto px-4 md:px-6 py-4 md:py-6">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-4">
               {team.logo_url && (
@@ -267,10 +289,10 @@ export function TeamPage() {
         <div className="space-y-2">
           {/* 1st Place Banner */}
           {firstPlaceRankings.length > 0 && (
-            <div className="alert bg-yellow-100 border-l-4 border-yellow-400 rounded">
+            <div className="alert bg-warning/20 border-l-4 border-warning rounded">
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold">🥇</span>
-                <span className="font-semibold text-yellow-800">
+                <span className="font-semibold text-base-content">
                   1st place in:{" "}
                   {firstPlaceRankings.map((r) => getFormattedCategoryLabel(r.label)).join(", ")}
                 </span>
@@ -280,10 +302,10 @@ export function TeamPage() {
 
           {/* 2nd Place Banner */}
           {secondPlaceRankings.length > 0 && (
-            <div className="alert bg-gray-100 border-l-4 border-gray-400 rounded">
+            <div className="alert bg-base-200 border-l-4 border-base-300 rounded">
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold">🥈</span>
-                <span className="font-semibold text-gray-800">
+                <span className="font-semibold text-base-content">
                   2nd place in:{" "}
                   {secondPlaceRankings.map((r) => getFormattedCategoryLabel(r.label)).join(", ")}
                 </span>
@@ -293,10 +315,10 @@ export function TeamPage() {
 
           {/* 3rd Place Banner */}
           {thirdPlaceRankings.length > 0 && (
-            <div className="alert bg-amber-50 border-l-4 border-amber-600 rounded">
+            <div className="alert bg-warning/10 border-l-4 border-warning/60 rounded">
               <div className="flex items-center gap-2">
                 <span className="text-2xl font-bold">🥉</span>
-                <span className="font-semibold text-amber-900">
+                <span className="font-semibold text-base-content">
                   3rd place in:{" "}
                   {thirdPlaceRankings.map((r) => getFormattedCategoryLabel(r.label)).join(", ")}
                 </span>

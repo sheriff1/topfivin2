@@ -19,10 +19,18 @@
       "prettier --write",
       "frontend/node_modules/.bin/eslint --fix --config frontend/eslint.config.cjs"
     ],
+    "frontend/**/*.{html,css}": "prettier --write",
     "*.{json,md,yml,yaml}": "prettier --write"
   },
   "devDependencies": {
     "husky": "^9.1.7",
     "lint-staged": "^16.4.0"
+  },
+  "pnpm": {
+    "overrides": {
+      "picomatch@2": ">=2.3.2",
+      "picomatch@4": ">=4.0.4",
+      "yaml@2": ">=2.8.3"
+    }
   }
 }

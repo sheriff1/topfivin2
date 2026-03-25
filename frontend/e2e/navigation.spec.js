@@ -19,13 +19,13 @@ test("logo click navigates to home from /teams", async ({ page }) => {
 test("Rankings tab is active at /", async ({ page }) => {
   await page.goto("/");
 
-  // Rankings tab has tab-active class (exact: true avoids matching the logo link)
-  const rankingsTab = page.getByRole("link", { name: "Rankings", exact: true });
-  await expect(rankingsTab).toHaveClass(/tab-active/);
+  // Rankings link has active highlight
+  const rankingsLink = page.getByRole("link", { name: "Rankings", exact: true });
+  await expect(rankingsLink).toHaveClass(/bg-primary-content/);
 
-  // Other tabs are not active
-  const teamsTab = page.getByRole("link", { name: "Teams", exact: true });
-  await expect(teamsTab).not.toHaveClass(/tab-active/);
+  // Other links are not active
+  const teamsLink = page.getByRole("link", { name: "Teams", exact: true });
+  await expect(teamsLink).not.toHaveClass(/bg-primary-content/);
 });
 
 test("Teams tab navigates to /teams", async ({ page }) => {
