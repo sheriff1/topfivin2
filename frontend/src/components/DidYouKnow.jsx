@@ -79,7 +79,7 @@ export function DidYouKnow() {
   const backgroundColor = getCardColor(fact.team_id, allTeams);
 
   return (
-    <div className="card shadow-xl overflow-hidden h-full">
+    <div className="overflow-hidden h-full">
       <Link to={`/team/${abbreviation}`} className="block h-full">
         <div
           className="relative flex items-center h-full min-h-40 overflow-hidden transition-colors duration-500"
@@ -100,7 +100,7 @@ export function DidYouKnow() {
           <div className="absolute inset-0 bg-black/25" />
 
           {/* Content */}
-          <div className="relative z-10 p-5 flex flex-col justify-center w-full">
+          <div className="relative z-10 p-5 pb-8 flex flex-col justify-center w-full">
             <span
               className="text-xs sm:text-sm font-bold tracking-widest text-white/90 mb-1"
               style={{ fontFamily: '"League Gothic", sans-serif', letterSpacing: "0.15em" }}
@@ -115,7 +115,7 @@ export function DidYouKnow() {
           </div>
 
           {/* Dot indicators */}
-          <div className="absolute bottom-2 right-3 flex gap-1">
+          <div className="absolute bottom-2 left-5 z-20 flex gap-1">
             {facts.map((_, i) => (
               <button
                 key={i}

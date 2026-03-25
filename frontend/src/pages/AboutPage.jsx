@@ -1,10 +1,10 @@
 export function AboutPage() {
   return (
-    <div className="space-y-6">
+    <>
       {/* About App */}
-      <div className="card bg-base-200 shadow-md">
-        <div className="card-body">
-          <h2 className="card-title text-3xl mb-4">NBA Top Five In</h2>
+      <div className="bg-base-200">
+        <div className="container mx-auto px-4 md:px-6 py-4 md:py-6">
+          <h2 className="text-3xl font-bold mb-4">NBA Top Five In</h2>
           <p className="text-lg mb-4">
             A comprehensive NBA statistics dashboard providing live rankings and team performance
             metrics for the 2025-26 NBA season. Explore how teams stack up across 147 statistical
@@ -25,9 +25,9 @@ export function AboutPage() {
       </div>
 
       {/* Data Accuracy */}
-      <div className="card bg-base-200 shadow-md">
-        <div className="card-body">
-          <h2 className="card-title text-2xl mb-4">📊 Data Accuracy & Completeness</h2>
+      <div className="bg-base-100">
+        <div className="container mx-auto px-4 md:px-6 py-4 md:py-6">
+          <h2 className="text-2xl font-bold mb-4">📊 Data Accuracy & Completeness</h2>
 
           <div className="space-y-4">
             <div className="bg-warning/10 p-4 rounded-lg border border-warning">
@@ -98,9 +98,9 @@ export function AboutPage() {
       </div>
 
       {/* Support */}
-      <div className="card bg-base-200 shadow-md">
-        <div className="card-body">
-          <h2 className="card-title text-xl mb-3">Have Questions or Found an Issue?</h2>
+      <div className="bg-base-200">
+        <div className="container mx-auto px-4 md:px-6 py-4 md:py-6">
+          <h2 className="text-xl font-bold mb-3">Have Questions or Found an Issue?</h2>
           <p className="text-sm mb-4">
             If you notice inconsistencies in the data or have suggestions for improvements, please
             report them on our GitHub issues page.
@@ -117,6 +117,6 @@ export function AboutPage() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }

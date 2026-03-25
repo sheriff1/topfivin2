@@ -5,14 +5,11 @@ test.beforeEach(async ({ page }) => {
   await setupApiMocks(page);
 });
 
-test("loads with PPG rankings table and Top 5 showcase", async ({ page }) => {
+test("loads with a rankings table and Top 5 showcase", async ({ page }) => {
   await page.goto("/");
 
-  // Heading shows default category
-  await expect(page.getByRole("heading", { name: /Points Per Game Rankings/i })).toBeVisible();
-
-  // Category dropdown defaults to PPG
-  await expect(page.locator("select.select-bordered")).toHaveValue("PPG");
+  // Heading shows a random category (PPG or RPG in mocks)
+  await expect(page.getByRole("heading", { name: /Rankings$/i }).first()).toBeVisible();
 
   // Top 5 Showcase section rendered (uses Top5Showcase component)
   await expect(page.getByText("Boston Celtics").first()).toBeVisible();
@@ -24,8 +21,8 @@ test("loads with PPG rankings table and Top 5 showcase", async ({ page }) => {
 test("category dropdown change updates rankings heading to RPG", async ({ page }) => {
   await page.goto("/");
 
-  // Wait for initial load
-  await expect(page.getByRole("heading", { name: /Points Per Game Rankings/i })).toBeVisible();
+  // Wait for initial load (random category)
+  await expect(page.getByRole("heading", { name: /Rankings$/i }).first()).toBeVisible();
 
   // Change category
   await page.locator("select.select-bordered").selectOption("RPG");
@@ -40,7 +37,7 @@ test("category dropdown change updates rankings heading to RPG", async ({ page }
 test("ranks are displayed in the rankings table", async ({ page }) => {
   await page.goto("/");
 
-  await expect(page.getByRole("heading", { name: /Points Per Game Rankings/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Rankings$/i }).first()).toBeVisible();
 
   // Rank badges visible in table (rendered as #1, #2)
   await expect(page.getByText("#1").first()).toBeVisible();

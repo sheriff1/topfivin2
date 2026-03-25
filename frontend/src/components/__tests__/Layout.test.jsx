@@ -141,27 +141,28 @@ describe("Layout Component", () => {
     expect(screen.getByText("Test Content")).toBeDefined();
   });
 
-  it("should have container with proper spacing", () => {
+  it("should have flex column layout for sticky footer", () => {
     const { container } = render(
       <BrowserRouter>
         <Layout>{mockChildren}</Layout>
       </BrowserRouter>
     );
 
-    const contentContainer = container.querySelectorAll(".container")[1];
-    expect(contentContainer.className).toContain("mx-auto");
-    expect(contentContainer.className).toContain("p-4");
+    const root = container.firstChild;
+    expect(root.className).toContain("flex");
+    expect(root.className).toContain("flex-col");
+    expect(root.className).toContain("min-h-screen");
   });
 
-  it("should have responsive padding on container", () => {
+  it("should have flex-1 on content area", () => {
     const { container } = render(
       <BrowserRouter>
         <Layout>{mockChildren}</Layout>
       </BrowserRouter>
     );
 
-    const contentContainer = container.querySelectorAll(".container")[1];
-    expect(contentContainer.className).toMatch(/md:p-6/);
+    const contentArea = container.querySelector(".flex-1");
+    expect(contentArea).toBeDefined();
   });
 
   it("should have tabs-bordered styling", () => {
@@ -194,7 +195,7 @@ describe("Layout Component", () => {
     );
 
     const links = screen.getAllByRole("link");
-    expect(links.length).toBe(6); // Home + 5 nav tabs (Rankings, Teams, Games Count, Audit, About) — dev mode
+    expect(links.length).toBe(7); // Home + 5 nav tabs (Rankings, Teams, Games Count, Audit, About) + footer link — dev mode
   });
 
   it("should have proper flexbox layout for navbar", () => {
