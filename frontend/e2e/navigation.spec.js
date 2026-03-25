@@ -13,7 +13,7 @@ test("logo click navigates to home from /teams", async ({ page }) => {
 
   // Should navigate to /
   await expect(page).toHaveURL("/");
-  await expect(page.getByRole("heading", { name: /Rankings$/i })).toBeVisible();
+  await expect(page.getByRole("heading", { name: /Rankings$/i }).first()).toBeVisible();
 });
 
 test("Rankings tab is active at /", async ({ page }) => {
