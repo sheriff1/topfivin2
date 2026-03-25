@@ -7,7 +7,7 @@ export function Layout({ children }) {
   const { pathname } = location;
 
   return (
-    <div className="min-h-screen bg-base-100">
+    <div className="min-h-screen bg-base-100 flex flex-col">
       {/* Header */}
       <div className="navbar bg-primary text-primary-content shadow-lg">
         <div className="flex-1">
@@ -63,7 +63,22 @@ export function Layout({ children }) {
       </div>
 
       {/* Page Content */}
-      <div className="container mx-auto p-4 md:p-6">{children}</div>
+      <div className="flex-1">{children}</div>
+
+      {/* Footer */}
+      <footer className="bg-base-200 text-base-content text-center p-4">
+        <p>
+          Made with ❤️ for 🏀 by{" "}
+          <a
+            href="https://webflow.sheriffjolaoso.com/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="link link-primary"
+          >
+            Sheriff
+          </a>
+        </p>
+      </footer>
     </div>
   );
 }

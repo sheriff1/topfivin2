@@ -227,16 +227,15 @@ export function TeamPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <>
       {/* Team Header */}
       <div
-        className="card shadow-md"
         style={{
           backgroundColor: getHeaderColor(),
           color: "white",
         }}
       >
-        <div className="card-body">
+        <div className="container mx-auto px-4 md:px-6 py-4 md:py-6">
           <div className="flex flex-wrap items-center gap-4">
             <div className="flex items-center gap-4">
               {team.logo_url && (
@@ -264,51 +263,53 @@ export function TeamPage() {
       </div>
 
       {/* Top 3 Stat Banners */}
-      <div className="space-y-2">
-        {/* 1st Place Banner */}
-        {firstPlaceRankings.length > 0 && (
-          <div className="alert bg-yellow-100 border-l-4 border-yellow-400 rounded">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold">🥇</span>
-              <span className="font-semibold text-yellow-800">
-                1st place in:{" "}
-                {firstPlaceRankings.map((r) => getFormattedCategoryLabel(r.label)).join(", ")}
-              </span>
+      <div className="container mx-auto px-4 md:px-6 py-2">
+        <div className="space-y-2">
+          {/* 1st Place Banner */}
+          {firstPlaceRankings.length > 0 && (
+            <div className="alert bg-yellow-100 border-l-4 border-yellow-400 rounded">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold">🥇</span>
+                <span className="font-semibold text-yellow-800">
+                  1st place in:{" "}
+                  {firstPlaceRankings.map((r) => getFormattedCategoryLabel(r.label)).join(", ")}
+                </span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* 2nd Place Banner */}
-        {secondPlaceRankings.length > 0 && (
-          <div className="alert bg-gray-100 border-l-4 border-gray-400 rounded">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold">🥈</span>
-              <span className="font-semibold text-gray-800">
-                2nd place in:{" "}
-                {secondPlaceRankings.map((r) => getFormattedCategoryLabel(r.label)).join(", ")}
-              </span>
+          {/* 2nd Place Banner */}
+          {secondPlaceRankings.length > 0 && (
+            <div className="alert bg-gray-100 border-l-4 border-gray-400 rounded">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold">🥈</span>
+                <span className="font-semibold text-gray-800">
+                  2nd place in:{" "}
+                  {secondPlaceRankings.map((r) => getFormattedCategoryLabel(r.label)).join(", ")}
+                </span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
 
-        {/* 3rd Place Banner */}
-        {thirdPlaceRankings.length > 0 && (
-          <div className="alert bg-amber-50 border-l-4 border-amber-600 rounded">
-            <div className="flex items-center gap-2">
-              <span className="text-2xl font-bold">🥉</span>
-              <span className="font-semibold text-amber-900">
-                3rd place in:{" "}
-                {thirdPlaceRankings.map((r) => getFormattedCategoryLabel(r.label)).join(", ")}
-              </span>
+          {/* 3rd Place Banner */}
+          {thirdPlaceRankings.length > 0 && (
+            <div className="alert bg-amber-50 border-l-4 border-amber-600 rounded">
+              <div className="flex items-center gap-2">
+                <span className="text-2xl font-bold">🥉</span>
+                <span className="font-semibold text-amber-900">
+                  3rd place in:{" "}
+                  {thirdPlaceRankings.map((r) => getFormattedCategoryLabel(r.label)).join(", ")}
+                </span>
+              </div>
             </div>
-          </div>
-        )}
+          )}
+        </div>
       </div>
 
       {/* Stats Rankings Table */}
-      <div className="card bg-base-200 shadow-md">
-        <div className="card-body">
-          <h2 className="card-title mb-4">Season Stats & Rankings ({CURRENT_SEASON})</h2>
+      <div className="bg-base-200">
+        <div className="container mx-auto px-4 md:px-6 py-4 md:py-6">
+          <h2 className="text-xl font-bold mb-4">Season Stats & Rankings ({CURRENT_SEASON})</h2>
 
           <div className="overflow-x-auto">
             <table className="table table-zebra w-full">
@@ -397,6 +398,6 @@ export function TeamPage() {
           </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
