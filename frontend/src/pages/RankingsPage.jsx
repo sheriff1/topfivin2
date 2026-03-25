@@ -230,12 +230,15 @@ export function RankingsPage() {
             alt="NBA Logo"
             className="hidden sm:block h-16 w-16 shrink-0"
           />
-          <p className="text-sm sm:text-base leading-relaxed">
-            A comprehensive NBA statistics dashboard providing live rankings and team performance
-            metrics for the 2025-26 NBA season. Explore how teams stack up across 147 statistical
-            categories, from basic stats like points per game to advanced metrics like effective
-            field goal percentage and player tracking data.
-          </p>
+          <div>
+            <h2 className="text-lg sm:text-xl font-bold mb-1">🏀 Welcome to NBA Top Five In</h2>
+            <p className="text-sm sm:text-base leading-relaxed">
+              A comprehensive NBA statistics dashboard providing live rankings and team performance
+              metrics for the 2025-26 NBA season. Explore how teams stack up across 147 statistical
+              categories, from basic stats like points per game to advanced metrics like effective
+              field goal percentage and player tracking data.
+            </p>
+          </div>
         </div>
       </div>
 
@@ -249,13 +252,15 @@ export function RankingsPage() {
         {/* Controls Section */}
         <div className="card bg-base-200 shadow-xl">
           <div className="card-body">
-            <h2 className="card-title text-xl">Filters</h2>
+            <p className="text-sm text-base-content/70 mb-2">
+              Choose a stat category to see which teams rank in the top 5.
+            </p>
 
             {/* Category Selector */}
             <div className="flex flex-col gap-2">
               <span className="text-sm font-semibold">Stat Category</span>
               <select
-                className="select select-bordered w-full max-w-sm"
+                className="select select-bordered w-full sm:max-w-sm"
                 value={selectedCategory}
                 onChange={(e) => handleCategoryChange(e.target.value)}
                 disabled={categoriesLoading}

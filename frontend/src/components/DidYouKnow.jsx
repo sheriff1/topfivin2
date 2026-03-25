@@ -87,7 +87,7 @@ export function DidYouKnow() {
         >
           {/* Zoomed logo background */}
           <div
-            className="absolute inset-0 opacity-20"
+            className="absolute inset-0 opacity-15"
             style={{
               backgroundImage: `url(${fact.logo_url})`,
               backgroundSize: "175%",
@@ -96,10 +96,13 @@ export function DidYouKnow() {
             }}
           />
 
+          {/* Dark overlay for text readability */}
+          <div className="absolute inset-0 bg-black/25" />
+
           {/* Content */}
           <div className="relative z-10 p-5 flex flex-col justify-center w-full">
             <span
-              className="text-xs sm:text-sm font-bold tracking-widest text-white/70 mb-1"
+              className="text-xs sm:text-sm font-bold tracking-widest text-white/90 mb-1"
               style={{ fontFamily: '"League Gothic", sans-serif', letterSpacing: "0.15em" }}
             >
               DID YOU KNOW...
