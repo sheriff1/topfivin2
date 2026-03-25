@@ -36,14 +36,14 @@ jobs:
         working-directory: backend
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          ARCHIVE_SEASON: ${{ secrets.CURRENT_SEASON }}
+          ARCHIVE_SEASON: ${{ vars.CURRENT_SEASON }}
           ARCHIVE_DIR: ../season_archive
         run: python scripts/archive_season.py
 
       - name: Run pg_dump (full DB snapshot)
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          CURRENT_SEASON: ${{ secrets.CURRENT_SEASON }}
+          CURRENT_SEASON: ${{ vars.CURRENT_SEASON }}
         run: |
           DUMP_FILE="nba_stats_season_${CURRENT_SEASON}.dump"
           /usr/lib/postgresql/18/bin/pg_dump "$DATABASE_URL" -F c -f "$DUMP_FILE"

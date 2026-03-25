@@ -237,7 +237,7 @@ describe("AuditTab Component", () => {
   it("should make API call with correct season", () => {
     render(<AuditTab season="2024" />);
 
-    expect(apiClient.get).toHaveBeenCalledWith(expect.stringContaining("season=2025"));
+    expect(apiClient.get).toHaveBeenCalledWith(expect.stringContaining("season=2024"));
   });
 
   it("should have progress bar for collection rate", async () => {

@@ -3,8 +3,7 @@ import { apiClient } from "../hooks/useApi";
 import GameStatsRow from "./GameStatsRow";
 
 export function AuditTab({ season }) {
-  // Only 2025-26 season data available
-  const auditSeason = "2025";
+  const auditSeason = season;
   const [stats, setStats] = useState(null);
   const [games, setGames] = useState([]);
   const [pagination, setPagination] = useState(null);

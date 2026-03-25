@@ -5,6 +5,7 @@ import {
   useTeamStats,
   useTeamRankings,
   useCategories,
+  CURRENT_SEASON,
 } from "../hooks/useApi";
 import { formatStatValue, formatPercentageStat } from "../utils/statFormatter";
 
@@ -21,8 +22,8 @@ const getFormattedCategoryLabel = (label) => {
 export function TeamPage() {
   const { abbreviation } = useParams();
   const { data: team, isLoading: teamLoading } = useTeamByAbbreviation(abbreviation);
-  const { data: stats, isLoading: statsLoading } = useTeamStats(team?.team_id, "2025");
-  const { data: rankings, isLoading: rankingsLoading } = useTeamRankings(team?.team_id, "2025");
+  const { data: stats, isLoading: statsLoading } = useTeamStats(team?.team_id);
+  const { data: rankings, isLoading: rankingsLoading } = useTeamRankings(team?.team_id);
   const { data: categories } = useCategories();
 
   // Sorting state - default to "category" ascending (A->Z)
@@ -307,7 +308,7 @@ export function TeamPage() {
       {/* Stats Rankings Table */}
       <div className="card bg-base-200 shadow-md">
         <div className="card-body">
-          <h2 className="card-title mb-4">Season Stats & Rankings (2025)</h2>
+          <h2 className="card-title mb-4">Season Stats & Rankings ({CURRENT_SEASON})</h2>
 
           <div className="overflow-x-auto">
             <table className="table table-zebra w-full">

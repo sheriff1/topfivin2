@@ -35,7 +35,7 @@ const TEAM_ID_TO_ABBR = {
   1610612766: "CHA",
 };
 
-export function RankingsGrid({ category, season = "2025" }) {
+export function RankingsGrid({ category, season }) {
   const { data, isLoading, error } = useRankings(category, season);
   const { data: allTeams } = useAllTeams();
 
