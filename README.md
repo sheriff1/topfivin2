@@ -1,6 +1,6 @@
 # NBA Stats Ranking Dashboard
 
-A full-stack web app that fetches NBA team statistics from the official NBA.com API, computes rankings across 27 stat categories, and displays them in an interactive dashboard. Data is fetched locally via Python scripts and served through a Node.js/Express API backed by PostgreSQL and Redis.
+A full-stack web app that fetches NBA team statistics from the official NBA.com API, computes rankings across 147 stat categories, and displays them in an interactive dashboard. Data is fetched locally via Python scripts and served through a Node.js/Express API backed by PostgreSQL and Redis.
 
 ---
 
@@ -11,7 +11,7 @@ A full-stack web app that fetches NBA team statistics from the official NBA.com 
 | **Frontend**       | React 19, React Router 7, TanStack Query 5, Tailwind CSS 4, DaisyUI 5, Vite 6  |
 | **Backend**        | Node.js 20, Express 5, PostgreSQL (pg), Redis (ioredis), Helmet, Winston, Jest |
 | **Data Pipeline**  | Python 3.13, nba_api, psycopg2                                                 |
-| **Infrastructure** | Railway (production DB + Redis), GitHub Actions CI/CD                          |
+| **Infrastructure** | Railway (production DB + Redis), Vercel (frontend), GitHub Actions CI/CD       |
 
 ---
 
@@ -34,6 +34,7 @@ nba_api (Python — run locally)
                                       Node.js / Express  (port 5001)
                                       GET /api/categories
                                       GET /api/rankings
+                                      GET /api/rankings/random-facts
                                       GET /api/teams
                                       GET /api/teams/abbr/:abbreviation
                                       GET /api/team/:id/stats
@@ -41,7 +42,7 @@ nba_api (Python — run locally)
                                       GET /api/audit/games
                                       GET /api/audit/game/:gameId/stats
                                                   │
-                                      React Frontend  (port 3000)
+                                      React Frontend  (port 3000, Vercel in prod)
                                       Tailwind + DaisyUI + TanStack Query
 ```
 
@@ -65,7 +66,7 @@ PostgreSQL stores all data. Redis caches ranking responses (1-hour TTL).
 git clone https://github.com/sheriff1/topfivin2.git
 cd topfivin2
 
-cd backend && pnpm install && cd ..
+cd backend && npm install && cd ..
 cd frontend && pnpm install && cd ..
 ```
 
@@ -206,13 +207,13 @@ Override the target URL: `BASE_URL=https://your-server.com make k6-load`
 
 Two workflows run **automatically** on a schedule. The rest are triggered manually.
 
-| Workflow                                   | Trigger                                   | What it does                                                                       | Secrets needed                                |
-| ------------------------------------------ | ----------------------------------------- | ---------------------------------------------------------------------------------- | --------------------------------------------- |
-| **CI** (`ci.yml`)                          | Push / PR to `main`                       | Dependency audit, lint, unit tests (backend + frontend), E2E (Playwright)          | —                                             |
-| **NBA Data Pipeline** (`nba-pipeline.yml`) | **Daily 10:00 UTC** (auto) + manual       | Derives team stats + rankings on production, flushes Redis                         | `DATABASE_URL`, `REDIS_URL`, `CURRENT_SEASON` |
-| **DB Backup** (`backup-release.yml`)       | **Every Sunday 2:00 UTC** (auto) + manual | `pg_dump` production DB → GitHub Release                                           | `DATABASE_URL`                                |
-| **Load Tests** (`load-test.yml`)           | Manual                                    | k6 smoke / load / stress against a target URL                                      | —                                             |
-| **Season Archive** (`season-archive.yml`)  | Manual                                    | Exports season CSVs + full DB dump → GitHub Release tagged `season-archive-{YEAR}` | `DATABASE_URL`, `CURRENT_SEASON`              |
+| Workflow                                   | Trigger                                   | What it does                                                                       | Secrets needed                                     |
+| ------------------------------------------ | ----------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------- |
+| **CI** (`ci.yml`)                          | Push / PR to `main`                       | Dependency audit, lint, unit tests (backend + frontend), E2E (Playwright)          | —                                                  |
+| **NBA Data Pipeline** (`nba-pipeline.yml`) | **Daily 10:00 UTC** (auto) + manual       | Derives team stats + rankings on production, flushes Redis                         | `DATABASE_URL`, `REDIS_URL`; var: `CURRENT_SEASON` |
+| **DB Backup** (`backup-release.yml`)       | **Every Sunday 2:00 UTC** (auto) + manual | `pg_dump` production DB → GitHub Release                                           | `DATABASE_URL`                                     |
+| **Load Tests** (`load-test.yml`)           | Manual                                    | k6 smoke / load / stress against a target URL                                      | —                                                  |
+| **Season Archive** (`season-archive.yml`)  | Manual                                    | Exports season CSVs + full DB dump → GitHub Release tagged `season-archive-{YEAR}` | `DATABASE_URL`; var: `CURRENT_SEASON`              |
 
 ---
 
@@ -257,10 +258,11 @@ make uninstall-cron
 
 ### Rankings
 
-| Method | Endpoint                                 | Description                                 |
-| ------ | ---------------------------------------- | ------------------------------------------- |
-| `GET`  | `/api/categories`                        | All available stat categories               |
-| `GET`  | `/api/rankings?category=PPG&season=2025` | Rankings for a stat category (Redis-cached) |
+| Method | Endpoint                                 | Description                                       |
+| ------ | ---------------------------------------- | ------------------------------------------------- |
+| `GET`  | `/api/categories`                        | All available stat categories                     |
+| `GET`  | `/api/rankings?category=PPG&season=2025` | Rankings for a stat category (Redis-cached)       |
+| `GET`  | `/api/rankings/random-facts?season=2025` | Random stat facts for the "Did You Know" carousel |
 
 ### Teams
 
@@ -288,7 +290,7 @@ make uninstall-cron
 | `games`         | Game log — game_id, date, home/away team IDs, `collected` flag |
 | `game_stats`    | Per-team per-game box score rows                               |
 | `team_stats`    | Season averages derived by `derive_team_stats.py`              |
-| `stat_rankings` | Pre-computed rankings — 27 categories × 30 teams = 810 rows    |
+| `stat_rankings` | Pre-computed rankings — 147 categories × 30 teams = 4,410 rows |
 
 ---
 
@@ -395,8 +397,8 @@ Before merging code to main, run all tests to ensure quality:
 
 ```bash
 cd frontend
-npm test              # run all tests once
-npm test -- --watch  # run in watch mode during development
+pnpm test -- --run    # run all tests once
+pnpm test             # run in watch mode during development
 ```
 
 #### Backend tests (jest)
@@ -410,7 +412,7 @@ npm test -- --watch  # run in watch mode during development
 #### Run all tests
 
 ```bash
-cd frontend && npm test && cd ..
+cd frontend && pnpm test -- --run && cd ..
 cd backend && npm test
 ```
 
@@ -433,7 +435,7 @@ The complete workflow for merging code to main:
 3. **Run full test suite** (required before pushing)
 
    ```bash
-   cd frontend && npm test -- --run && cd ..
+   cd frontend && pnpm test -- --run && cd ..
    cd backend && npm test
    ```
 
