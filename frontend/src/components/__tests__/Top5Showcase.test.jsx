@@ -266,14 +266,18 @@ describe("Top5Showcase Component", () => {
     expect(screen.getAllByText("58.0%").length).toBeGreaterThan(0);
   });
 
-  it("should display animation when shouldAnimate is true", () => {
+  it("should render cards on initial load without transition animation", () => {
     const { container } = render(
       <BrowserRouter>
         <Top5Showcase rankings={mockRankings} category="PPG" shouldAnimate={true} />
       </BrowserRouter>
     );
 
-    const cards = container.querySelectorAll(".animate-fade-in-up");
+    // On initial render, no slide transition (only triggers on category change)
+    const transitionCards = container.querySelectorAll(".card-slide-transition");
+    expect(transitionCards.length).toBe(0);
+    // Cards should still render
+    const cards = container.querySelectorAll(".card");
     expect(cards.length).toBeGreaterThan(0);
   });
 
