@@ -415,12 +415,17 @@ def draw_mixed_wrap(
     max_w: int,
     pad: int,
     line_spacing: int = 12,
+    dry_run: bool = False,
 ) -> int:
     """Draw word-wrapped left-aligned text with per-segment colors.
 
     *segments* is a list of ``(text, fill_color)`` tuples rendered inline,
     wrapping to the next line when accumulated width exceeds *max_w*.
     Returns the y-coordinate below the last line.
+
+    If *dry_run* is True, no drawing is performed — only the height is
+    calculated.  Useful for measuring the block before deciding where to
+    place it.
     """
     space_w = text_width(draw, " ", font)
     line_h = draw.textbbox((0, 0), "Ag", font=font)[3]
@@ -444,7 +449,8 @@ def draw_mixed_wrap(
         if needs_space:
             x += space_w
 
-        draw.text((x, y), word, font=font, fill=color)
+        if not dry_run:
+            draw.text((x, y), word, font=font, fill=color)
         x += w
 
     return y + line_h + line_spacing
@@ -500,13 +506,8 @@ def compose_image(fact: dict) -> Image.Image:
     pad = 64
     max_text_w = IMAGE_W - pad * 2
 
-    # Position text block ~40% from top
-    y = int(IMAGE_H * 0.40)
-
-    # "DID YOU KNOW..." — small tracked header, left-aligned
-    draw.text((pad, y), "DID YOU KNOW...", font=font_header, fill=white_90)
     header_h = draw.textbbox((0, 0), "DID YOU KNOW...", font=font_header)[3]
-    y += header_h + 24
+    header_gap = 24
 
     # Flowing sentence: "The {team} are ranked {ord} in {label}"
     ord_text = ordinal(fact["rank"])
@@ -515,6 +516,21 @@ def compose_image(fact: dict) -> Image.Image:
         (ord_text, gold),
         (f"in {fact['label']}", white),
     ]
+
+    # Measure total block height (header + gap + body) with a dry run
+    body_end = draw_mixed_wrap(
+        draw, 0, segments, font_body, max_text_w, pad,
+        line_spacing=12, dry_run=True,
+    )
+    total_h = header_h + header_gap + body_end  # body_end is height from y=0
+
+    # Vertically center the whole block
+    y = (IMAGE_H - total_h) // 2
+
+    # "DID YOU KNOW..." — small tracked header, left-aligned
+    draw.text((pad, y), "DID YOU KNOW...", font=font_header, fill=white_90)
+    y += header_h + header_gap
+
     draw_mixed_wrap(draw, y, segments, font_body, max_text_w, pad, line_spacing=12)
 
     return img.convert("RGB")
