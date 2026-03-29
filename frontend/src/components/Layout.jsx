@@ -275,7 +275,7 @@ export function Layout({ children }) {
 
       {/* Footer */}
       <footer className="bg-base-200 text-base-content text-center p-4">
-        <p>
+        <p className="text-sm">
           Made with ❤️ for 🏀 by{" "}
           <a
             href="https://webflow.sheriffjolaoso.com/"
