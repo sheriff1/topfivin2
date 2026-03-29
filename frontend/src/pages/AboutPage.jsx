@@ -104,6 +104,33 @@ export function AboutPage() {
         </div>
       </div>
 
+      {/* Privacy & Analytics */}
+      <div className="bg-base-100">
+        <div className="container mx-auto px-4 md:px-6 py-4 md:py-6">
+          <h2 className="text-2xl font-bold mb-4">🔒 Privacy & Analytics</h2>
+          <div className="space-y-4">
+            <div>
+              <h3 className="font-semibold mb-2">Web Analytics</h3>
+              <p className="text-sm mb-2">
+                This site uses Vercel Web Analytics to understand how visitors use the application.
+                Analytics data collected includes:
+              </p>
+              <ul className="list-disc list-inside space-y-1 text-sm ml-2 mb-2">
+                <li>Pages visited and time spent on each page</li>
+                <li>Geographic location (country/region level)</li>
+                <li>Device type and browser information</li>
+                <li>Visitor counts and traffic patterns</li>
+              </ul>
+              <p className="text-sm text-base-content/70">
+                <strong>Privacy:</strong> Web Analytics only stores anonymized data and does not use
+                cookies, providing valuable insights while respecting your privacy and web
+                experience. No personal information is collected or stored.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Support */}
       <div className="bg-base-200">
         <div className="container mx-auto px-4 md:px-6 py-4 md:py-6">
