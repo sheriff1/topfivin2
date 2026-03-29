@@ -533,6 +533,19 @@ def compose_image(fact: dict) -> Image.Image:
 
     draw_mixed_wrap(draw, y, segments, font_body, max_text_w, pad, line_spacing=12)
 
+    # ── Branding: bottom-right corner ────────────────────────────────────
+    font_brand = load_font(FONT_JAKARTA_BOLD, 36)
+    brand_text = "\U0001F3C0 NBA Top Five In"
+    brand_bbox = draw.textbbox((0, 0), brand_text, font=font_brand)
+    brand_w = brand_bbox[2] - brand_bbox[0]
+    brand_h = brand_bbox[3] - brand_bbox[1]
+    draw.text(
+        (IMAGE_W - pad - brand_w, IMAGE_H - pad - brand_h),
+        brand_text,
+        font=font_brand,
+        fill=white_90,
+    )
+
     return img.convert("RGB")
 
 
