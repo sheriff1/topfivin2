@@ -1,4 +1,4 @@
-.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod backup backup-clean archive-season k6-smoke k6-load k6-stress fetch-advanced-extras fetch-misc fetch-hustle fetch-summary fetch-fourfactors fetch-scoring fetch-starters-bench fetch-playertrack backfill backfill-prod backfill-missing sync-advanced-prod sync-missing-prod sync-prod migrate-prod check-progress check-progress-prod install-cron uninstall-cron logs-clean
+.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod social-images social-images-prod social-image-manual backup backup-clean archive-season k6-smoke k6-load k6-stress fetch-advanced-extras fetch-misc fetch-hustle fetch-summary fetch-fourfactors fetch-scoring fetch-starters-bench fetch-playertrack backfill backfill-prod backfill-missing sync-advanced-prod sync-missing-prod sync-prod migrate-prod check-progress check-progress-prod install-cron uninstall-cron logs-clean
 
 # ── Infrastructure ───────────────────────────────────────────────────────────
 services:
@@ -41,16 +41,39 @@ derive:
 	set -a && source backend/.env && set +a && \
 	cd backend && \
 	python scripts/derive_team_stats.py && \
-	python scripts/derive_rankings.py
-	@echo "✅ Derive + Rankings complete (local)"
+	python scripts/derive_rankings.py && \
+	python scripts/generate_social_images.py
+	@echo "✅ Derive + Rankings + Social Images complete (local)"
+
+social-images:
+	source .venv/bin/activate && \
+	set -a && source backend/.env && set +a && \
+	cd backend && \
+	python scripts/generate_social_images.py
+	@echo "✅ Social images generated (local)"
+
+social-image-manual:
+	source .venv/bin/activate && \
+	set -a && source backend/.env && set +a && \
+	cd backend && \
+	python scripts/generate_social_image_manual.py
+	@echo "✅ Manual social image generated"
 
 derive-prod:
 	source .venv/bin/activate && \
 	set -a && source backend/.env.production && set +a && \
 	cd backend && \
 	python scripts/derive_team_stats.py && \
-	python scripts/derive_rankings.py
-	@echo "✅ Derive + Rankings complete (production)"
+	python scripts/derive_rankings.py && \
+	ENV_FILE=.env.production python scripts/generate_social_images.py
+	@echo "✅ Derive + Rankings + Social Images complete (production)"
+
+social-images-prod:
+	source .venv/bin/activate && \
+	set -a && source backend/.env.production && set +a && \
+	cd backend && \
+	ENV_FILE=.env.production python scripts/generate_social_images.py
+	@echo "✅ Social images generated (production)"
 
 pipeline:
 	source .venv/bin/activate && \
@@ -66,7 +89,8 @@ pipeline:
 	python scripts/fetch_misc_stats.py && \
 	python scripts/fetch_hustle_stats.py && \
 	python scripts/derive_team_stats.py && \
-	python scripts/derive_rankings.py
+	python scripts/derive_rankings.py && \
+	python scripts/generate_social_images.py
 	@echo "✅ Full pipeline complete (local) — all stats backfilled + rankings updated"
 
 pipeline-prod:
