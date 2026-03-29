@@ -13,6 +13,7 @@ package-lock.json
 backend/node_modules/
 backend/.env
 backend/.env.production
+backend/logo_cache/
 
 # Frontend
 frontend/node_modules/
