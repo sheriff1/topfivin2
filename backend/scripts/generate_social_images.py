@@ -18,6 +18,7 @@ import textwrap
 from datetime import date
 from pathlib import Path
 
+import cairosvg
 import psycopg2
 import requests
 from PIL import Image, ImageDraw, ImageFont
@@ -143,6 +144,55 @@ STAT_LABELS: dict[str, str] = {
     "CONTESTED_FGA": "Contested FGA Per Game",
     "CONTESTED_FG%": "Contested FG %",
     "UNCONTESTED_FGM": "Uncontested FG Made Per Game",
+    "UNCONTESTED_FGA": "Uncontested FGA Per Game",
+    "UNCONTESTED_FG%": "Uncontested FG %",
+    "DAR_FGM": "Defended at Rim FG Made Per Game",
+    "DAR_FGA": "Defended at Rim FGA Per Game",
+    "DAR_FG%": "Defended at Rim FG %",
+    "PCT_FGA_2PT": "FGA % from 2PT",
+    "PCT_FGA_3PT": "FGA % from 3PT",
+    "PCT_PTS_2PT": "Points % from 2PT",
+    "PCT_PTS_2PT_MR": "Points % from 2PT Midrange",
+    "PCT_PTS_3PT": "Points % from 3PT",
+    "PCT_PTS_FB": "Points % from Fast Break",
+    "PCT_PTS_FT": "Points % from Free Throws",
+    "PCT_PTS_OFF_TOV": "Points % from Turnovers",
+    "PCT_PTS_PAINT": "Points % from Paint",
+    "PCT_AST_2PM": "Assisted 2PM %",
+    "PCT_UAST_2PM": "Unassisted 2PM %",
+    "PCT_AST_3PM": "Assisted 3PM %",
+    "PCT_UAST_3PM": "Unassisted 3PM %",
+    "PCT_AST_FGM": "Assisted FGM %",
+    "PCT_UAST_FGM": "Unassisted FGM %",
+    "DURATION": "Average Game Duration",
+    "STARTERS_FG": "Starter FG Made Per Game",
+    "STARTERS_FGA": "Starter FGA Per Game",
+    "STARTERS_3P": "Starter 3P Made Per Game",
+    "STARTERS_3PA": "Starter 3PA Per Game",
+    "STARTERS_OREB": "Starter Off. Rebounds Per Game",
+    "STARTERS_DREB": "Starter Def. Rebounds Per Game",
+    "STARTERS_FT": "Starter FT Made Per Game",
+    "STARTERS_FTA": "Starter FTA Per Game",
+    "STARTERS_TOV": "Starter Turnovers Per Game",
+    "STARTERS_PF": "Starter Fouls Per Game",
+    "BENCH_PTS": "Bench Points Per Game",
+    "BENCH_FG%": "Bench Field Goal %",
+    "BENCH_3P%": "Bench 3-Point %",
+    "BENCH_FT%": "Bench Free Throw %",
+    "BENCH_FG": "Bench FG Made Per Game",
+    "BENCH_FGA": "Bench FGA Per Game",
+    "BENCH_3P": "Bench 3P Made Per Game",
+    "BENCH_3PA": "Bench 3PA Per Game",
+    "BENCH_OREB": "Bench Off. Rebounds Per Game",
+    "BENCH_DREB": "Bench Def. Rebounds Per Game",
+    "BENCH_FT": "Bench FT Made Per Game",
+    "BENCH_FTA": "Bench FTA Per Game",
+    "BENCH_TOV": "Bench Turnovers Per Game",
+    "BENCH_PF": "Bench Fouls Per Game",
+    "REB_CHANCES_OFF": "Offensive Rebound Chances",
+    "REB_CHANCES_DEF": "Defensive Rebound Chances",
+    "REB_CHANCES_TOT": "Total Rebound Chances",
+    "FT_AST": "Free Throw Assists Per Game",
 }
 
 
@@ -315,27 +365,40 @@ def draw_wrapped_centered(
 
 # ── Logo download ─────────────────────────────────────────────────────────────
 
-_logo_cache: dict[str, Image.Image] = {}
-
-
-def get_png_logo_url(team_id: int) -> str:
-    """
-    Return PNG logo URL from NBA CDN.
-    The DB stores SVG URLs, but we need PNG for Pillow compatibility.
-    """
-    return f"https://cdn.nba.com/logos/nba/{team_id}/global/L/logo.png"
+LOGO_CACHE_DIR = Path(__file__).parent.parent / "logo_cache"
+LOGO_SIZE_PX = 1024  # render SVG at this size for high-res watermarks
 
 
 def fetch_logo(team_id: int) -> Image.Image | None:
-    """Download PNG logo from NBA CDN, using team_id to construct URL."""
-    url = get_png_logo_url(team_id)
-    if url in _logo_cache:
-        return _logo_cache[url]
+    """Return a high-res RGBA logo for *team_id*.
+
+    Uses the same SVG URL as the web app
+    (``https://cdn.nba.com/logos/nba/<id>/primary/logo.svg``), converts
+    to PNG via *cairosvg*, and caches the result on disk so subsequent
+    runs don't hit the CDN.
+    """
+    LOGO_CACHE_DIR.mkdir(parents=True, exist_ok=True)
+    cached_path = LOGO_CACHE_DIR / f"{team_id}.png"
+
+    # Return from disk cache if available
+    if cached_path.exists():
+        try:
+            return Image.open(cached_path).convert("RGBA")
+        except Exception:
+            cached_path.unlink(missing_ok=True)
+
+    # Download SVG from NBA CDN (same URL the web app uses)
+    svg_url = f"https://cdn.nba.com/logos/nba/{team_id}/primary/logo.svg"
     try:
-        resp = requests.get(url, timeout=10)
+        resp = requests.get(svg_url, timeout=10)
         resp.raise_for_status()
-        img = Image.open(io.BytesIO(resp.content)).convert("RGBA")
-        _logo_cache[url] = img
+        png_data = cairosvg.svg2png(
+            bytestring=resp.content,
+            output_width=LOGO_SIZE_PX,
+            output_height=LOGO_SIZE_PX,
+        )
+        img = Image.open(io.BytesIO(png_data)).convert("RGBA")
+        img.save(cached_path, "PNG")
         return img
     except Exception as exc:
         print(f"  ⚠️  Logo download failed for team {team_id}: {exc}")
@@ -343,6 +406,49 @@ def fetch_logo(team_id: int) -> Image.Image | None:
 
 
 # ── Image composition ─────────────────────────────────────────────────────────
+
+def draw_mixed_wrap(
+    draw: ImageDraw.ImageDraw,
+    y: int,
+    segments: list[tuple[str, tuple]],
+    font: ImageFont.FreeTypeFont,
+    max_w: int,
+    pad: int,
+    line_spacing: int = 12,
+) -> int:
+    """Draw word-wrapped left-aligned text with per-segment colors.
+
+    *segments* is a list of ``(text, fill_color)`` tuples rendered inline,
+    wrapping to the next line when accumulated width exceeds *max_w*.
+    Returns the y-coordinate below the last line.
+    """
+    space_w = text_width(draw, " ", font)
+    line_h = draw.textbbox((0, 0), "Ag", font=font)[3]
+
+    words: list[tuple[str, tuple]] = []
+    for text, color in segments:
+        for w in text.split():
+            words.append((w, color))
+
+    x = pad
+    for i, (word, color) in enumerate(words):
+        w = text_width(draw, word, font)
+        needs_space = x > pad
+        total_w = (space_w if needs_space else 0) + w
+
+        if x + total_w > pad + max_w and x > pad:
+            y += line_h + line_spacing
+            x = pad
+            needs_space = False
+
+        if needs_space:
+            x += space_w
+
+        draw.text((x, y), word, font=font, fill=color)
+        x += w
+
+    return y + line_h + line_spacing
+
 
 def compose_image(fact: dict) -> Image.Image:
     """Render a single 1080×1350 social image for one team/fact."""
@@ -355,78 +461,61 @@ def compose_image(fact: dict) -> Image.Image:
 
     img = Image.new("RGBA", (IMAGE_W, IMAGE_H), bg_rgb + (255,))
 
-    # ── Layer 2: logo watermark ───────────────────────────────────────────────
+    # ── Layer 2: logo watermark (175% zoom, center-crop like CSS background-size) ──
     logo = fetch_logo(fact["team_id"])
     if logo:
-        logo_size = 920
-        logo_resized = logo.copy()
-        logo_resized.thumbnail((logo_size, logo_size), Image.LANCZOS)
-        # Build a faded version at 12% opacity
+        # Scale uniformly so the logo covers 175% of canvas width,
+        # preserving aspect ratio (no stretching). The overflow is
+        # naturally cropped by the canvas boundary.
+        target = int(IMAGE_W * 1.75)
+        orig_w, orig_h = logo.size
+        scale = target / orig_w
+        logo_resized = logo.resize(
+            (int(orig_w * scale), int(orig_h * scale)), Image.LANCZOS
+        )
+        # Fade to 15% opacity
         r, g, b, a = logo_resized.split()
-        a = a.point(lambda v: int(v * 0.12))
+        a = a.point(lambda v: int(v * 0.15))
         logo_faded = Image.merge("RGBA", (r, g, b, a))
+        # Center on canvas — parts that overflow are naturally clipped
         lw, lh = logo_faded.size
         x = (IMAGE_W - lw) // 2
         y = (IMAGE_H - lh) // 2
         img.paste(logo_faded, (x, y), logo_faded)
 
-    # ── Layer 3: dark overlay ─────────────────────────────────────────────────
-    overlay = Image.new("RGBA", (IMAGE_W, IMAGE_H), (0, 0, 0, 210))
+    # ── Layer 3: subtle dark overlay (25% like web component) ────────────
+    overlay = Image.new("RGBA", (IMAGE_W, IMAGE_H), (0, 0, 0, 64))
     img = Image.alpha_composite(img, overlay)
 
-    # ── Layer 4: text ─────────────────────────────────────────────────────────
+    # ── Layer 4: text (left-aligned, matching DidYouKnow component) ──────
     draw = ImageDraw.Draw(img)
 
-    font_gothic_sm = load_font(FONT_LEAGUE_GOTHIC, 42)
-    font_gothic_lg = load_font(FONT_LEAGUE_GOTHIC, 84)
-    font_jakarta_xl = load_font(FONT_JAKARTA_BOLD, 96)
-    font_jakarta_lg = load_font(FONT_JAKARTA_BOLD, 76)
-    font_jakarta_hero = load_font(FONT_JAKARTA_BOLD, 168)
-    font_jakarta_md = load_font(FONT_JAKARTA_BOLD, 64)
-    font_jakarta_sm = load_font(FONT_JAKARTA_BOLD, 40)
+    font_header = load_font(FONT_LEAGUE_GOTHIC, 42)
+    font_body = load_font(FONT_JAKARTA_BOLD, 76)
 
+    white = (255, 255, 255, 255)
     white_90 = (255, 255, 255, 230)
-    white_60 = (255, 255, 255, 153)
-    white_40 = (255, 255, 255, 100)
     gold = (255, 215, 0, 255)
 
-    pad = 64  # horizontal padding
+    pad = 64
     max_text_w = IMAGE_W - pad * 2
 
-    # "NBA TOP FIVE IN" — small header
-    y = 80
-    draw_centered(draw, y, "NBA TOP FIVE IN", font_gothic_sm, white_60)
+    # Position text block ~40% from top
+    y = int(IMAGE_H * 0.40)
 
-    # "DID YOU KNOW..." — large tracked header
-    y = 148
-    draw_centered(draw, y, "DID YOU KNOW...", font_gothic_lg, white_90)
+    # "DID YOU KNOW..." — small tracked header, left-aligned
+    draw.text((pad, y), "DID YOU KNOW...", font=font_header, fill=white_90)
+    header_h = draw.textbbox((0, 0), "DID YOU KNOW...", font=font_header)[3]
+    y += header_h + 24
 
-    # Divider
-    y = 278
-    draw.line([(pad, y), (IMAGE_W - pad, y)], fill=white_40, width=2)
-
-    # Team name
-    y = 330
-    team_text = f"The {fact['team_name']}"
-    y = draw_wrapped_centered(draw, y, team_text, font_jakarta_xl, (255, 255, 255, 255), max_text_w, line_spacing=10)
-
-    # "are ranked"
-    y += 16
-    draw_centered(draw, y, "are ranked", font_jakarta_lg, white_60)
-
-    # Ordinal (gold hero)
-    y += 100
+    # Flowing sentence: "The {team} are ranked {ord} in {label}"
     ord_text = ordinal(fact["rank"])
-    draw_centered(draw, y, ord_text, font_jakarta_hero, gold)
-
-    # "in {label}"
-    y += 200
-    label_text = f"in {fact['label']}"
-    y = draw_wrapped_centered(draw, y, label_text, font_jakarta_md, (255, 255, 255, 255), max_text_w, line_spacing=10)
-
-    # Date — bottom
-    date_str = date.today().strftime("%B %-d, %Y")
-    draw_centered(draw, IMAGE_H - 80, date_str, font_jakarta_sm, white_40)
+    segments = [
+        (f"The {fact['team_name']} are ranked", white),
+        (ord_text, gold),
+        (f"in {fact['label']}", white),
+    ]
+    draw_mixed_wrap(draw, y, segments, font_body, max_text_w, pad, line_spacing=12)
 
     return img.convert("RGB")
 
