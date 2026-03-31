@@ -40,6 +40,8 @@ module.exports = [
         URLSearchParams: "readonly",
         fetch: "readonly",
         console: "readonly",
+        setTimeout: "readonly",
+        clearTimeout: "readonly",
       },
     },
   },

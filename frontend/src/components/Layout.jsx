@@ -48,6 +48,12 @@ export function Layout({ children }) {
         Rankings
       </Link>
       <Link
+        to="/game"
+        className={`btn btn-ghost btn-sm ${pathname === "/game" ? "bg-primary-content/20" : ""}`}
+      >
+        Game
+      </Link>
+      <Link
         to="/teams"
         className={`btn btn-ghost btn-sm ${
           pathname === "/teams" || pathname.startsWith("/team/") ? "bg-primary-content/20" : ""
@@ -193,6 +199,12 @@ export function Layout({ children }) {
               className={`btn btn-ghost btn-lg text-xl ${pathname === "/" ? "bg-primary-content/20" : ""}`}
             >
               Rankings
+            </Link>
+            <Link
+              to="/game"
+              className={`btn btn-ghost btn-lg text-xl ${pathname === "/game" ? "bg-primary-content/20" : ""}`}
+            >
+              Game
             </Link>
             <Link
               to="/teams"

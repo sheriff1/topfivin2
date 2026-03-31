@@ -155,9 +155,37 @@ make backup                # pg_dump Railway → local backups/
 
 - **Main branch**: `main`
 - **Feature branches**: `feature/{feature-name}-#{issue-number}`
-- **"Ship it"** = push branch + open PR on GitHub (never merge locally to main)
-- **"Sync and clean" (S&C)** = `git checkout main && git pull origin main && git branch -d feature/...`
 - PRs must be merged via GitHub UI — squash merge is used
+
+### "Ship It" — push branch + open PR for review (never merge locally to main)
+
+```bash
+# 1. Run all tests first — must pass before pushing
+cd backend && npm test
+cd frontend && npm test
+
+# 2. Push branch
+git push -u origin feature/your-feature-name
+
+# 3. Create PR via gh CLI (write body to file first to avoid shell escaping issues)
+gh pr create --title "Your title" --body-file /tmp/pr-body.md --base main
+```
+
+PR description must end with `Closes #ISSUE_NUMBER` to auto-close the linked issue on merge.
+If there is no issue number, omit the closing keyword entirely.
+
+### "Sync & Clean" (S&C) — run after PR is confirmed merged on GitHub
+
+```bash
+git checkout main && git pull origin main
+git branch -d feature/your-feature-name
+```
+
+If the branch shows "not fully merged" (expected with squash merge), force-delete:
+
+```bash
+git branch -D feature/your-feature-name
+```
 
 ---
 
