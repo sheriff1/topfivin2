@@ -4,6 +4,7 @@ import { Layout } from "./components/Layout";
 import { AboutPage } from "./pages/AboutPage";
 import { AuditPage } from "./pages/AuditPage";
 import { GameCountPage } from "./pages/GameCountPage";
+import { GamePage } from "./pages/GamePage";
 import { RankingsPage } from "./pages/RankingsPage";
 import { TeamPage } from "./pages/TeamPage";
 import { TeamsPage } from "./pages/TeamsPage";
@@ -25,6 +26,7 @@ function App() {
         <Layout>
           <Routes>
             <Route path="/" element={<RankingsPage />} />
+            <Route path="/game" element={<GamePage />} />
             <Route path="/teams" element={<TeamsPage />} />
             <Route path="/team/:abbreviation" element={<TeamPage />} />
             <Route path="/games-count" element={<GameCountPage />} />

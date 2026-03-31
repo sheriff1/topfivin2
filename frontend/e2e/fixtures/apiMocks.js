@@ -7,7 +7,7 @@ export const mockCategories = [
   { code: "RPG", label: "Rebounds Per Game" },
 ];
 
-// BOS = 1610612738, BKN = 1610612751
+// BOS = 1610612738, BKN = 1610612751, LAL = 1610612747, MIA = 1610612748, DAL = 1610612742
 export const mockTeams = [
   {
     id: 1,
@@ -22,6 +22,27 @@ export const mockTeams = [
     team_name: "Brooklyn Nets",
     logo_url: null,
     team_colors: { primary: "#000000", secondary: "#FFFFFF" },
+  },
+  {
+    id: 3,
+    team_id: 1610612747,
+    team_name: "Los Angeles Lakers",
+    logo_url: null,
+    team_colors: { primary: "#552583", secondary: "#FDB927" },
+  },
+  {
+    id: 4,
+    team_id: 1610612748,
+    team_name: "Miami Heat",
+    logo_url: null,
+    team_colors: { primary: "#98002E", secondary: "#F9A01B" },
+  },
+  {
+    id: 5,
+    team_id: 1610612742,
+    team_name: "Dallas Mavericks",
+    logo_url: null,
+    team_colors: { primary: "#00538C", secondary: "#002B5E" },
   },
 ];
 
@@ -46,6 +67,33 @@ export const mockRankingsPPG = {
       logo_url: null,
       games_count: 82,
     },
+    {
+      team_id: 1610612747,
+      team_name: "Los Angeles Lakers",
+      stat_category: "PPG",
+      rank: 3,
+      value: 112.8,
+      logo_url: null,
+      games_count: 82,
+    },
+    {
+      team_id: 1610612748,
+      team_name: "Miami Heat",
+      stat_category: "PPG",
+      rank: 10,
+      value: 105.2,
+      logo_url: null,
+      games_count: 82,
+    },
+    {
+      team_id: 1610612742,
+      team_name: "Dallas Mavericks",
+      stat_category: "PPG",
+      rank: 15,
+      value: 101.8,
+      logo_url: null,
+      games_count: 82,
+    },
   ],
   category: "PPG",
   label: "Points Per Game",
@@ -66,11 +114,38 @@ export const mockRankingsRPG = {
       games_count: 82,
     },
     {
+      team_id: 1610612747,
+      team_name: "Los Angeles Lakers",
+      stat_category: "RPG",
+      rank: 2,
+      value: 46.5,
+      logo_url: null,
+      games_count: 82,
+    },
+    {
       team_id: 1610612738,
       team_name: "Boston Celtics",
       stat_category: "RPG",
       rank: 4,
       value: 44.1,
+      logo_url: null,
+      games_count: 82,
+    },
+    {
+      team_id: 1610612748,
+      team_name: "Miami Heat",
+      stat_category: "RPG",
+      rank: 12,
+      value: 40.3,
+      logo_url: null,
+      games_count: 82,
+    },
+    {
+      team_id: 1610612742,
+      team_name: "Dallas Mavericks",
+      stat_category: "RPG",
+      rank: 18,
+      value: 38.1,
       logo_url: null,
       games_count: 82,
     },

@@ -28,7 +28,7 @@ test("team cards show trophy count", async ({ page }) => {
 
   // BOS mock has 2 trophies (PPG rank=1, RPG rank=4), BKN has 1 trophy (RPG rank=8)
   await expect(page.getByText("×2").first()).toBeVisible();
-  await expect(page.getByText("×1")).toBeVisible();
+  await expect(page.getByText("×1").first()).toBeVisible();
 });
 
 test("clicking a team card navigates to team detail page", async ({ page }) => {

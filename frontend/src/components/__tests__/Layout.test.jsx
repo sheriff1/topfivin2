@@ -198,7 +198,7 @@ describe("Layout Component", () => {
     );
 
     const links = screen.getAllByRole("link");
-    expect(links.length).toBe(7); // Home + 5 nav tabs (Rankings, Teams, Games Count, Audit, About) + footer link — dev mode
+    expect(links.length).toBe(8); // Home + 6 nav tabs (Rankings, Game, Teams, Games Count, Audit, About) + footer link — dev mode
   });
 
   it("should have proper navbar layout with start and end sections", () => {
