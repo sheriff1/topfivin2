@@ -36,7 +36,6 @@ export function GamePage() {
     submitAnswer,
     nextQuestion,
     startGame,
-    resetGame,
   } = useGameEngine();
 
   const { data: allTeams } = useAllTeams();
@@ -78,10 +77,18 @@ export function GamePage() {
               >
                 NBA Top Five In Guesser
               </h1>
-              <p className="text-base-content/70 mb-6 text-lg">
+              <p className="text-base-content/70 mb-2 text-lg">
                 Test your NBA knowledge! Guess which team is ranked in the top 5 for each stat
                 category. How long can you keep your streak going?
               </p>
+              <div className="text-base-content/50 text-sm mb-6 space-y-1">
+                <p>
+                  <strong>Classic</strong> — Is this team in the top 5?
+                </p>
+                <p>
+                  <strong>Challenge</strong> — Guess the exact rank
+                </p>
+              </div>
 
               {/* Logo marquee - 2 rows */}
               {logosRow1.length > 0 && (
@@ -113,9 +120,20 @@ export function GamePage() {
                 </div>
               )}
 
-              <button className="btn btn-primary btn-lg px-12 w-full" onClick={startGame}>
-                Play
-              </button>
+              <div className="flex flex-col gap-2 w-full">
+                <button
+                  className="btn btn-primary btn-lg w-full"
+                  onClick={() => startGame("classic")}
+                >
+                  Play Classic Mode
+                </button>
+                <button
+                  className="btn btn-secondary btn-lg w-full"
+                  onClick={() => startGame("challenge")}
+                >
+                  Play Challenge Mode
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -151,16 +169,25 @@ export function GamePage() {
             ) : (
               <p className="text-base-content/50 mb-4">Your High Score: {highScore}</p>
             )}
-            <div className="flex flex-col gap-2 w-full">
-              <button className="btn btn-primary" onClick={resetGame}>
-                Play Again
-              </button>
-              <Link to="/" className="btn btn-outline">
-                View all Rankings
-              </Link>
-              <Link to="/teams" className="btn btn-outline">
-                View by Teams
-              </Link>
+            <div className="flex flex-col w-full">
+              <div className="divider text-sm">Try again</div>
+              <div className="flex flex-col gap-2">
+                <button className="btn btn-primary" onClick={() => startGame("classic")}>
+                  Play Classic Mode
+                </button>
+                <button className="btn btn-secondary" onClick={() => startGame("challenge")}>
+                  Play Challenge Mode
+                </button>
+              </div>
+              <div className="divider text-sm">View more</div>
+              <div className="flex flex-col gap-2">
+                <Link to="/" className="btn btn-outline">
+                  View all Rankings
+                </Link>
+                <Link to="/teams" className="btn btn-outline">
+                  View by Teams
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -203,8 +230,18 @@ export function GamePage() {
         <div className="card bg-base-200 shadow-xl">
           <div className="card-body">
             <h2 className="text-xl text-center mb-6 font-bold">
-              Which team is ranked <span className="text-amber-500">{currentQuestion.ordinal}</span>{" "}
-              in {currentQuestion.label}?
+              {currentQuestion.mode === "classic" ? (
+                <>
+                  Which team is in the <span className="text-amber-500">top 5</span> for{" "}
+                  {currentQuestion.label}?
+                </>
+              ) : (
+                <>
+                  Which team is ranked{" "}
+                  <span className="text-amber-500">{currentQuestion.ordinal}</span> in{" "}
+                  {currentQuestion.label}?
+                </>
+              )}
             </h2>
 
             {/* Choices */}
