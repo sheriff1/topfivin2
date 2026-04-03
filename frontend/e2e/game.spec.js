@@ -5,22 +5,23 @@ test.beforeEach(async ({ page }) => {
   await setupApiMocks(page);
 });
 
-test("game page shows intro screen with Play button", async ({ page }) => {
+test("game page shows intro screen with Classic and Challenge buttons", async ({ page }) => {
   await page.goto("/game");
 
   await expect(page.getByText("NBA Top Five In Guesser")).toBeVisible();
   await expect(page.getByText(/Test your NBA knowledge/)).toBeVisible();
-  await expect(page.getByRole("button", { name: "Play" })).toBeVisible();
+  await expect(page.getByText("Play Classic Mode")).toBeVisible();
+  await expect(page.getByText("Play Challenge Mode")).toBeVisible();
 });
 
-test("game page loads and shows a question after clicking Play", async ({ page }) => {
+test("game page loads and shows a question after clicking Classic", async ({ page }) => {
   await page.goto("/game");
 
-  // Click Play on intro screen
-  await page.getByRole("button", { name: "Play" }).click();
+  // Click Classic to start game
+  await page.getByRole("button", { name: /Classic/ }).click();
 
-  // Should show the question text
-  await expect(page.getByText(/Which team is ranked/)).toBeVisible({ timeout: 10000 });
+  // Classic mode question text
+  await expect(page.getByText(/Which team is in the/)).toBeVisible({ timeout: 10000 });
 
   // Should show 3 choice buttons
   const choiceButtons = page.locator(".card-body button");
@@ -29,9 +30,9 @@ test("game page loads and shows a question after clicking Play", async ({ page }
 
 test("clicking correct answer shows Correct feedback", async ({ page }) => {
   await page.goto("/game");
-  await page.getByRole("button", { name: "Play" }).click();
+  await page.getByRole("button", { name: /Classic/ }).click();
 
-  await expect(page.getByText(/Which team is ranked/)).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText(/Which team is in the/)).toBeVisible({ timeout: 10000 });
 
   // The question asks about rank 1, 2, or 3 in PPG or RPG
   // Find the correct team by checking who is highlighted after clicking
@@ -57,11 +58,11 @@ test("game nav link navigates to game page", async ({ page }) => {
   await expect(page).toHaveURL(/\/game/);
 });
 
-test("game over shows Play Again button", async ({ page }) => {
+test("game over shows Classic and Challenge buttons", async ({ page }) => {
   await page.goto("/game");
-  await page.getByRole("button", { name: "Play" }).click();
+  await page.getByRole("button", { name: /Classic/ }).click();
 
-  await expect(page.getByText(/Which team is ranked/)).toBeVisible({ timeout: 10000 });
+  await expect(page.getByText(/Which team is in the/)).toBeVisible({ timeout: 10000 });
 
   // Keep clicking wrong answers until game over
   // Click buttons until we get "Wrong!" then wait for Game Over
@@ -86,7 +87,8 @@ test("game over shows Play Again button", async ({ page }) => {
   if (isWrong) {
     // Wait for game over screen
     await expect(page.getByText("Game Over!")).toBeVisible({ timeout: 5000 });
-    await expect(page.getByRole("button", { name: "Play Again" })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Classic/ })).toBeVisible();
+    await expect(page.getByRole("button", { name: /Challenge/ })).toBeVisible();
     await expect(page.getByRole("link", { name: "View all Rankings" })).toBeVisible();
     await expect(page.getByRole("link", { name: "View by Teams" })).toBeVisible();
   } else {

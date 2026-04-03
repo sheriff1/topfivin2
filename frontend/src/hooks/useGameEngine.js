@@ -23,19 +23,22 @@ const BASIC_CODES = [
 
 const ORDINAL = ["", "1st", "2nd", "3rd", "4th", "5th"];
 
-const HIGH_SCORE_KEY = "topfivin-game-highscore";
+const HIGH_SCORE_KEYS = {
+  classic: "topfivin-game-highscore-classic",
+  challenge: "topfivin-game-highscore-challenge",
+};
 
-function getHighScore() {
+function getHighScore(mode) {
   try {
-    return parseInt(localStorage.getItem(HIGH_SCORE_KEY), 10) || 0;
+    return parseInt(localStorage.getItem(HIGH_SCORE_KEYS[mode]), 10) || 0;
   } catch {
     return 0;
   }
 }
 
-function saveHighScore(score) {
+function saveHighScore(mode, score) {
   try {
-    localStorage.setItem(HIGH_SCORE_KEY, String(score));
+    localStorage.setItem(HIGH_SCORE_KEYS[mode], String(score));
   } catch {
     // localStorage unavailable
   }
@@ -57,17 +60,26 @@ function shuffleArray(arr) {
 export function useGameEngine() {
   const { data: categories, isLoading: categoriesLoading } = useCategories();
 
+  const [gameMode, setGameMode] = useState("classic"); // classic | challenge
   const [gameState, setGameState] = useState("intro"); // intro | playing | correct | wrong | ended
   const [questionNumber, setQuestionNumber] = useState(0);
   const [score, setScore] = useState(0);
-  const [highScore, setHighScore] = useState(getHighScore);
+  const [highScore, setHighScore] = useState(() => getHighScore("classic"));
   const [currentQuestion, setCurrentQuestion] = useState(null);
   const [loading, setLoading] = useState(false);
   const [selectedTeamId, setSelectedTeamId] = useState(null);
 
+  const activeModeRef = useRef("classic");
   const autoAdvanceTimer = useRef(null);
   // Track mounted state to prevent state updates after unmount
   const mountedRef = useRef(true);
+
+  // Update high score when mode changes on intro screen
+  const handleSetGameMode = useCallback((mode) => {
+    setGameMode(mode);
+    setHighScore(getHighScore(mode));
+    activeModeRef.current = mode;
+  }, []);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -78,9 +90,10 @@ export function useGameEngine() {
   }, []);
 
   const generateQuestion = useCallback(
-    async (qNumber) => {
+    async (qNumber, mode) => {
       if (!categories || categories.length === 0) return;
 
+      const activeMode = mode || activeModeRef.current;
       setLoading(true);
       const maxAttempts = 10;
 
@@ -88,7 +101,6 @@ export function useGameEngine() {
         // Pick category based on difficulty ramp
         let pool;
         if (qNumber < 3) {
-          // First 3 questions: basic stats only, ranks 1-3
           pool = categories.filter((c) => BASIC_CODES.includes(c.code));
         } else {
           pool = categories;
@@ -97,8 +109,6 @@ export function useGameEngine() {
         if (pool.length === 0) pool = categories;
 
         const category = pickRandom(pool);
-        const maxRank = qNumber < 3 ? 3 : 5;
-        const targetRank = Math.floor(Math.random() * maxRank) + 1;
 
         try {
           const response = await apiClient.get("/rankings", {
@@ -108,19 +118,42 @@ export function useGameEngine() {
           const rankings = response.data?.rankings;
           if (!rankings || rankings.length === 0) continue;
 
-          // Find team at target rank
-          const correctTeam = rankings.find((r) => r.rank === targetRank);
-          if (!correctTeam) continue;
+          let correctTeam;
+          let targetRank;
+          let wrongPool;
 
-          // Check for ties — skip if another team shares the same rank
-          const teamsAtRank = rankings.filter((r) => r.rank === targetRank);
-          if (teamsAtRank.length > 1) continue;
+          if (activeMode === "classic") {
+            // Classic: pick a random team from top 5
+            const top5 = rankings.filter((r) => r.rank >= 1 && r.rank <= 5);
+            if (top5.length === 0) continue;
 
-          // Pick 2 wrong choices from teams ranked lower than the correct team
-          // and not within 2 ranks of the target rank
-          const wrongPool = rankings.filter(
-            (r) => r.rank > targetRank && Math.abs(r.rank - targetRank) > 2
-          );
+            correctTeam = pickRandom(top5);
+            targetRank = correctTeam.rank;
+
+            // Check for ties
+            const teamsAtRank = rankings.filter((r) => r.rank === targetRank);
+            if (teamsAtRank.length > 1) continue;
+
+            // Wrong choices: outside top 5, with >2 rank buffer from boundary
+            wrongPool = rankings.filter((r) => r.rank > 7);
+          } else {
+            // Challenge: guess specific rank (existing logic)
+            const maxRank = qNumber < 3 ? 3 : 5;
+            targetRank = Math.floor(Math.random() * maxRank) + 1;
+
+            correctTeam = rankings.find((r) => r.rank === targetRank);
+            if (!correctTeam) continue;
+
+            // Check for ties
+            const teamsAtRank = rankings.filter((r) => r.rank === targetRank);
+            if (teamsAtRank.length > 1) continue;
+
+            // Wrong choices: ranked lower, >2 away from target
+            wrongPool = rankings.filter(
+              (r) => r.rank > targetRank && Math.abs(r.rank - targetRank) > 2
+            );
+          }
+
           if (wrongPool.length < 2) continue;
 
           const shuffledWrong = shuffleArray(wrongPool);
@@ -153,6 +186,7 @@ export function useGameEngine() {
               ordinal: ORDINAL[targetRank] || `#${targetRank}`,
               correctTeamId: correctTeam.team_id,
               choices,
+              mode: activeMode,
             });
             setLoading(false);
           }
@@ -174,7 +208,7 @@ export function useGameEngine() {
   // Generate initial question when categories load
   useEffect(() => {
     if (categories && categories.length > 0 && gameState === "playing" && !currentQuestion) {
-      generateQuestion(0);
+      generateQuestion(0, activeModeRef.current);
     }
   }, [categories, gameState, currentQuestion, generateQuestion]);
 
@@ -191,13 +225,10 @@ export function useGameEngine() {
 
         if (newScore > highScore) {
           setHighScore(newScore);
-          saveHighScore(newScore);
+          saveHighScore(activeModeRef.current, newScore);
         }
-
-        // No auto-advance on correct — user clicks "Next"
       } else {
         setGameState("wrong");
-        // Longer delay then show game over
         autoAdvanceTimer.current = setTimeout(() => {
           if (mountedRef.current) {
             setGameState("ended");
@@ -208,13 +239,20 @@ export function useGameEngine() {
     [gameState, currentQuestion, score, highScore, questionNumber, generateQuestion]
   );
 
-  const startGame = useCallback(() => {
-    setScore(0);
-    setQuestionNumber(0);
-    setGameState("playing");
-    setCurrentQuestion(null);
-    setSelectedTeamId(null);
-  }, []);
+  const startGame = useCallback(
+    (mode) => {
+      const selected = mode || gameMode;
+      setGameMode(selected);
+      activeModeRef.current = selected;
+      setHighScore(getHighScore(selected));
+      setScore(0);
+      setQuestionNumber(0);
+      setGameState("playing");
+      setCurrentQuestion(null);
+      setSelectedTeamId(null);
+    },
+    [gameMode]
+  );
 
   const resetGame = useCallback(() => {
     if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
@@ -223,7 +261,6 @@ export function useGameEngine() {
     setGameState("playing");
     setCurrentQuestion(null);
     setSelectedTeamId(null);
-    // generateQuestion will be triggered by the useEffect when currentQuestion becomes null
   }, []);
 
   const nextQuestion = useCallback(() => {
@@ -232,11 +269,13 @@ export function useGameEngine() {
     setQuestionNumber(nextQ);
     setGameState("playing");
     setSelectedTeamId(null);
-    generateQuestion(nextQ);
+    generateQuestion(nextQ, activeModeRef.current);
   }, [gameState, questionNumber, generateQuestion]);
 
   return {
     gameState,
+    gameMode,
+    setGameMode: handleSetGameMode,
     questionNumber,
     score,
     highScore,

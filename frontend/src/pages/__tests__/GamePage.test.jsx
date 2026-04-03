@@ -7,10 +7,10 @@ import { GamePage } from "../GamePage";
 const mockSubmitAnswer = vi.fn();
 const mockNextQuestion = vi.fn();
 const mockStartGame = vi.fn();
-const mockResetGame = vi.fn();
 
 let mockGameState = {
   gameState: "playing",
+  gameMode: "classic",
   questionNumber: 0,
   score: 0,
   highScore: 3,
@@ -20,7 +20,6 @@ let mockGameState = {
   submitAnswer: mockSubmitAnswer,
   nextQuestion: mockNextQuestion,
   startGame: mockStartGame,
-  resetGame: mockResetGame,
 };
 
 vi.mock("../../hooks/useGameEngine", () => ({
@@ -56,6 +55,7 @@ const SAMPLE_QUESTION = {
   rank: 1,
   ordinal: "1st",
   correctTeamId: 1610612738,
+  mode: "challenge",
   choices: [
     {
       team_id: 1610612738,
@@ -89,6 +89,7 @@ describe("GamePage", () => {
     vi.clearAllMocks();
     mockGameState = {
       gameState: "playing",
+      gameMode: "classic",
       questionNumber: 0,
       score: 0,
       highScore: 3,
@@ -98,7 +99,6 @@ describe("GamePage", () => {
       submitAnswer: mockSubmitAnswer,
       nextQuestion: mockNextQuestion,
       startGame: mockStartGame,
-      resetGame: mockResetGame,
     };
   });
 
@@ -256,7 +256,7 @@ describe("GamePage", () => {
     expect(screen.getByText("Your High Score: 5")).toBeDefined();
   });
 
-  it("should show Play Again button on game over", () => {
+  it("should show Classic and Challenge buttons on game over", () => {
     mockGameState.gameState = "ended";
     mockGameState.score = 3;
     mockGameState.highScore = 5;
@@ -267,10 +267,11 @@ describe("GamePage", () => {
       </MemoryRouter>
     );
 
-    const playAgainBtn = screen.getByRole("button", { name: /Play Again/ });
-    expect(playAgainBtn).toBeDefined();
-    fireEvent.click(playAgainBtn);
-    expect(mockResetGame).toHaveBeenCalled();
+    fireEvent.click(screen.getByText("Play Classic Mode"));
+    expect(mockStartGame).toHaveBeenCalledWith("classic");
+
+    fireEvent.click(screen.getByText("Play Challenge Mode"));
+    expect(mockStartGame).toHaveBeenCalledWith("challenge");
   });
 
   it("should have navigation links on game over", () => {
@@ -302,7 +303,7 @@ describe("GamePage", () => {
     expect(screen.getByText("1")).toBeDefined();
   });
 
-  it("should render intro screen with Play button", () => {
+  it("should render intro screen with Classic and Challenge buttons", () => {
     mockGameState.gameState = "intro";
 
     render(
@@ -313,9 +314,65 @@ describe("GamePage", () => {
 
     expect(screen.getByText("NBA Top Five In Guesser")).toBeDefined();
     expect(screen.getByText(/Test your NBA knowledge/)).toBeDefined();
-    const playBtn = screen.getByRole("button", { name: "Play" });
-    expect(playBtn).toBeDefined();
-    fireEvent.click(playBtn);
-    expect(mockStartGame).toHaveBeenCalled();
+    expect(screen.getByText(/Is this team in the top 5/)).toBeDefined();
+    expect(screen.getByText(/Guess the exact rank/)).toBeDefined();
+    expect(screen.getByText("Play Classic Mode")).toBeDefined();
+    expect(screen.getByText("Play Challenge Mode")).toBeDefined();
+  });
+
+  it("should start classic mode when Classic button is clicked", () => {
+    mockGameState.gameState = "intro";
+
+    render(
+      <MemoryRouter>
+        <GamePage />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByText("Play Classic Mode"));
+    expect(mockStartGame).toHaveBeenCalledWith("classic");
+  });
+
+  it("should start challenge mode when Challenge button is clicked", () => {
+    mockGameState.gameState = "intro";
+
+    render(
+      <MemoryRouter>
+        <GamePage />
+      </MemoryRouter>
+    );
+
+    fireEvent.click(screen.getByText("Play Challenge Mode"));
+    expect(mockStartGame).toHaveBeenCalledWith("challenge");
+  });
+
+  it("should show classic question text for classic mode", () => {
+    mockGameState.currentQuestion = {
+      ...SAMPLE_QUESTION,
+      mode: "classic",
+    };
+
+    render(
+      <MemoryRouter>
+        <GamePage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/Which team is in the/)).toBeDefined();
+    expect(screen.getByText("top 5")).toBeDefined();
+    expect(screen.getByText(/Points Per Game/)).toBeDefined();
+  });
+
+  it("should show challenge question text for challenge mode", () => {
+    mockGameState.currentQuestion = SAMPLE_QUESTION;
+
+    render(
+      <MemoryRouter>
+        <GamePage />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/Which team is ranked/)).toBeDefined();
+    expect(screen.getByText("1st")).toBeDefined();
   });
 });
