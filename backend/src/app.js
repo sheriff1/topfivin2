@@ -10,6 +10,9 @@ const { apiLimiter } = require("./middleware/rateLimiter");
 
 const app = express();
 
+// Trust first proxy (Railway) so express-rate-limit reads real client IP
+app.set("trust proxy", 1);
+
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:3001",
