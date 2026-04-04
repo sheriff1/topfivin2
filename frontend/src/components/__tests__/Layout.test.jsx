@@ -198,7 +198,7 @@ describe("Layout Component", () => {
     );
 
     const links = screen.getAllByRole("link");
-    expect(links.length).toBe(8); // Home + 6 nav tabs (Rankings, Game, Teams, Games Count, Audit, About) + footer link — dev mode
+    expect(links.length).toBe(9); // Home + 6 nav tabs (Rankings, Game, Teams, Games Count, Audit, About) + footer link + Instagram — dev mode
   });
 
   it("should have proper navbar layout with start and end sections", () => {
@@ -431,8 +431,23 @@ describe("Layout Component", () => {
       );
 
       const footer = container.querySelector("footer");
-      const footerLink = footer.querySelector("a");
+      const footerLink = footer.querySelector("a.link-accent");
       expect(footerLink.className).toContain("link-accent");
+    });
+
+    it("should have Instagram link", () => {
+      const { container } = render(
+        <BrowserRouter>
+          <Layout>{mockChildren}</Layout>
+        </BrowserRouter>
+      );
+
+      const footer = container.querySelector("footer");
+      const igLink = footer.querySelector('a[aria-label="Instagram"]');
+      expect(igLink).toBeTruthy();
+      expect(igLink.getAttribute("href")).toBe("https://www.instagram.com/nbatopfivein/");
+      expect(igLink.getAttribute("target")).toBe("_blank");
+      expect(igLink.getAttribute("rel")).toBe("noopener noreferrer");
     });
   });
 });
