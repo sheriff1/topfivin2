@@ -6,11 +6,10 @@ jest.mock("../db/postgresClient", () => ({
   pool: { end: jest.fn() },
 }));
 
-jest.mock("../cache/redisClient", () => ({
+jest.mock("../cache/memoryCache", () => ({
   get: jest.fn(),
   set: jest.fn(),
   del: jest.fn(),
-  redis: { quit: jest.fn() },
 }));
 
 // Bypass rate limiting in tests
@@ -22,7 +21,7 @@ jest.mock("../middleware/rateLimiter", () => ({
 
 const app = require("../app");
 const db = require("../db/postgresClient");
-const cache = require("../cache/redisClient");
+const cache = require("../cache/memoryCache");
 
 beforeEach(() => {
   jest.clearAllMocks();

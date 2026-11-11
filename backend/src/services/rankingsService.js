@@ -44,7 +44,7 @@ async function getRankings(category, season, db, cache) {
     cached_at: new Date().toISOString(),
   };
 
-  await cache.set(cacheKey, responseData, 3600);
+  await cache.set(cacheKey, responseData);
 
   return {
     rows: result.rows,

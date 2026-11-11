@@ -60,9 +60,7 @@ The logger uses a custom 6-level hierarchy and outputs structured JSON to rotati
 | `app.js`                      | error | Unhandled Express errors (catch-all handler)                   |
 | `db/postgresClient.js`        | error | Idle pool errors, query errors                                 |
 | `db/postgresClient.js`        | debug | Per-query execution time                                       |
-| `cache/redisClient.js`        | info  | Redis connected                                                |
-| `cache/redisClient.js`        | error | Redis errors                                                   |
-| `cache/redisClient.js`        | debug | Reconnect attempts, cache hits                                 |
+| `cache/memoryCache.js`        | debug | Cache hits                                                     |
 | `services/statProcessor.js`   | warn  | Ranking calculation failures (non-fatal)                       |
 | `services/statProcessor.js`   | info  | Rankings generation summary                                    |
 | `index.js`                    | info  | Server startup milestones                                      |

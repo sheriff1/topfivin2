@@ -14,7 +14,7 @@ Hosted on Railway (backend + DB) and Vercel (frontend).
 | Frontend        | React 19, React Router 7, Tailwind CSS 4.2, DaisyUI 5.5, Vite |
 | Backend         | Node.js, Express, `backend/src/index.js`                      |
 | Database        | PostgreSQL (local: `nba_stats`, production: Railway)          |
-| Cache           | Redis                                                         |
+| Cache           | In-memory TTL cache                                           |
 | Scripts         | Python 3 (`.venv` at repo root)                               |
 | Package manager | `pnpm` (frontend), `npm` (backend)                            |
 
@@ -50,7 +50,7 @@ backend/
     db/
       postgresClient.js
     cache/
-      redisClient.js
+      memoryCache.js
   migrations/              — Node.js migration files (001–009), run against Railway via make migrate-prod
   scripts/                 — Python data pipeline scripts (fetch, derive, sync)
 frontend/
@@ -66,7 +66,7 @@ frontend/
 ## Environment Files
 
 - `backend/.env` — local DB credentials (`DB_HOST`, `DB_USER`, `DB_NAME=nba_stats`, `PORT=5001`, `CURRENT_SEASON`)
-- `backend/.env.production` — Railway credentials (`DATABASE_URL`, `REDIS_URL`) — **gitignored, never commit**
+- `backend/.env.production` — Railway credentials (`DATABASE_URL`) — **gitignored, never commit**
 
 ---
 
@@ -114,7 +114,7 @@ make fetch-summary         # BoxScoreSummaryV3 full — attendance, q1-q4_pts, p
 make fetch-fourfactors     # BoxScoreFourFactorsV3 — ft_rate, tov_pct, oreb_pct, opp_*
 make fetch-scoring         # BoxScoreScoringV3 — pct_fga_*, pct_pts_*, pct_ast_*
 make fetch-playertrack     # BoxScorePlayerTrackV3 — distance, touches, passes, contested_fg*
-make derive                # derive_team_stats.py + derive_rankings.py + redis FLUSHDB
+make derive                # derive_team_stats.py + derive_rankings.py
 ```
 
 **All fetch scripts use IS NULL guards** — safe to re-run, will only process new/missing games.
@@ -143,7 +143,7 @@ make frontend              # Frontend only (vite)
 make pipeline              # fetch + derive (local)
 make migrate-prod MIGRATION=<name>  # Apply a migration to Railway
 make sync-prod             # Sync game_stats columns local → Railway
-make derive-prod           # Rebuild team_stats + rankings on Railway + flush Redis
+make derive-prod           # Rebuild team_stats + rankings on Railway
 make check-progress        # Show backfill completion per column (local)
 make check-progress-prod   # Same against Railway
 make backup                # pg_dump Railway → local backups/
@@ -214,7 +214,7 @@ Backfill scripts hit rate limits around ~600 games during bulk backfills.
 
 ## Deployment Infrastructure
 
-- **Backend + DB**: Railway — `DATABASE_URL` and `REDIS_URL` set as env vars in Railway service
+- **Backend + DB**: Railway — `DATABASE_URL` set as env vars in Railway service
 - **Frontend**: Vercel — env vars: `REACT_APP_API_URL`, `REACT_APP_CURRENT_SEASON`
 - Railway uses PORT=8080 (auto-injected) — not 5001
 - NBA API calls must run locally (Railway IPs are blocked by stats.nba.com)

@@ -17,7 +17,7 @@ Or via the official installer — see [k6 installation docs](https://grafana.com
 ### Running Tests
 
 All tests accept a `BASE_URL` environment variable (defaults to `http://localhost:5001`).
-The backend server **must be running** with a live PostgreSQL + Redis connection.
+The backend server **must be running** with a live PostgreSQL connection.
 
 ```bash
 # Quick sanity check (1 VU × 30s)
