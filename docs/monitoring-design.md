@@ -24,7 +24,7 @@
 
 ### Winston configuration (`backend/src/utils/logger.js`)
 
-The logger uses a custom 6-level hierarchy and outputs structured JSON to rotating log files:
+The logger uses a custom 6-level hierarchy and outputs structured JSON to stdout (production) and, where a writable disk exists, to rotating log files:
 
 | Level   | Priority | Used for                                             |
 | ------- | -------- | ---------------------------------------------------- |
@@ -41,13 +41,19 @@ The logger uses a custom 6-level hierarchy and outputs structured JSON to rotati
 | --------- | ------------------- | --------------- | -------- | -------- |
 | File      | `logs/error.log`    | error + fatal   | 10 MB    | 5 files  |
 | File      | `logs/combined.log` | all levels      | 10 MB    | 5 files  |
-| Console   | stdout              | all (dev only)  | —        | —        |
+| Console   | stdout              | all             | —        | —        |
 
 **Default metadata** appended to every log entry: `{ "service": "topfivin2-api" }`
 
+**Console format:** colorized, human-readable text in development; plain structured JSON (one object per line) when `NODE_ENV=production`, so hosts such as Render capture it from stdout.
+
+**File transports:** enabled by default outside production; in production they are opt-in with `LOG_TO_FILES=true` (ephemeral hosts lose them anyway). Set `LOG_TO_FILES=false` to disable them in development. If `logs/` is not writable the file transports are skipped with a warning and startup continues.
+
 **Log file path:** `process.cwd()/logs/` — ignored by `.gitignore`.
 
-**Production hook:** `logger.js` contains a reserved block for adding production transports (Sentry, Datadog, Cloud Logging). See [Section 5](#5-future-sentry-integration).
+**Graceful shutdown:** on `SIGTERM`/`SIGINT` the API stops accepting connections, waits for in-flight requests (up to `SHUTDOWN_TIMEOUT_MS`, default 10000), closes the Postgres pool, and exits 0 (exits 1 on error or timeout). Manual check: start the API, run `kill -TERM <pid>`, and confirm the "Received SIGTERM" and "Shutdown complete" log lines and exit code 0.
+
+**Production hook:** add further production transports in `logger.js` (Sentry, Datadog, Cloud Logging). See [Section 5](#5-future-sentry-integration).
 
 ### What is logged today
 
