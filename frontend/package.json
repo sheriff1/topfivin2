@@ -6,10 +6,10 @@
   "dependencies": {
     "@tanstack/react-query": "^5.90.21",
     "@vercel/analytics": "^2.0.1",
-    "axios": "^1.13.6",
+    "axios": "^1.21.1",
     "react": "^19.2.4",
     "react-dom": "^19.2.4",
-    "react-router-dom": "^7.13.1"
+    "react-router-dom": "^7.18.5"
   },
   "scripts": {
     "dev": "vite",
@@ -24,7 +24,7 @@
   },
   "devDependencies": {
     "@playwright/test": "^1.58.2",
-    "@tailwindcss/postcss": "^4.2.1",
+    "@tailwindcss/postcss": "^4.3.5",
     "@testing-library/dom": "^10.4.1",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.2",
@@ -39,10 +39,10 @@
     "eslint-plugin-prettier": "^5.5.5",
     "eslint-plugin-react": "^7.37.5",
     "jsdom": "^26.1.0",
-    "postcss": "^8.5.8",
+    "postcss": "^8.5.32",
     "prettier": "^3.8.1",
-    "tailwindcss": "^4.2.1",
-    "vite": "^6.3.5",
-    "vitest": "^3.2.1"
+    "tailwindcss": "^4.3.5",
+    "vite": "^6.4.6",
+    "vitest": "^4.1.12"
   }
 }
