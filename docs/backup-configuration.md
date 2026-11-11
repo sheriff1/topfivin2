@@ -66,6 +66,29 @@ pg_restore --clean --no-acl --no-owner \
 
 > **Warning**: `--clean` will drop and recreate all tables. Only run this against a database you intend to fully overwrite.
 
+### Restoring into a fresh Neon database
+
+Used for the Railway → Neon migration (#176) and reusable for any empty Postgres. Use **v18 client tools** (the servers are Postgres 18), the **direct** (non-pooled) connection string, and never paste it into logs or commits.
+
+```bash
+# 1. Get a dump: latest GitHub release backup (or a local backups/*.dump)
+gh release download db-backup-N -R sheriff1/topfivin2 -D /path/to/empty/dir
+
+# 2. Restore into the empty database (no --clean needed on an empty DB)
+pg_restore --no-owner --no-privileges --exit-on-error \
+  -d "$NEON_DIRECT_URL" /path/to/empty/dir/nba_stats_YYYYMMDD.dump
+
+# 3. Record/apply migrations (idempotent; adds anything newer than the dump)
+cd backend && DATABASE_URL="$NEON_DIRECT_URL" node migrations/index.js
+
+# 4. Verify: row counts for teams, games, game_stats, team_stats, stat_rankings
+#    must match the dump; then re-run the derive steps and confirm no value changes
+cd backend && DATABASE_URL="$NEON_DIRECT_URL" python scripts/derive_team_stats.py \
+  && DATABASE_URL="$NEON_DIRECT_URL" python scripts/derive_rankings.py
+```
+
+Dumps from Postgres 18.3 restore cleanly into Neon's 18.x with client 18.4. `schema_migrations` is not in older dumps, so step 3 creates it and records all migrations.
+
 To list available backups before choosing one:
 
 ```bash
