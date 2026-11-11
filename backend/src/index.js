@@ -14,7 +14,6 @@ try {
 
 const app = require("./app");
 const db = require("./db/postgresClient");
-const cache = require("./cache/redisClient");
 const { runPendingMigrations } = require("../migrations");
 
 const PORT = process.env.PORT || 5000;
@@ -66,7 +65,6 @@ process.on("SIGINT", async () => {
   console.log("\n\n🛑 Shutting down gracefully...");
   try {
     await db.pool.end();
-    await cache.redis.quit();
     process.exit(0);
   } catch (error) {
     logger.error("Error during shutdown:", { message: error.message, stack: error.stack });

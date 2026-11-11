@@ -10,11 +10,11 @@ Railway's native volume backup feature requires the Pro plan and is deferred for
 
 ### Automatic (via pipeline)
 
-Every `make pipeline` run automatically creates a backup after the data is fully processed and Redis is flushed:
+Every `make pipeline` run automatically creates a backup after the data is fully processed :
 
 ```bash
 make pipeline
-# Fetches NBA stats → derives team stats → updates rankings → flushes Redis → creates backup
+# Fetches NBA stats → derives team stats → updates rankings → creates backup
 ```
 
 ### Manual (standalone)

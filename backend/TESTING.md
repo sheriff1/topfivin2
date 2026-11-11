@@ -82,7 +82,7 @@ describe("Module Name", () => {
 2. Test behavior, not implementation
 3. Keep tests focused and isolated
 4. Use `beforeEach`/`afterEach` for setup/cleanup
-5. Mock external dependencies (database, API calls, Redis)
+5. Mock external dependencies (database, API calls)
 
 ### Next Steps
 

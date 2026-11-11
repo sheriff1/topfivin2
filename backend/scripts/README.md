@@ -107,7 +107,7 @@ CURRENT_SEASON=2025
 
 ### `derive_rankings.py`
 
-**Purpose**: Calculate stat rankings across all teams for a season and flush the Redis cache.
+**Purpose**: Calculate stat rankings across all teams for a season.
 
 **Dependencies**: `psycopg2`
 
@@ -120,14 +120,11 @@ DB_USER=your_db_username
 DB_PASSWORD=
 DB_NAME=nba_stats
 CURRENT_SEASON=2025
-# Production: REDIS_URL (flushes remote cache)
-# Local:      REDIS_HOST / REDIS_PORT
 ```
 
 **Output**:
 
 - Populates `stat_rankings` table — 15 categories × 30 teams = 450 rows per season
-- Flushes Redis so the API immediately serves fresh data
 
 **Notes**:
 
@@ -195,7 +192,6 @@ python scripts/derive_rankings.py
 
 - PostgreSQL 16+ running locally or accessible via network
 - Python 3.13 with dependencies installed (`pip install -r requirements.txt`)
-- Redis running locally (for cache flushing)
 
 ### Python Dependencies
 

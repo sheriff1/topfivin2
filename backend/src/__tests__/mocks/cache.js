@@ -1,5 +1,5 @@
 /**
- * Mock Redis Cache Client
+ * Mock cache client
  * Provides a Jest mock for cache operations used by services
  */
 
@@ -32,7 +32,7 @@ class MockCache {
   async set(key, value, _ttl = null) {
     this.setCount++;
     this.store.set(key, value);
-    // In a real Redis implementation, ttl would expire the key
+    // The real cache expires keys after the TTL
     // For testing, we just store it indefinitely unless reset
     return "OK";
   }

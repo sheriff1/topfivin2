@@ -1,6 +1,6 @@
 const express = require("express");
 const db = require("../db/postgresClient");
-const cache = require("../cache/redisClient");
+const cache = require("../cache/memoryCache");
 const {
   getCategories,
   getRankings,

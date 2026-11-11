@@ -1,17 +1,17 @@
 # NBA Stats Ranking Dashboard
 
-A full-stack web app that fetches NBA team statistics from the official NBA.com API, computes rankings across 147 stat categories, and displays them in an interactive dashboard. Data is fetched locally via Python scripts and served through a Node.js/Express API backed by PostgreSQL and Redis.
+A full-stack web app that fetches NBA team statistics from the official NBA.com API, computes rankings across 147 stat categories, and displays them in an interactive dashboard. Data is fetched locally via Python scripts and served through a Node.js/Express API backed by PostgreSQL.
 
 ---
 
 ## Tech Stack
 
-| Layer              | Technologies                                                                   |
-| ------------------ | ------------------------------------------------------------------------------ |
-| **Frontend**       | React 19, React Router 7, TanStack Query 5, Tailwind CSS 4, DaisyUI 5, Vite 6  |
-| **Backend**        | Node.js 20, Express 5, PostgreSQL (pg), Redis (ioredis), Helmet, Winston, Jest |
-| **Data Pipeline**  | Python 3.13, nba_api, psycopg2                                                 |
-| **Infrastructure** | Railway (production DB + Redis), Vercel (frontend), GitHub Actions CI/CD       |
+| Layer              | Technologies                                                                  |
+| ------------------ | ----------------------------------------------------------------------------- |
+| **Frontend**       | React 19, React Router 7, TanStack Query 5, Tailwind CSS 4, DaisyUI 5, Vite 6 |
+| **Backend**        | Node.js 20, Express 5, PostgreSQL (pg), Helmet, Winston, Jest                 |
+| **Data Pipeline**  | Python 3.13, nba_api, psycopg2                                                |
+| **Infrastructure** | Railway (production DB), Vercel (frontend), GitHub Actions CI/CD              |
 
 ---
 
@@ -46,7 +46,7 @@ nba_api (Python — run locally)
                                       Tailwind + DaisyUI + TanStack Query
 ```
 
-PostgreSQL stores all data. Redis caches ranking responses (1-hour TTL).
+PostgreSQL stores all data. An in-process cache holds ranking responses (5-minute TTL; fresh data appears within 5 minutes of the daily derive).
 
 > **Note:** `fetch_nba_stats.py` must run **locally** — nba.com actively blocks GitHub Actions IP ranges. All other pipeline steps (derive + rank) run automatically daily via GitHub Actions.
 
@@ -58,7 +58,7 @@ PostgreSQL stores all data. Redis caches ranking responses (1-hour TTL).
 
 - Node.js 20+, pnpm
 - Python 3.13
-- PostgreSQL 16+ and Redis running locally (`make services` starts both via Homebrew)
+- PostgreSQL 16+ running locally (`make services` starts it via Homebrew)
 
 ### 1. Clone and install dependencies
 
@@ -87,7 +87,7 @@ whoami   # copy this value into DB_USER
 ### 3. Start services and run migrations
 
 ```bash
-make services              # start PostgreSQL + Redis
+make services              # start PostgreSQL
 cd backend && pnpm run migrate && cd ..
 ```
 
@@ -127,9 +127,6 @@ DB_USER=your_db_username   # macOS: run `whoami`; Linux/Docker: postgres
 DB_PASSWORD=
 DB_NAME=nba_stats
 
-REDIS_HOST=localhost
-REDIS_PORT=6379
-REDIS_PASSWORD=
 
 CURRENT_SEASON=2025
 FRONTEND_URL=http://localhost:3000
@@ -149,20 +146,20 @@ DATABASE_URL=postgresql://...   # from Railway dashboard
 
 ### Dev
 
-| Target          | Description                              |
-| --------------- | ---------------------------------------- |
-| `make dev`      | Start services + backend + frontend      |
-| `make backend`  | Start backend only (nodemon)             |
-| `make frontend` | Start frontend only (Vite)               |
-| `make services` | Start PostgreSQL 16 + Redis via Homebrew |
-| `make stop`     | Stop PostgreSQL + Redis                  |
+| Target          | Description                         |
+| --------------- | ----------------------------------- |
+| `make dev`      | Start services + backend + frontend |
+| `make backend`  | Start backend only (nodemon)        |
+| `make frontend` | Start frontend only (Vite)          |
+| `make services` | Start PostgreSQL 16 via Homebrew    |
+| `make stop`     | Stop PostgreSQL                     |
 
 ### Data Pipeline
 
 | Target               | Description                                                   |
 | -------------------- | ------------------------------------------------------------- |
 | `make fetch`         | Fetch new games from nba_api → local DB                       |
-| `make derive`        | Derive team stats + rankings → flush local Redis              |
+| `make derive`        | Derive team stats + rankings                                  |
 | `make pipeline`      | Full local pipeline: fetch → derive → rankings                |
 | `make backfill`      | One-time backfill of 24 V3 advanced columns → local DB        |
 | `make backfill-prod` | Same backfill against Railway DB (run locally post-migration) |
@@ -172,7 +169,7 @@ DATABASE_URL=postgresql://...   # from Railway dashboard
 | Target               | Description                                                             |
 | -------------------- | ----------------------------------------------------------------------- |
 | `make fetch-prod`    | Fetch games → Railway DB                                                |
-| `make derive-prod`   | Derive stats + rankings → flush Railway Redis                           |
+| `make derive-prod`   | Derive stats + rankings                                                 |
 | `make pipeline-prod` | Full production pipeline: fetch → backfill → derive → rankings → backup |
 
 ### Backup & Archive
@@ -207,13 +204,13 @@ Override the target URL: `BASE_URL=https://your-server.com make k6-load`
 
 Two workflows run **automatically** on a schedule. The rest are triggered manually.
 
-| Workflow                                   | Trigger                                   | What it does                                                                       | Secrets needed                                     |
-| ------------------------------------------ | ----------------------------------------- | ---------------------------------------------------------------------------------- | -------------------------------------------------- |
-| **CI** (`ci.yml`)                          | Push / PR to `main`                       | Dependency audit, lint, unit tests (backend + frontend), E2E (Playwright)          | —                                                  |
-| **NBA Data Pipeline** (`nba-pipeline.yml`) | **Daily 10:00 UTC** (auto) + manual       | Derives team stats + rankings on production, flushes Redis                         | `DATABASE_URL`, `REDIS_URL`; var: `CURRENT_SEASON` |
-| **DB Backup** (`backup-release.yml`)       | **Every Sunday 2:00 UTC** (auto) + manual | `pg_dump` production DB → GitHub Release                                           | `DATABASE_URL`                                     |
-| **Load Tests** (`load-test.yml`)           | Manual                                    | k6 smoke / load / stress against a target URL                                      | —                                                  |
-| **Season Archive** (`season-archive.yml`)  | Manual                                    | Exports season CSVs + full DB dump → GitHub Release tagged `season-archive-{YEAR}` | `DATABASE_URL`; var: `CURRENT_SEASON`              |
+| Workflow                                   | Trigger                                   | What it does                                                                       | Secrets needed                        |
+| ------------------------------------------ | ----------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------- |
+| **CI** (`ci.yml`)                          | Push / PR to `main`                       | Dependency audit, lint, unit tests (backend + frontend), E2E (Playwright)          | —                                     |
+| **NBA Data Pipeline** (`nba-pipeline.yml`) | **Daily 10:00 UTC** (auto) + manual       | Derives team stats + rankings on production                                        | `DATABASE_URL`; var: `CURRENT_SEASON` |
+| **DB Backup** (`backup-release.yml`)       | **Every Sunday 2:00 UTC** (auto) + manual | `pg_dump` production DB → GitHub Release                                           | `DATABASE_URL`                        |
+| **Load Tests** (`load-test.yml`)           | Manual                                    | k6 smoke / load / stress against a target URL                                      | —                                     |
+| **Season Archive** (`season-archive.yml`)  | Manual                                    | Exports season CSVs + full DB dump → GitHub Release tagged `season-archive-{YEAR}` | `DATABASE_URL`; var: `CURRENT_SEASON` |
 
 ---
 
@@ -261,7 +258,7 @@ make uninstall-cron
 | Method | Endpoint                                 | Description                                       |
 | ------ | ---------------------------------------- | ------------------------------------------------- |
 | `GET`  | `/api/categories`                        | All available stat categories                     |
-| `GET`  | `/api/rankings?category=PPG&season=2025` | Rankings for a stat category (Redis-cached)       |
+| `GET`  | `/api/rankings?category=PPG&season=2025` | Rankings for a stat category (cached)             |
 | `GET`  | `/api/rankings/random-facts?season=2025` | Random stat facts for the "Did You Know" carousel |
 
 ### Teams

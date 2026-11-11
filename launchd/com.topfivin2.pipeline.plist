@@ -24,7 +24,7 @@
         <integer>0</integer>
     </dict>
 
-    <!-- Provide PATH so launchd can find Homebrew tools (redis-cli, pg_dump, python3). -->
+    <!-- Provide PATH so launchd can find Homebrew tools (pg_dump, python3). -->
     <key>EnvironmentVariables</key>
     <dict>
         <key>PATH</key>

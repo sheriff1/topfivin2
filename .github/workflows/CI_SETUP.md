@@ -99,7 +99,7 @@ pnpm --filter frontend build
 1. Run locally: `pnpm --filter backend test`
 2. Check for:
    - Failed assertions
-   - Environmental issues (Redis, PostgreSQL mocks)
+   - Environmental issues (PostgreSQL mocks)
    - Node version mismatch
 
 ### Frontend Tests Failing

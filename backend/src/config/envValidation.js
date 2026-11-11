@@ -59,29 +59,6 @@ function validateEnvironment() {
     }
   }
 
-  // Validate Redis Configuration
-  // Support both REDIS_URL format and individual REDIS_* variables
-  const hasRedisUrl = Boolean(process.env.REDIS_URL);
-  const hasIndividualRedisVars = Boolean(process.env.REDIS_HOST && process.env.REDIS_PORT);
-
-  if (!hasRedisUrl && !hasIndividualRedisVars) {
-    errors.push(
-      "Redis configuration is missing. Provide either:\n" +
-        '  1. REDIS_URL (e.g., "redis://:password@host:port"), or\n' +
-        "  2. Both of: REDIS_HOST, REDIS_PORT (and optionally REDIS_PASSWORD)"
-    );
-  }
-
-  // Validate individual Redis variables if provided
-  if (process.env.REDIS_PORT) {
-    const redisPort = parseInt(process.env.REDIS_PORT, 10);
-    if (isNaN(redisPort) || redisPort < 1 || redisPort > 65535) {
-      errors.push(
-        `REDIS_PORT must be a valid number between 1 and 65535. Got: ${process.env.REDIS_PORT}`
-      );
-    }
-  }
-
   // If there are errors, throw with detailed message
   if (errors.length > 0) {
     const errorMessage = [

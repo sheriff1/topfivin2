@@ -31,14 +31,12 @@ jobs:
         working-directory: backend
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          REDIS_URL: ${{ secrets.REDIS_URL }}
           CURRENT_SEASON: ${{ vars.CURRENT_SEASON }}
         run: python scripts/derive_team_stats.py
 
-      - name: Derive rankings and clear cache
+      - name: Derive rankings
         working-directory: backend
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          REDIS_URL: ${{ secrets.REDIS_URL }}
           CURRENT_SEASON: ${{ vars.CURRENT_SEASON }}
         run: python scripts/derive_rankings.py
