@@ -173,6 +173,10 @@ DATABASE_URL=postgresql://...   # from Railway dashboard
 | `make derive-prod`   | Derive stats + rankings                                                 |
 | `make pipeline-prod` | Full production pipeline: fetch → backfill → derive → rankings → backup |
 
+### Manual fetch
+
+See [docs/manual-fetch.md](docs/manual-fetch.md) for the exact order, verification and troubleshooting.
+
 ### Backup & Archive
 
 | Target                | Description                                                                |
