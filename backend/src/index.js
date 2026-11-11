@@ -15,7 +15,7 @@ try {
 const app = require("./app");
 const db = require("./db/postgresClient");
 const cache = require("./cache/redisClient");
-const { runMigrations } = require("../migrations/001_init_schema");
+const { runPendingMigrations } = require("../migrations");
 
 const PORT = process.env.PORT || 5000;
 
@@ -28,9 +28,13 @@ async function initialize() {
 
     // Step 1: Run database migrations
     logger.info("📊 Setting up database schema...");
-    await runMigrations();
+    const applied = await runPendingMigrations();
 
-    logger.info("✓ Database migrations completed successfully");
+    logger.info(
+      applied.length
+        ? `✓ Applied ${applied.length} database migration(s): ${applied.join(", ")}`
+        : "✓ Database schema is up to date"
+    );
   } catch (error) {
     logger.error("❌ Initialization failed:", { message: error.message, stack: error.stack });
     process.exit(1);

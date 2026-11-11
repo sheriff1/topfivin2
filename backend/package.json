@@ -6,7 +6,7 @@
   "scripts": {
     "start": "node src/index.js",
     "dev": "nodemon src/index.js",
-    "migrate": "node migrations/001_init_schema.js",
+    "migrate": "node migrations/index.js",
     "migrate:logos": "node migrations/002_add_team_logos.js",
     "test": "jest",
     "test:watch": "jest --watch",
