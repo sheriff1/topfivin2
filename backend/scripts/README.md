@@ -61,7 +61,6 @@ DB_PORT=5432
 DB_USER=your_db_username   # macOS Homebrew: run `whoami`; Linux/Docker: postgres
 DB_PASSWORD=
 DB_NAME=nba_stats
-CURRENT_SEASON=2025
 ```
 
 **Output**:
@@ -91,7 +90,6 @@ DB_PORT=5432
 DB_USER=your_db_username
 DB_PASSWORD=
 DB_NAME=nba_stats
-CURRENT_SEASON=2025
 ```
 
 **Output**:
@@ -119,7 +117,6 @@ DB_PORT=5432
 DB_USER=your_db_username
 DB_PASSWORD=
 DB_NAME=nba_stats
-CURRENT_SEASON=2025
 ```
 
 **Output**:
@@ -142,7 +139,7 @@ CURRENT_SEASON=2025
 
 ```bash
 DATABASE_URL=postgresql://...   # or DB_* vars (same as other scripts)
-ARCHIVE_SEASON=2025             # season to snapshot; falls back to CURRENT_SEASON
+ARCHIVE_SEASON=2025             # season to snapshot; default: latest stored season
 ARCHIVE_DIR=season_archive      # output directory (default: ./season_archive)
 ```
 

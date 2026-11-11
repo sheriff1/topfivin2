@@ -129,7 +129,6 @@ DB_PASSWORD=
 DB_NAME=nba_stats
 
 
-CURRENT_SEASON=2025
 FRONTEND_URL=http://localhost:3000
 ```
 
@@ -205,13 +204,13 @@ Override the target URL: `BASE_URL=https://your-server.com make k6-load`
 
 Two workflows run **automatically** on a schedule. The rest are triggered manually.
 
-| Workflow                                   | Trigger                                   | What it does                                                                       | Secrets needed                        |
-| ------------------------------------------ | ----------------------------------------- | ---------------------------------------------------------------------------------- | ------------------------------------- |
-| **CI** (`ci.yml`)                          | Push / PR to `main`                       | Dependency audit, lint, unit tests (backend + frontend), E2E (Playwright)          | —                                     |
-| **NBA Data Pipeline** (`nba-pipeline.yml`) | **Daily 10:00 UTC** (auto) + manual       | Derives team stats + rankings on production                                        | `DATABASE_URL`; var: `CURRENT_SEASON` |
-| **DB Backup** (`backup-release.yml`)       | **Every Sunday 2:00 UTC** (auto) + manual | `pg_dump` production DB → GitHub Release                                           | `DATABASE_URL`                        |
-| **Load Tests** (`load-test.yml`)           | Manual                                    | k6 smoke / load / stress against a target URL                                      | —                                     |
-| **Season Archive** (`season-archive.yml`)  | Manual                                    | Exports season CSVs + full DB dump → GitHub Release tagged `season-archive-{YEAR}` | `DATABASE_URL`; var: `CURRENT_SEASON` |
+| Workflow                                   | Trigger                                   | What it does                                                                       | Secrets needed                           |
+| ------------------------------------------ | ----------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------- |
+| **CI** (`ci.yml`)                          | Push / PR to `main`                       | Dependency audit, lint, unit tests (backend + frontend), E2E (Playwright)          | —                                        |
+| **NBA Data Pipeline** (`nba-pipeline.yml`) | **Daily 10:00 UTC** (auto) + manual       | Derives team stats + rankings on production                                        | `DATABASE_URL`                           |
+| **DB Backup** (`backup-release.yml`)       | **Every Sunday 2:00 UTC** (auto) + manual | `pg_dump` production DB → GitHub Release                                           | `DATABASE_URL`                           |
+| **Load Tests** (`load-test.yml`)           | Manual                                    | k6 smoke / load / stress against a target URL                                      | —                                        |
+| **Season Archive** (`season-archive.yml`)  | Manual                                    | Exports season CSVs + full DB dump → GitHub Release tagged `season-archive-{YEAR}` | `DATABASE_URL`; optional input: `season` |
 
 ---
 

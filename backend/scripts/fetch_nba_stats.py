@@ -6,6 +6,7 @@ Stores data in PostgreSQL database.
 """
 
 import os
+import argparse
 import json
 import sys
 import time
@@ -17,6 +18,7 @@ import warnings
 
 # Import shared configuration
 from team_constants import TEAM_ABBR_TO_ID
+from season_utils import calendar_season
 import psycopg2
 from psycopg2.extras import Json
 import requests
@@ -98,7 +100,6 @@ DB_PORT = int(os.getenv('DB_PORT', 5432))
 DB_USER = os.getenv('DB_USER', 'postgres')
 DB_PASSWORD = os.getenv('DB_PASSWORD', '')
 DB_NAME = os.getenv('DB_NAME', 'nba_stats')
-CURRENT_SEASON = os.getenv('CURRENT_SEASON', '2025')
 
 # API pacing configuration (V3 endpoint is more efficient)
 REQUEST_DELAY = 2.0  # 2 second delay to balance speed with rate-limit avoidance
@@ -206,10 +207,10 @@ def get_team_mapping():
     teams_data = nba_teams.get_teams()
     return {team['id']: team['full_name'] for team in teams_data}
 
-def fetch_season_games(season=CURRENT_SEASON):
+def fetch_season_games(season):
     """
     Fetch all games for the season using LeagueGameLog.
-    Season is controlled via the CURRENT_SEASON env var (default: '2025').
+    The season is passed in by main() (calendar-derived, or an explicit override).
     Returns list of game details with team info
     
     NOTE: This endpoint is most vulnerable to hard IP blocks from stats.nba.com.
@@ -356,7 +357,7 @@ def extract_team_stats(game_id, game_date, team_mapping):
                 print(f"    ❌ Failed after {RETRY_ATTEMPTS} attempts: {error_msg}")
                 return None
 
-def insert_game_stats_to_db(conn, game_id, game_date, team_stats):
+def insert_game_stats_to_db(conn, game_id, game_date, team_stats, season):
     """
     Insert extracted game stats directly into game_stats table.
     team_stats: Dict of team_id -> {stat: value}
@@ -385,7 +386,7 @@ def insert_game_stats_to_db(conn, game_id, game_date, team_stats):
                     tov_pct = EXCLUDED.tov_pct, usg_pct = EXCLUDED.usg_pct, 
                     ts_pct = EXCLUDED.ts_pct
             """, (
-                game_id, team_id, game_date, '2025',
+                game_id, team_id, game_date, season,
                 int(stats.get('FGM', 0)), int(stats.get('FGA', 0)), stats.get('FG_PCT', 0),
                 int(stats.get('FG3M', 0)), int(stats.get('FG3A', 0)), stats.get('FG3_PCT', 0),
                 int(stats.get('FTM', 0)), int(stats.get('FTA', 0)), stats.get('FT_PCT', 0),
@@ -583,6 +584,20 @@ def store_season_stats(conn, season_avg, game_counts, team_mapping, season):
     finally:
         cur.close()
 
+def resolve_fetch_season(argv=None):
+    """Season to fetch: --season arg, then FETCH_SEASON env, else the calendar season."""
+    parser = argparse.ArgumentParser(description='Fetch NBA stats for a season')
+    parser.add_argument('--season', default=os.getenv('FETCH_SEASON') or None,
+                        help='Season start year to fetch (e.g. 2025 for 2025-26). '
+                             'Default: derived from today\'s date (rolls over in October).')
+    args = parser.parse_args(argv)
+    if args.season:
+        if not re.fullmatch(r'\d{4}', args.season):
+            parser.error('--season must be a 4-digit start year, e.g. 2025')
+        return args.season
+    return calendar_season()
+
+
 def main():
     print("🏀 NBA Stats Data Fetcher - Full Season")
     print("=" * 50)
@@ -596,7 +611,7 @@ def main():
     print(f"✓ Connected to database {DB_NAME}")
     
     # Fetch season games
-    game_details, season = fetch_season_games()
+    game_details, season = fetch_season_games(resolve_fetch_season())
     if not game_details or not season:
         print("❌ No games found")
         conn.close()
@@ -639,7 +654,7 @@ def main():
             all_game_stats.append(game_stats)
             # Insert game_stats directly into database
             game_date = next((g['game_date'] for g in game_details if g['game_id'] == game_id), datetime.now().date())
-            insert_game_stats_to_db(conn, game_id, game_date, game_stats)
+            insert_game_stats_to_db(conn, game_id, game_date, game_stats, season)
             mark_game_collected(conn, game_id)  # Mark as collected
             if i % 25 == 0:
                 print(f"    ✓ Successfully processed {i} games")
