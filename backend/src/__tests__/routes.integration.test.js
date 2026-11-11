@@ -103,7 +103,7 @@ describe("GET /api/rankings", () => {
       cached_at: "2026-01-01T00:00:00.000Z",
     });
 
-    const res = await request(app).get("/api/rankings?category=PPG");
+    const res = await request(app).get("/api/rankings?category=PPG&season=2025");
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.cached).toBe(true);
@@ -383,7 +383,7 @@ describe("GET /api/audit/games", () => {
     // auditService runs 2 queries in parallel via Promise.all
     db.query.mockResolvedValueOnce(mockStatsResult).mockResolvedValueOnce(mockGamesResult);
 
-    const res = await request(app).get("/api/audit/games");
+    const res = await request(app).get("/api/audit/games?season=2025");
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body).toHaveProperty("stats");
@@ -501,5 +501,67 @@ describe("GET /api/audit/game/:gameId/stats", () => {
     const res = await request(app).get("/api/audit/game/g1/stats");
     expect(res.status).toBe(500);
     expect(res.body.success).toBe(false);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/seasons and default-season resolution
+// ---------------------------------------------------------------------------
+describe("GET /api/seasons", () => {
+  it("returns the current season and all available seasons", async () => {
+    db.query.mockResolvedValueOnce({ rows: [{ season: "2026" }, { season: "2025" }] });
+    const res = await request(app).get("/api/seasons");
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ success: true, current: "2026", available: ["2026", "2025"] });
+  });
+
+  it("returns null current for an empty database", async () => {
+    db.query.mockResolvedValueOnce({ rows: [] });
+    const res = await request(app).get("/api/seasons");
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ success: true, current: null, available: [] });
+  });
+
+  it("returns 500 when the lookup fails", async () => {
+    db.query.mockRejectedValueOnce(new Error("db down"));
+    const res = await request(app).get("/api/seasons");
+    expect(res.status).toBe(500);
+  });
+});
+
+describe("default season", () => {
+  const originalEnv = process.env.CURRENT_SEASON;
+  afterEach(() => {
+    if (originalEnv === undefined) delete process.env.CURRENT_SEASON;
+    else process.env.CURRENT_SEASON = originalEnv;
+  });
+
+  it("uses the latest stored season when ?season= is absent, ignoring CURRENT_SEASON", async () => {
+    process.env.CURRENT_SEASON = "1999";
+    db.query
+      .mockResolvedValueOnce({ rows: [{ season: "2026" }, { season: "2025" }] })
+      .mockResolvedValueOnce({ rows: [], rowCount: 0 });
+    await request(app).get("/api/team/1610612751/rankings");
+    expect(db.query.mock.calls[1][1]).toEqual(["1610612751", "2026"]);
+  });
+
+  it("uses an explicit ?season= without looking up the current season", async () => {
+    db.query.mockResolvedValueOnce({ rows: [], rowCount: 0 });
+    await request(app).get("/api/team/1610612751/rankings?season=2024");
+    expect(db.query).toHaveBeenCalledTimes(1);
+    expect(db.query.mock.calls[0][1]).toEqual(["1610612751", "2024"]);
+  });
+
+  it("returns 404 when no season is given and the database is empty", async () => {
+    db.query.mockResolvedValueOnce({ rows: [] });
+    const res = await request(app).get("/api/rankings?category=PPG");
+    expect(res.status).toBe(404);
+    expect(res.body.success).toBe(false);
+  });
+
+  it("returns 500 when the season lookup fails", async () => {
+    db.query.mockRejectedValueOnce(new Error("db down"));
+    const res = await request(app).get("/api/audit/games");
+    expect(res.status).toBe(500);
   });
 });

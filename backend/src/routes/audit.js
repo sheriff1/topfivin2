@@ -3,6 +3,7 @@ const db = require("../db/postgresClient");
 const { getAuditGames, getGameStats } = require("../services/auditService");
 const { validateAuditGames, validateGameStats } = require("../middleware/validationSchemas");
 const { validationMiddleware } = require("../middleware/validation");
+const { resolveSeason } = require("../middleware/resolveSeason");
 const logger = require("../utils/logger");
 
 const router = express.Router();
@@ -12,29 +13,35 @@ const router = express.Router();
  * Returns game collection audit data
  * Query params: ?season=2025&status=collected|missing&date=2026-03-12&limit=100&offset=0
  */
-router.get("/audit/games", validateAuditGames, validationMiddleware, async (req, res) => {
-  try {
-    const season = req.query.season || process.env.CURRENT_SEASON || "2025";
-    const limit = parseInt(req.query.limit) || 100;
-    const offset = parseInt(req.query.offset) || 0;
-    const status = req.query.status;
-    const date = req.query.date;
+router.get(
+  "/audit/games",
+  validateAuditGames,
+  validationMiddleware,
+  resolveSeason,
+  async (req, res) => {
+    try {
+      const season = req.season;
+      const limit = parseInt(req.query.limit) || 100;
+      const offset = parseInt(req.query.offset) || 0;
+      const status = req.query.status;
+      const date = req.query.date;
 
-    const result = await getAuditGames(season, limit, offset, status, date, db);
+      const result = await getAuditGames(season, limit, offset, status, date, db);
 
-    res.json({ success: true, ...result });
-  } catch (error) {
-    logger.error("[API] /audit/games - Error:", {
-      message: error.message,
-      stack: error.stack,
-      requestId: req.id,
-    });
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch audit data",
-    });
+      res.json({ success: true, ...result });
+    } catch (error) {
+      logger.error("[API] /audit/games - Error:", {
+        message: error.message,
+        stack: error.stack,
+        requestId: req.id,
+      });
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch audit data",
+      });
+    }
   }
-});
+);
 
 /**
  * GET /api/audit/game/:gameId/stats

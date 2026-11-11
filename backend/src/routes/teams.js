@@ -9,6 +9,7 @@ const {
   validateTeamRankings,
 } = require("../middleware/validationSchemas");
 const { validationMiddleware } = require("../middleware/validation");
+const { resolveSeason } = require("../middleware/resolveSeason");
 const logger = require("../utils/logger");
 
 const router = express.Router();
@@ -114,46 +115,55 @@ router.get(
 /**
  * GET /api/team/:teamId/stats
  * Returns all stats for a specific team
- * Query params: ?season=2025
+ * Query params: ?season=2025 (defaults to the latest stored season)
  */
-router.get("/team/:teamId/stats", validateTeamStats, validationMiddleware, async (req, res) => {
-  try {
-    const { teamId } = req.params;
-    const season = req.query.season || process.env.CURRENT_SEASON || "2025";
+router.get(
+  "/team/:teamId/stats",
+  validateTeamStats,
+  validationMiddleware,
+  resolveSeason,
+  async (req, res) => {
+    try {
+      const { teamId } = req.params;
+      const season = req.season;
 
-    const data = await getTeamStats(teamId, season, db);
+      const data = await getTeamStats(teamId, season, db);
 
-    if (!data) {
-      return res.status(404).json({ success: false, message: `No stats found for team ${teamId}` });
+      if (!data) {
+        return res
+          .status(404)
+          .json({ success: false, message: `No stats found for team ${teamId}` });
+      }
+
+      res.json({ success: true, data });
+    } catch (error) {
+      logger.error("[API] /team/:teamId/stats - Error:", {
+        message: error.message,
+        stack: error.stack,
+        requestId: req.id,
+      });
+      res.status(500).json({
+        success: false,
+        message: "Failed to fetch team stats",
+      });
     }
-
-    res.json({ success: true, data });
-  } catch (error) {
-    logger.error("[API] /team/:teamId/stats - Error:", {
-      message: error.message,
-      stack: error.stack,
-      requestId: req.id,
-    });
-    res.status(500).json({
-      success: false,
-      message: "Failed to fetch team stats",
-    });
   }
-});
+);
 
 /**
  * GET /api/team/:teamId/rankings
  * Returns all rankings for a specific team across all categories
- * Query params: ?season=2025
+ * Query params: ?season=2025 (defaults to the latest stored season)
  */
 router.get(
   "/team/:teamId/rankings",
   validateTeamRankings,
   validationMiddleware,
+  resolveSeason,
   async (req, res) => {
     try {
       const { teamId } = req.params;
-      const season = req.query.season || process.env.CURRENT_SEASON || "2025";
+      const season = req.season;
 
       const data = await getTeamRankings(teamId, season, db);
 

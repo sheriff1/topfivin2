@@ -13,6 +13,7 @@ const {
   validateRandomFacts,
 } = require("../middleware/validationSchemas");
 const { validationMiddleware } = require("../middleware/validation");
+const { resolveSeason } = require("../middleware/resolveSeason");
 const logger = require("../utils/logger");
 
 const router = express.Router();
@@ -43,10 +44,10 @@ router.get("/categories", validateCategories, validationMiddleware, (req, res) =
  * Returns rankings for a specific stat category
  * Query params: ?category=PPG&season=2025
  */
-router.get("/rankings", validateRankings, validationMiddleware, async (req, res) => {
+router.get("/rankings", validateRankings, validationMiddleware, resolveSeason, async (req, res) => {
   try {
     const category = req.query.category;
-    const season = req.query.season || process.env.CURRENT_SEASON || "2025";
+    const season = req.season;
 
     if (!category) {
       return res.status(400).json({
@@ -103,10 +104,11 @@ router.get(
   "/rankings/random-facts",
   validateRandomFacts,
   validationMiddleware,
+  resolveSeason,
   async (req, res) => {
     try {
       const count = parseInt(req.query.count, 10) || 10;
-      const season = req.query.season || process.env.CURRENT_SEASON || "2025";
+      const season = req.season;
 
       const facts = await getRandomFacts(count, season, db);
 

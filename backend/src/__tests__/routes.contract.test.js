@@ -31,6 +31,7 @@ const {
   TeamByAbbrResponseSchema,
   TeamStatsResponseSchema,
   TeamRankingsResponseSchema,
+  SeasonsResponseSchema,
   AuditGamesResponseSchema,
   AuditGameStatsResponseSchema,
 } = require("../schemas/responseSchemas");
@@ -253,7 +254,7 @@ describe("GET /api/audit/games — contract", () => {
         rowCount: 1,
       });
 
-    const res = await request(app).get("/api/audit/games");
+    const res = await request(app).get("/api/audit/games?season=2025");
     assertSchema(AuditGamesResponseSchema, res.body);
   });
 });
@@ -314,5 +315,22 @@ describe("GET /api/audit/game/:gameId/stats — contract", () => {
 
     const res = await request(app).get("/api/audit/game/g1/stats");
     assertSchema(AuditGameStatsResponseSchema, res.body);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/seasons
+// ---------------------------------------------------------------------------
+describe("GET /api/seasons — contract", () => {
+  it("response matches SeasonsResponseSchema", async () => {
+    db.query.mockResolvedValueOnce({ rows: [{ season: "2026" }, { season: "2025" }], rowCount: 2 });
+    const res = await request(app).get("/api/seasons");
+    assertSchema(SeasonsResponseSchema, res.body);
+  });
+
+  it("matches the schema for an empty database", async () => {
+    db.query.mockResolvedValueOnce({ rows: [], rowCount: 0 });
+    const res = await request(app).get("/api/seasons");
+    assertSchema(SeasonsResponseSchema, res.body);
   });
 });
