@@ -25,14 +25,14 @@ fetch:
 	source .venv/bin/activate && \
 	set -a && source backend/.env && set +a && \
 	cd backend && \
-	python scripts/fetch_nba_stats.py
+	python scripts/fetch_nba_stats.py $(if $(SEASON),--season $(SEASON))
 	@echo "✅ Fetch complete (local)"
 
 fetch-prod:
 	source .venv/bin/activate && \
 	set -a && source backend/.env.production && set +a && \
 	cd backend && \
-	python scripts/fetch_nba_stats.py
+	python scripts/fetch_nba_stats.py $(if $(SEASON),--season $(SEASON))
 	@echo "✅ Fetch complete (production)"
 
 derive:
@@ -288,7 +288,7 @@ archive-season:
 	@echo "📦 Archiving season..."
 	@source .venv/bin/activate && \
 	set -a && source backend/.env.production && set +a && \
-	ARCHIVE_DIR=season_archive python backend/scripts/archive_season.py
+	ARCHIVE_DIR=season_archive $(if $(SEASON),ARCHIVE_SEASON=$(SEASON)) python backend/scripts/archive_season.py
 	@echo "✅ Season archive complete — CSVs + checksums in season_archive/"
 
 # ── Automation (launchd) ─────────────────────────────────────────────────────

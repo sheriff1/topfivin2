@@ -23,6 +23,8 @@ import psycopg2
 import requests
 from PIL import Image, ImageDraw, ImageFont
 
+from season_utils import require_latest_stored_season
+
 # ── Constants ─────────────────────────────────────────────────────────────────
 
 IMAGE_W, IMAGE_H = 1080, 1350
@@ -554,10 +556,9 @@ def compose_image(fact: dict) -> Image.Image:
 def main() -> None:
     load_env()
 
-    season = os.environ.get("CURRENT_SEASON", "2025")
-
     conn = get_connection()
     try:
+        season = require_latest_stored_season(conn)
         facts = fetch_team_facts(conn, season)
     finally:
         conn.close()

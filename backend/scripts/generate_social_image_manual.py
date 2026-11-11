@@ -24,6 +24,7 @@ from generate_social_images import (
     get_connection,
     load_env,
 )
+from season_utils import require_latest_stored_season
 
 MANUAL_DIR = OUTPUT_BASE / "manual"
 
@@ -75,10 +76,9 @@ def pick_option(prompt: str, options: list[str]) -> int:
 
 def main() -> None:
     load_env()
-    season = os.environ.get("CURRENT_SEASON", "2025")
-
     conn = get_connection()
     try:
+        season = require_latest_stored_season(conn)
         # Step 1: pick a team
         teams = fetch_teams(conn)
         team_labels = [f"{t['abbreviation']}  {t['team_name']}" for t in teams]

@@ -9,6 +9,7 @@ Phase 6: Derive STAT_RANKINGS from TEAM_STATS
 import os
 import psycopg2
 from datetime import datetime
+from season_utils import require_latest_stored_season
 
 # ── Load .env configuration ───────────────────────────────────────────────────
 def load_env():
@@ -234,7 +235,9 @@ def derive_rankings():
     cursor = conn.cursor()
     
     try:
-        print(f"\n🔄 Deriving rankings for {len(STAT_CATEGORIES)} stat categories...\n")
+        season = require_latest_stored_season(conn)
+        print(f"\n🔄 Deriving rankings for season {season} "
+              f"({len(STAT_CATEGORIES)} stat categories)...\n")
         
         total_inserted = 0
         
@@ -252,18 +255,18 @@ def derive_rankings():
                 {stat_column} as value,
                 season
             FROM team_stats
-            WHERE season = '2025'
+            WHERE season = %s
             ON CONFLICT (team_id, stat_category, season) DO UPDATE SET
                 rank = EXCLUDED.rank,
                 value = EXCLUDED.value,
                 updated_at = CURRENT_TIMESTAMP
             """
             
-            cursor.execute(ranking_sql, (stat_name,))
+            cursor.execute(ranking_sql, (stat_name, season))
             conn.commit()
             
             # Get ranking count
-            cursor.execute("SELECT COUNT(*) FROM stat_rankings WHERE stat_category = %s", (stat_name,))
+            cursor.execute("SELECT COUNT(*) FROM stat_rankings WHERE stat_category = %s AND season = %s", (stat_name, season))
             count = cursor.fetchone()[0]
             total_inserted += count
             print(f"    ✓ Created {count} rankings for {stat_name}")
@@ -276,10 +279,10 @@ def derive_rankings():
             SELECT sr.rank, t.team_name, sr.value
             FROM stat_rankings sr
             JOIN teams t ON t.team_id = sr.team_id
-            WHERE sr.stat_category = 'PPG'
+            WHERE sr.stat_category = 'PPG' AND sr.season = %s
             ORDER BY sr.rank
             LIMIT 10
-        """)
+        """, (season,))
         
         for rank, team_name, value in cursor.fetchall():
             print(f"  {rank:2}. {team_name:30} {value:.1f}")

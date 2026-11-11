@@ -2,6 +2,11 @@ name: Season Archive
 
 on:
   workflow_dispatch:
+    inputs:
+      season:
+        description: "Season start year to archive (e.g. 2025 for 2025-26). Leave empty for the latest stored season."
+        required: false
+        default: ""
 
 jobs:
   archive:
@@ -32,41 +37,53 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client-18
 
+      - name: Resolve season to archive
+        working-directory: backend/scripts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          INPUT_SEASON: ${{ inputs.season }}
+        run: |
+          SEASON="$INPUT_SEASON"
+          if [ -z "$SEASON" ]; then
+            SEASON=$(python -c "import os, psycopg2; from season_utils import require_latest_stored_season as r; print(r(psycopg2.connect(os.environ['DATABASE_URL'])))")
+          fi
+          if ! echo "$SEASON" | grep -Eq '^[0-9]{4}$'; then
+            echo "Invalid season: '$SEASON'"; exit 1
+          fi
+          echo "ARCHIVE_SEASON=$SEASON" >> "$GITHUB_ENV"
+
       - name: Export season CSVs and checksum manifest
         working-directory: backend
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          ARCHIVE_SEASON: ${{ vars.CURRENT_SEASON }}
           ARCHIVE_DIR: ../season_archive
         run: python scripts/archive_season.py
 
       - name: Run pg_dump (full DB snapshot)
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
-          CURRENT_SEASON: ${{ vars.CURRENT_SEASON }}
         run: |
-          DUMP_FILE="nba_stats_season_${CURRENT_SEASON}.dump"
+          DUMP_FILE="nba_stats_season_${ARCHIVE_SEASON}.dump"
           /usr/lib/postgresql/18/bin/pg_dump "$DATABASE_URL" -F c -f "$DUMP_FILE"
           echo "DUMP_FILE=$DUMP_FILE" >> $GITHUB_ENV
-          echo "CURRENT_SEASON=$CURRENT_SEASON" >> $GITHUB_ENV
 
       - name: Create GitHub Release with all archive assets
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: season-archive-${{ env.CURRENT_SEASON }}
-          name: "Season Archive — ${{ env.CURRENT_SEASON }}"
+          tag_name: season-archive-${{ env.ARCHIVE_SEASON }}
+          name: "Season Archive — ${{ env.ARCHIVE_SEASON }}"
           body: |
-            Immutable annual snapshot of NBA Season ${{ env.CURRENT_SEASON }}.
+            Immutable annual snapshot of NBA Season ${{ env.ARCHIVE_SEASON }}.
 
             ## Contents
             | File | Description |
             |------|-------------|
             | `${{ env.DUMP_FILE }}` | Full PostgreSQL database dump |
-            | `games_${{ env.CURRENT_SEASON }}.csv` | All games for season |
-            | `game_stats_${{ env.CURRENT_SEASON }}.csv` | Per-game team stats |
-            | `team_stats_${{ env.CURRENT_SEASON }}.csv` | Aggregated season team stats |
-            | `stat_rankings_${{ env.CURRENT_SEASON }}.csv` | Season stat rankings (all categories) |
-            | `checksums_${{ env.CURRENT_SEASON }}.txt` | SHA-256 checksums for all CSVs |
+            | `games_${{ env.ARCHIVE_SEASON }}.csv` | All games for season |
+            | `game_stats_${{ env.ARCHIVE_SEASON }}.csv` | Per-game team stats |
+            | `team_stats_${{ env.ARCHIVE_SEASON }}.csv` | Aggregated season team stats |
+            | `stat_rankings_${{ env.ARCHIVE_SEASON }}.csv` | Season stat rankings (all categories) |
+            | `checksums_${{ env.ARCHIVE_SEASON }}.txt` | SHA-256 checksums for all CSVs |
 
             ## Restore database
             ```bash
@@ -75,18 +92,18 @@ jobs:
 
             ## Verify CSV integrity
             ```bash
-            sha256sum -c checksums_${{ env.CURRENT_SEASON }}.txt
+            sha256sum -c checksums_${{ env.ARCHIVE_SEASON }}.txt
             ```
 
             - **Triggered by:** ${{ github.event_name }}
             - **Run:** [#${{ github.run_number }}](${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }})
           files: |
             ${{ env.DUMP_FILE }}
-            season_archive/games_${{ env.CURRENT_SEASON }}.csv
-            season_archive/game_stats_${{ env.CURRENT_SEASON }}.csv
-            season_archive/team_stats_${{ env.CURRENT_SEASON }}.csv
-            season_archive/stat_rankings_${{ env.CURRENT_SEASON }}.csv
-            season_archive/checksums_${{ env.CURRENT_SEASON }}.txt
+            season_archive/games_${{ env.ARCHIVE_SEASON }}.csv
+            season_archive/game_stats_${{ env.ARCHIVE_SEASON }}.csv
+            season_archive/team_stats_${{ env.ARCHIVE_SEASON }}.csv
+            season_archive/stat_rankings_${{ env.ARCHIVE_SEASON }}.csv
+            season_archive/checksums_${{ env.ARCHIVE_SEASON }}.txt
           make_latest: false
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
