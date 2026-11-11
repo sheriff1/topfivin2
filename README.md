@@ -99,7 +99,8 @@ cd backend && pnpm run migrate && cd ..
 ```bash
 python3.13 -m venv .venv
 source .venv/bin/activate
-pip install -r requirements.txt
+pip install -r requirements-dev.txt   # runtime deps + pytest
+# macOS: social images (CairoSVG) also need the cairo library: brew install cairo
 
 make pipeline   # fetch → derive team stats → compute rankings → flush cache
 ```
