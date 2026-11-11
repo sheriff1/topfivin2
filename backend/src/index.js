@@ -17,6 +17,10 @@ const db = require("./db/postgresClient");
 const { runPendingMigrations } = require("../migrations");
 
 const PORT = process.env.PORT || 5000;
+const SHUTDOWN_TIMEOUT_MS = Number(process.env.SHUTDOWN_TIMEOUT_MS) || 10000;
+
+let server;
+let shuttingDown = false;
 
 /**
  * Initialize application
@@ -45,7 +49,7 @@ async function start() {
   try {
     await initialize();
 
-    app.listen(PORT, () => {
+    server = app.listen(PORT, () => {
       logger.info(`✅ Server running on http://localhost:${PORT}`);
       logger.info("📖 API Documentation:");
       logger.info("  GET /health - Health check");
@@ -60,17 +64,40 @@ async function start() {
   }
 }
 
-// Graceful shutdown
-process.on("SIGINT", async () => {
-  console.log("\n\n🛑 Shutting down gracefully...");
+/**
+ * Graceful shutdown: stop accepting connections, drain in-flight requests
+ * (bounded by a timeout), close the Postgres pool, then exit.
+ */
+async function shutdown(signal) {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  logger.info(`🛑 Received ${signal}, shutting down gracefully...`);
+
+  const forceTimer = setTimeout(() => {
+    logger.error("Shutdown timed out, forcing exit");
+    process.exit(1);
+  }, SHUTDOWN_TIMEOUT_MS);
+  forceTimer.unref();
+
   try {
+    if (server) {
+      await new Promise((resolve, reject) => {
+        server.close((err) => (err ? reject(err) : resolve()));
+        // Close idle keep-alive connections so close() can complete
+        server.closeIdleConnections?.();
+      });
+    }
     await db.pool.end();
+    logger.info("✓ Shutdown complete");
     process.exit(0);
   } catch (error) {
     logger.error("Error during shutdown:", { message: error.message, stack: error.stack });
     process.exit(1);
   }
-});
+}
+
+process.on("SIGTERM", () => shutdown("SIGTERM"));
+process.on("SIGINT", () => shutdown("SIGINT"));
 
 // Start the application
 start();

@@ -1,5 +1,6 @@
 const winston = require("winston");
 const path = require("path");
+const fs = require("fs");
 
 // Define custom log levels with colors
 const customLevels = {
@@ -21,36 +22,56 @@ const customLevels = {
   },
 };
 
-// Create logger instance
-const logger = winston.createLogger({
-  levels: customLevels.levels,
-  format: winston.format.combine(
-    winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
-    winston.format.errors({ stack: true }),
-    winston.format.splat(),
-    winston.format.json()
-  ),
-  defaultMeta: { service: "topfivin2-api" },
-  transports: [
-    // Error log file - only errors and fatal
-    new winston.transports.File({
-      filename: path.join(process.cwd(), "logs", "error.log"),
-      level: "error",
-      maxsize: 10485760, // 10MB
-      maxFiles: 5,
-    }),
-    // Combined log file - all levels
-    new winston.transports.File({
-      filename: path.join(process.cwd(), "logs", "combined.log"),
-      maxsize: 10485760, // 10MB
-      maxFiles: 5,
-    }),
-  ],
-});
+const isProduction = process.env.NODE_ENV === "production";
+const logDir = path.join(process.cwd(), "logs");
 
-// Add console transport in development
-if (process.env.NODE_ENV !== "production") {
-  logger.add(
+// File logging: on by default outside production, opt-in in production via LOG_TO_FILES=true
+const fileLoggingEnabled = isProduction
+  ? process.env.LOG_TO_FILES === "true"
+  : process.env.LOG_TO_FILES !== "false";
+
+// Returns true only if the log directory exists (or can be created) and is writable
+function isLogDirWritable() {
+  try {
+    fs.mkdirSync(logDir, { recursive: true });
+    fs.accessSync(logDir, fs.constants.W_OK);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+const transports = [];
+let fileLoggingSkipped = false;
+
+if (fileLoggingEnabled) {
+  if (isLogDirWritable()) {
+    transports.push(
+      // Error log file - only errors and fatal
+      new winston.transports.File({
+        filename: path.join(logDir, "error.log"),
+        level: "error",
+        maxsize: 10485760, // 10MB
+        maxFiles: 5,
+      }),
+      // Combined log file - all levels
+      new winston.transports.File({
+        filename: path.join(logDir, "combined.log"),
+        maxsize: 10485760, // 10MB
+        maxFiles: 5,
+      })
+    );
+  } else {
+    fileLoggingSkipped = true;
+  }
+}
+
+if (isProduction) {
+  // Structured JSON on stdout so the host's log collector can capture it
+  transports.push(new winston.transports.Console());
+} else {
+  // Human-readable, colorized output in development
+  transports.push(
     new winston.transports.Console({
       format: winston.format.combine(
         winston.format.colorize({ colors: customLevels.colors }),
@@ -63,9 +84,21 @@ if (process.env.NODE_ENV !== "production") {
   );
 }
 
-// Add production-specific transports
-if (process.env.NODE_ENV === "production") {
-  // Could add additional transports here (e.g., Cloud Logging, Datadog, etc.)
+// Create logger instance
+const logger = winston.createLogger({
+  levels: customLevels.levels,
+  format: winston.format.combine(
+    winston.format.timestamp({ format: "YYYY-MM-DD HH:mm:ss" }),
+    winston.format.errors({ stack: true }),
+    winston.format.splat(),
+    winston.format.json()
+  ),
+  defaultMeta: { service: "topfivin2-api" },
+  transports,
+});
+
+if (fileLoggingSkipped) {
+  logger.warn("Log directory is not writable; file logging disabled", { logDir });
 }
 
 module.exports = logger;
