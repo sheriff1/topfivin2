@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useRankings } from "../hooks/useApi";
+import { useRankings, useCurrentSeason } from "../hooks/useApi";
 
 export function GameCountPage() {
   // Scroll to top on navigation
@@ -7,7 +7,7 @@ export function GameCountPage() {
     window.scrollTo(0, 0);
   }, []);
 
-  const season = import.meta.env.VITE_CURRENT_SEASON || "2025";
+  const { data: season } = useCurrentSeason();
   // Use PPG category to get all teams with their games_count
   const [selectedCategory] = useState("PPG");
   const {

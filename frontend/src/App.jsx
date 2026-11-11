@@ -1,6 +1,7 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Layout } from "./components/Layout";
+import { SeasonGate } from "./components/SeasonGate";
 import { AboutPage } from "./pages/AboutPage";
 import { AuditPage } from "./pages/AuditPage";
 import { GameCountPage } from "./pages/GameCountPage";
@@ -24,15 +25,17 @@ function App() {
     <QueryClientProvider client={queryClient}>
       <Router>
         <Layout>
-          <Routes>
-            <Route path="/" element={<RankingsPage />} />
-            <Route path="/game" element={<GamePage />} />
-            <Route path="/teams" element={<TeamsPage />} />
-            <Route path="/team/:abbreviation" element={<TeamPage />} />
-            <Route path="/games-count" element={<GameCountPage />} />
-            <Route path="/audit" element={<AuditPage />} />
-            <Route path="/about" element={<AboutPage />} />
-          </Routes>
+          <SeasonGate>
+            <Routes>
+              <Route path="/" element={<RankingsPage />} />
+              <Route path="/game" element={<GamePage />} />
+              <Route path="/teams" element={<TeamsPage />} />
+              <Route path="/team/:abbreviation" element={<TeamPage />} />
+              <Route path="/games-count" element={<GameCountPage />} />
+              <Route path="/audit" element={<AuditPage />} />
+              <Route path="/about" element={<AboutPage />} />
+            </Routes>
+          </SeasonGate>
         </Layout>
       </Router>
     </QueryClientProvider>

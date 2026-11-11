@@ -1,6 +1,9 @@
 import { useEffect } from "react";
+import { useCurrentSeason } from "../hooks/useApi";
+import { formatSeasonLabel } from "../utils/season";
 
 export function AboutPage() {
+  const { data: season } = useCurrentSeason();
   // Scroll to top on navigation
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -14,9 +17,9 @@ export function AboutPage() {
           <h2 className="text-3xl font-bold mb-4">NBA Top Five In</h2>
           <p className="text-lg mb-4">
             A comprehensive NBA statistics dashboard providing live rankings and team performance
-            metrics for the 2025-26 NBA season. Explore how teams stack up across 147 statistical
-            categories, from basic stats like points per game to advanced metrics like effective
-            field goal percentage and player tracking data.
+            metrics for the {formatSeasonLabel(season)} NBA season. Explore how teams stack up
+            across 147 statistical categories, from basic stats like points per game to advanced
+            metrics like effective field goal percentage and player tracking data.
           </p>
           <div className="space-y-3">
             <h3 className="text-xl font-semibold">Features:</h3>

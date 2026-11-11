@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, useMemo } from "react";
 import { apiClient } from "../hooks/useApi";
+import { formatSeasonLabel } from "../utils/season";
 import GameStatsRow from "./GameStatsRow";
 
 export function AuditTab({ season }) {
@@ -178,7 +179,7 @@ export function AuditTab({ season }) {
     return (
       <div className="alert alert-warning shadow-lg">
         <div>
-          <span>No audit data available for 2025-26 season</span>
+          <span>No audit data available for {formatSeasonLabel(season)} season</span>
         </div>
       </div>
     );

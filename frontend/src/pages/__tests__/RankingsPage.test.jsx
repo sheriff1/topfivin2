@@ -25,7 +25,7 @@ vi.mock("../../hooks/useApi", () => ({
     isLoading: false,
     error: null,
   })),
-  CURRENT_SEASON: "2025",
+  useCurrentSeason: vi.fn(() => ({ data: "2025", isLoading: false, error: null })),
 }));
 
 vi.mock("../../components/DidYouKnow", () => ({

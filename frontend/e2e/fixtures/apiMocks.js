@@ -2,6 +2,9 @@
 // Shared mock data
 // ---------------------------------------------------------------------------
 
+// Deliberately not 2025 so tests prove the season comes from the API
+export const mockSeason = "2026";
+
 export const mockCategories = [
   { code: "PPG", label: "Points Per Game" },
   { code: "RPG", label: "Rebounds Per Game" },
@@ -329,6 +332,15 @@ export async function setupApiMocks(page) {
       status: 200,
       contentType: "application/json",
       body: JSON.stringify({ status: "healthy", timestamp: new Date().toISOString(), api: "ok" }),
+    })
+  );
+
+  // /api/seasons
+  await page.route("**/api/seasons", (route) =>
+    route.fulfill({
+      status: 200,
+      contentType: "application/json",
+      body: JSON.stringify({ success: true, current: mockSeason, available: [mockSeason, "2025"] }),
     })
   );
 

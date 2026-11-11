@@ -46,7 +46,7 @@ vi.mock("../../hooks/useApi", () => ({
       },
     ],
   })),
-  CURRENT_SEASON: "2025",
+  useCurrentSeason: vi.fn(() => ({ data: "2025", isLoading: false, error: null })),
 }));
 
 const SAMPLE_QUESTION = {

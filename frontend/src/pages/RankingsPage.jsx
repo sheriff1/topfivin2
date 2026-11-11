@@ -3,7 +3,7 @@ import { Link } from "react-router-dom";
 import { DidYouKnow } from "../components/DidYouKnow";
 import { RankingsGrid } from "../components/RankingsGrid";
 import { Top5Showcase } from "../components/Top5Showcase";
-import { useCategories, useRankings, CURRENT_SEASON } from "../hooks/useApi";
+import { useCategories, useRankings, useCurrentSeason } from "../hooks/useApi";
 
 const CATEGORY_GROUPS = [
   {
@@ -189,7 +189,7 @@ export function RankingsPage() {
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [shouldAnimate, setShouldAnimate] = useState(true);
   const hasInitialized = useRef(false);
-  const season = CURRENT_SEASON;
+  const { data: season } = useCurrentSeason();
   const { data: categories, isLoading: categoriesLoading } = useCategories();
   const { data: rankings } = useRankings(selectedCategory, season);
 
