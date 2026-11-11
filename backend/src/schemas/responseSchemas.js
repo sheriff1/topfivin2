@@ -147,6 +147,12 @@ const TeamRankingsResponseSchema = z.object({
   }),
 });
 
+const SeasonsResponseSchema = z.object({
+  success: z.literal(true),
+  current: z.string().nullable(),
+  available: z.array(z.string()),
+});
+
 const AuditGamesResponseSchema = z.object({
   success: z.literal(true),
   stats: z.object({
@@ -181,6 +187,7 @@ module.exports = {
   TeamByAbbrResponseSchema,
   TeamStatsResponseSchema,
   TeamRankingsResponseSchema,
+  SeasonsResponseSchema,
   AuditGamesResponseSchema,
   AuditGameStatsResponseSchema,
 };

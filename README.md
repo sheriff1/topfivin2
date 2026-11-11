@@ -39,6 +39,7 @@ nba_api (Python — run locally)
                                       GET /api/teams/abbr/:abbreviation
                                       GET /api/team/:id/stats
                                       GET /api/team/:id/rankings
+                                      GET /api/seasons
                                       GET /api/audit/games
                                       GET /api/audit/game/:gameId/stats
                                                   │
@@ -252,6 +253,14 @@ make uninstall-cron
 ---
 
 ## API Reference
+
+### Seasons
+
+| Method | Endpoint       | Description                                                                          |
+| ------ | -------------- | ------------------------------------------------------------------------------------ |
+| `GET`  | `/api/seasons` | `{ current, available }`: latest stored season and all stored seasons (newest first) |
+
+Routes that take `?season=` default to the latest stored season when it is omitted (404 if the database is empty). The lookup is cached for 5 minutes.
 
 ### Rankings
 
