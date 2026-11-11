@@ -277,9 +277,17 @@ backup:
 	@mkdir -p backups
 	@echo "📦 Backing up production database..."
 	@set -a && source backend/.env.production && set +a && \
-	pg_dump $$DATABASE_URL -F c -f backups/nba_stats_$$(date +%Y%m%d_%H%M%S).dump \
-	&& echo "✅ Backup saved to backups/" \
-	|| echo "⚠️  Local pg_dump skipped (version mismatch with PostgreSQL 18). Backups run automatically via GitHub Actions weekly."
+	OUT=backups/nba_stats_$$(date +%Y%m%d_%H%M%S).dump && \
+	TMP=$$OUT.partial && \
+	if pg_dump "$$DATABASE_URL" -F c -f "$$TMP" 2>backups/.pg_dump.err \
+	   && [ -s "$$TMP" ] && pg_restore --list "$$TMP" >/dev/null 2>&1; then \
+	  mv "$$TMP" "$$OUT" && echo "✅ Backup saved to $$OUT"; \
+	else \
+	  rm -f -- "$$TMP"; \
+	  echo "❌ Backup FAILED — no dump written. pg_dump said:" >&2; \
+	  sed -E 's#postgres(ql)?://[^ ]*#<url>#g' backups/.pg_dump.err >&2; \
+	  exit 1; \
+	fi
 
 backup-clean:
 	@find backups/ -name "*.dump" -mtime +7 -delete
