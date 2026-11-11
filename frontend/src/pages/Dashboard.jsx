@@ -2,11 +2,12 @@ import { useState } from "react";
 import { AuditTab } from "../components/AuditTab";
 import { GameCountTab } from "../components/GameCountTab";
 import { RankingsGrid } from "../components/RankingsGrid";
-import { useCategories, useApiHealth } from "../hooks/useApi";
+import { useCategories, useApiHealth, useCurrentSeason } from "../hooks/useApi";
+import { formatSeasonLabel } from "../utils/season";
 
 export function Dashboard() {
   const [selectedCategory, setSelectedCategory] = useState("PPG");
-  const season = "2025"; // Only 2025-26 season available
+  const { data: season } = useCurrentSeason();
   const [activeTab, setActiveTab] = useState("rankings");
   const { data: categories, isLoading: categoriesLoading } = useCategories();
   const { data: health } = useApiHealth();
@@ -94,7 +95,7 @@ export function Dashboard() {
             <div className="card bg-base-200 shadow-xl">
               <div className="card-body">
                 <h2 className="card-title text-2xl mb-4">
-                  {selectedCategoryLabel} Rankings - 2025-26 Season
+                  {selectedCategoryLabel} Rankings - {formatSeasonLabel(season)} Season
                 </h2>
                 <RankingsGrid category={selectedCategory} season={season} />
               </div>

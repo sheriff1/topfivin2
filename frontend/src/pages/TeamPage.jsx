@@ -5,8 +5,9 @@ import {
   useTeamStats,
   useTeamRankings,
   useCategories,
-  CURRENT_SEASON,
+  useCurrentSeason,
 } from "../hooks/useApi";
+import { formatSeasonLabel } from "../utils/season";
 import { formatStatValue, formatPercentageStat } from "../utils/statFormatter";
 
 // Helper function to format category label for display
@@ -21,6 +22,7 @@ const getFormattedCategoryLabel = (label) => {
 
 export function TeamPage() {
   const { abbreviation } = useParams();
+  const { data: currentSeason } = useCurrentSeason();
   const { data: team, isLoading: teamLoading } = useTeamByAbbreviation(abbreviation);
   const { data: stats, isLoading: statsLoading } = useTeamStats(team?.team_id);
   const { data: rankings, isLoading: rankingsLoading } = useTeamRankings(team?.team_id);
@@ -331,7 +333,9 @@ export function TeamPage() {
       {/* Stats Rankings Table */}
       <div className="bg-base-200">
         <div className="container mx-auto px-4 md:px-6 py-4 md:py-6">
-          <h2 className="text-xl font-bold mb-4">Season Stats & Rankings ({CURRENT_SEASON})</h2>
+          <h2 className="text-xl font-bold mb-4">
+            Season Stats & Rankings ({formatSeasonLabel(currentSeason)})
+          </h2>
 
           <div className="overflow-x-auto">
             <table className="table table-zebra w-full">

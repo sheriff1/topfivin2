@@ -1,6 +1,6 @@
 /* global localStorage */
 import { useState, useCallback, useRef, useEffect } from "react";
-import { useCategories, apiClient, CURRENT_SEASON } from "./useApi";
+import { useCategories, useCurrentSeason, apiClient } from "./useApi";
 
 const BASIC_CODES = [
   "W",
@@ -59,6 +59,7 @@ function shuffleArray(arr) {
 
 export function useGameEngine() {
   const { data: categories, isLoading: categoriesLoading } = useCategories();
+  const { data: currentSeason } = useCurrentSeason();
 
   const [gameMode, setGameMode] = useState("classic"); // classic | challenge
   const [gameState, setGameState] = useState("intro"); // intro | playing | correct | wrong | ended
@@ -112,7 +113,7 @@ export function useGameEngine() {
 
         try {
           const response = await apiClient.get("/rankings", {
-            params: { category: category.code, season: CURRENT_SEASON },
+            params: { category: category.code, season: currentSeason },
           });
 
           const rankings = response.data?.rankings;
@@ -202,15 +203,21 @@ export function useGameEngine() {
         setLoading(false);
       }
     },
-    [categories]
+    [categories, currentSeason]
   );
 
   // Generate initial question when categories load
   useEffect(() => {
-    if (categories && categories.length > 0 && gameState === "playing" && !currentQuestion) {
+    if (
+      categories &&
+      categories.length > 0 &&
+      currentSeason &&
+      gameState === "playing" &&
+      !currentQuestion
+    ) {
       generateQuestion(0, activeModeRef.current);
     }
-  }, [categories, gameState, currentQuestion, generateQuestion]);
+  }, [categories, currentSeason, gameState, currentQuestion, generateQuestion]);
 
   const submitAnswer = useCallback(
     (teamId) => {

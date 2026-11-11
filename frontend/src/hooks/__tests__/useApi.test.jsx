@@ -162,3 +162,10 @@ describe("useApi Hooks", () => {
     });
   });
 });
+
+describe("useCurrentSeason", () => {
+  it("is exported and CURRENT_SEASON no longer is", () => {
+    expect(typeof useApiModule.useCurrentSeason).toBe("function");
+    expect(useApiModule.CURRENT_SEASON).toBeUndefined();
+  });
+});

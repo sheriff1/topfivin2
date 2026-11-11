@@ -12,7 +12,7 @@ vi.mock("../../hooks/useApi", () => ({
   useRankings: vi.fn(() => ({ data: null, isLoading: false })),
   useRandomFacts: vi.fn(() => ({ data: null, isLoading: false })),
   useApiHealth: vi.fn(() => ({ data: null, isLoading: false })),
-  CURRENT_SEASON: "2025",
+  useCurrentSeason: vi.fn(() => ({ data: "2025", isLoading: false, error: null })),
 }));
 
 import { AboutPage } from "../AboutPage";

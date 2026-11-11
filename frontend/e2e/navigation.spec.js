@@ -43,3 +43,10 @@ test("dev-only tabs (Audit, Games Count) are not visible in production", async (
   await expect(page.getByRole("link", { name: "Audit" })).not.toBeVisible();
   await expect(page.getByRole("link", { name: "Games Count" })).not.toBeVisible();
 });
+
+test("season label comes from the API, not a hardcoded value", async ({ page }) => {
+  await setupApiMocks(page);
+  await page.goto("/about");
+  await expect(page.getByText(/for the 2026-27 NBA season/)).toBeVisible();
+  await expect(page.getByText(/2025-26/)).toHaveCount(0);
+});

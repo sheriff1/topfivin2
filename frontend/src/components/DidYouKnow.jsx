@@ -1,7 +1,7 @@
 /* global requestAnimationFrame, cancelAnimationFrame */
 import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
-import { useRandomFacts, useAllTeams, CURRENT_SEASON } from "../hooks/useApi";
+import { useRandomFacts, useAllTeams } from "../hooks/useApi";
 
 const TEAM_ID_TO_ABBR = {
   1610612737: "ATL",
@@ -60,8 +60,7 @@ function getCardColor(teamId, allTeams) {
 }
 
 export function DidYouKnow() {
-  const season = CURRENT_SEASON;
-  const { data: facts } = useRandomFacts(10, season);
+  const { data: facts } = useRandomFacts(10);
   const { data: allTeams } = useAllTeams();
   const [activeIndex, setActiveIndex] = useState(0);
   const [progress, setProgress] = useState(0);
