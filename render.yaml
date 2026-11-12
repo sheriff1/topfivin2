@@ -9,8 +9,8 @@ services:
     plan: free
     branch: main
     autoDeployTrigger: commit
-    # Repo root (not `backend`) so pnpm can see the workspace lockfile.
-    buildCommand: corepack enable && pnpm install --frozen-lockfile --filter backend...
+    # Repo root (not `backend`) so pnpm can see the workspace lockfile. pnpm is pinned to match CI.
+    buildCommand: corepack enable && corepack prepare pnpm@10.30.3 --activate && pnpm install --frozen-lockfile --filter backend...
     startCommand: pnpm --filter backend start
     healthCheckPath: /health
     envVars:
