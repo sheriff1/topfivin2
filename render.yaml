@@ -26,9 +26,12 @@ services:
         sync: false
       - key: FRONTEND_URL_2
         sync: false
-      # Proxy hops to trust for req.ip (see backend/src/app.js and #203).
+      # Proxy hops to trust for req.ip. Render sits behind Cloudflare plus an internal proxy:
+      # X-Forwarded-For is "client, cloudflare, render-internal" and the socket is one more
+      # hop, so 3 is needed for req.ip to be the real client (1 gives the internal address
+      # and puts every visitor in one rate-limit bucket). Verified in #203.
       - key: TRUST_PROXY
-        value: 1
+        value: 3
       # Temporary: log req.ip + X-Forwarded-For to verify TRUST_PROXY (#203). Remove afterwards.
       - key: LOG_CLIENT_IP
         value: true
