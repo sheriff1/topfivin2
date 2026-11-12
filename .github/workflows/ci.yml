@@ -122,8 +122,6 @@ jobs:
 
       - name: Install Playwright Chromium
         timeout-minutes: 5
-        env:
-          DEBUG: pw:install
         run: cd frontend && pnpm exec playwright install --with-deps chromium
 
       - name: Run E2E tests
