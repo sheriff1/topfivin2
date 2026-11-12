@@ -19,6 +19,7 @@ import warnings
 # Import shared configuration
 from team_constants import TEAM_ABBR_TO_ID
 from season_utils import calendar_season
+from game_status import final_game_ids
 import psycopg2
 from psycopg2.extras import Json
 import requests
@@ -231,7 +232,8 @@ def fetch_season_games(season):
                     'game_id': row['GAME_ID'],
                     'game_date': row['GAME_DATE'],
                     'team_id': row['TEAM_ID'],
-                    'matchup': row['MATCHUP']  # Format: "LAL @ BOS" or "LAL vs BOS"
+                    'matchup': row['MATCHUP'],  # Format: "LAL @ BOS" or "LAL vs BOS"
+                    'wl': row['WL']  # 'W'/'L' once the game has a result, empty while in progress
                 })
             
             # Get unique games (each game appears twice, once per team)
@@ -631,10 +633,18 @@ def main():
         if g['game_id'] not in already_collected
     ))
 
-    skipped = len(set(g['game_id'] for g in game_details)) - len(game_ids)
+    # Skip games without a result yet (in progress / not final): no retries, no noise
+    final_ids = final_game_ids(game_details)
+    not_final = [gid for gid in game_ids if gid not in final_ids]
+    for gid in not_final:
+        print(f"   ⏭  {gid}: not final, skipping")
+    game_ids = [gid for gid in game_ids if gid in final_ids]
+
+    skipped = len(set(g['game_id'] for g in game_details)) - len(game_ids) - len(not_final)
     print(f"\n📊 Starting full season fetch for {season}...")
     print(f"   Unique games total: {len(set(g['game_id'] for g in game_details))}")
     print(f"   Already collected (skipping): {skipped}")
+    print(f"   Not final (skipping): {len(not_final)}")
     print(f"   Games to process: {len(game_ids)}")
     print(f"   (This may take 1-2 hours with API pacing)")
     
@@ -671,8 +681,12 @@ def main():
     print(f"\n  ✓ Completed {len(all_game_stats)}/{len(game_ids)} games (failed: {failed_games})")
     
     if not all_game_stats:
-        print("❌ No stats extracted")
         conn.close()
+        if game_ids:
+            # Games were attempted and none were stored: fail so make/schedulers stop
+            print("❌ No stats extracted")
+            sys.exit(1)
+        print("✓ Nothing new to fetch")
         return
     
     # Aggregate into final season averages
