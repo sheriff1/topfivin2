@@ -2,18 +2,19 @@
 
 ## Strategy
 
-Automated local `pg_dump` backups integrated into the existing data pipeline workflow. Because NBA stats data is fetched locally (Railway IP restriction workaround), the pipeline already runs against the production database from the local machine — making a post-pipeline backup a natural, zero-overhead addition.
+Two `pg_dump` backups of the production database (Neon), both using standard PostgreSQL tooling:
 
-Railway's native volume backup feature requires the Pro plan and is deferred for now. This strategy provides equivalent recovery capability using standard PostgreSQL tooling.
+1. **Local**, at the end of `make pipeline-prod`. NBA stats data is fetched locally (nba.com blocks cloud IPs), so the pipeline already runs against the production database from the local machine, making a post-pipeline backup a natural addition.
+2. **Weekly, off-machine**: the `backup-release.yml` GitHub Actions workflow runs every Sunday at 02:00 UTC (and on demand), dumps the production database with Postgres 18 client tools and publishes it as a GitHub Release (`db-backup-N`). It needs the `DATABASE_URL` repository secret.
 
 ## How Backups Work
 
 ### Automatic (via pipeline)
 
-Every `make pipeline` run automatically creates a backup after the data is fully processed :
+Every `make pipeline-prod` run creates a backup after the data is fully processed. The local `make pipeline` target (local database) has no backup step.
 
 ```bash
-make pipeline
+make pipeline-prod
 # Fetches NBA stats → derives team stats → updates rankings → creates backup
 ```
 
@@ -42,25 +43,25 @@ make backup-clean
 
 ## Connectivity
 
-`pg_dump` connects to Railway via the external TCP Proxy URL (`DATABASE_URL` in `backend/.env`):
+`make backup` reads `DATABASE_URL` from `backend/.env.production` (the Neon connection string):
 
 ```
-postgresql://postgres:<password>@mainline.proxy.rlwy.net:<port>/railway
+postgresql://<user>:<password>@<endpoint>.neon.tech/<database>?sslmode=require
 ```
 
-No additional configuration is required — this is the same URL the application uses.
+Prefer the **direct** (non-pooled) string for dumps. The backup needs a `pg_dump` at least as new as the server (Postgres 18).
 
 ## Restore Procedure
 
-To restore a backup to the Railway production database:
+To restore a backup over an existing production (Neon) database:
 
 ```bash
-# 1. Source the environment variables
-source backend/.env
+# 1. Source the production environment variables
+source backend/.env.production
 
 # 2. Restore (--clean drops existing objects before recreating)
 pg_restore --clean --no-acl --no-owner \
-  -d $DATABASE_URL \
+  -d "$DATABASE_URL" \
   backups/nba_stats_YYYYMMDD_HHMMSS.dump
 ```
 
@@ -68,7 +69,7 @@ pg_restore --clean --no-acl --no-owner \
 
 ### Restoring into a fresh Neon database
 
-Used for the Railway → Neon migration (#176) and reusable for any empty Postgres. Use **v18 client tools** (the servers are Postgres 18), the **direct** (non-pooled) connection string, and never paste it into logs or commits.
+Used for the original migration to Neon (#176) and reusable for any empty Postgres. Use **v18 client tools** (the servers are Postgres 18), the **direct** (non-pooled) connection string, and never paste it into logs or commits.
 
 ```bash
 # 1. Get a dump: latest GitHub release backup (or a local backups/*.dump)
@@ -110,13 +111,3 @@ Verify:
 ```bash
 pg_dump --version
 ```
-
-## Upgrading to Railway Native Backups
-
-When upgrading to Railway Pro plan, enable backups via:
-
-1. Railway dashboard → Production environment → PostgreSQL service → **Backups** tab
-2. Enable **Daily** schedule (kept 6 days) and optionally **Weekly** (kept 1 month)
-3. Repeat for Staging environment
-
-At that point, `make backup` can remain as a local on-demand option alongside Railway's automated snapshots.

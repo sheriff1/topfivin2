@@ -7,9 +7,9 @@ much of the local (or production) data collection is complete.
 
 Usage:
     python scripts/check_backfill_progress.py         # local DB
-    DATABASE_URL=<url> python scripts/...             # Railway
+    DATABASE_URL=<url> python scripts/...             # production
     make check-progress                               # local (via Makefile)
-    make check-progress-prod                          # Railway (via Makefile)
+    make check-progress-prod                          # production (via Makefile)
 """
 
 import os
@@ -70,7 +70,7 @@ def main():
     cur.execute("SELECT COUNT(DISTINCT game_id) FROM game_stats")
     total_games = cur.fetchone()[0]
 
-    env = "Railway" if os.getenv("DATABASE_URL") else "local"
+    env = "production" if os.getenv("DATABASE_URL") else "local"
     print(f"\n{'='*70}")
     print(f"  Backfill Progress  [{env}]")
     print(f"  {total_games} games  |  {total_rows} team-game rows in game_stats")

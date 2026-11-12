@@ -11,7 +11,7 @@ A full-stack web app that fetches NBA team statistics from the official NBA.com 
 | **Frontend**       | React 19, React Router 7, TanStack Query 5, Tailwind CSS 4, DaisyUI 5, Vite 6 |
 | **Backend**        | Node.js 20, Express 5, PostgreSQL (pg), Helmet, Winston, Jest                 |
 | **Data Pipeline**  | Python 3.13, nba_api, psycopg2                                                |
-| **Infrastructure** | Railway (production DB), Vercel (frontend), GitHub Actions CI/CD              |
+| **Infrastructure** | Neon (Postgres), Render (API), Vercel (frontend), GitHub Actions CI/CD        |
 
 ---
 
@@ -49,7 +49,7 @@ nba_api (Python — run locally)
 
 PostgreSQL stores all data. An in-process cache holds ranking responses (5-minute TTL; fresh data appears within 5 minutes of the daily derive).
 
-> **Note:** `fetch_nba_stats.py` must run **locally** — nba.com actively blocks GitHub Actions IP ranges. All other pipeline steps (derive + rank) run automatically daily via GitHub Actions.
+> **Note:** `fetch_nba_stats.py` must run **locally** — nba.com actively blocks cloud IP ranges (GitHub Actions, Render). In practice the whole production pipeline is run by hand with `make pipeline-prod`; the scheduled GitHub Actions derive job is a backup for the derive + rank steps (see [GitHub Actions](#github-actions)).
 
 ---
 
@@ -67,9 +67,10 @@ PostgreSQL stores all data. An in-process cache holds ranking responses (5-minut
 git clone https://github.com/sheriff1/topfivin2.git
 cd topfivin2
 
-cd backend && npm install && cd ..
-cd frontend && pnpm install && cd ..
+pnpm install   # one install at the repo root covers backend and frontend (pnpm workspace)
 ```
+
+> Use **pnpm** everywhere (CI and the lockfile are pnpm). `npm` is not supported.
 
 ### 2. Configure environment
 
@@ -89,7 +90,7 @@ whoami   # copy this value into DB_USER
 
 ```bash
 make services              # start PostgreSQL
-cd backend && pnpm run migrate && cd ..
+pnpm --filter backend migrate
 ```
 
 ### 4. Set up Python and fetch data
@@ -133,13 +134,67 @@ DB_NAME=nba_stats
 FRONTEND_URL=http://localhost:3000
 ```
 
-### Production — `backend/.env.production`
+### Production pipeline — `backend/.env.production`
 
-This file is **gitignored** and never committed. It contains a single Railway-provided connection string:
+This file is **gitignored** and never committed. The `*-prod` Makefile targets (run from your machine) load it to reach the production database. It contains a single connection string:
 
 ```env
-DATABASE_URL=postgresql://...   # from Railway dashboard
+DATABASE_URL=postgresql://...   # Neon dashboard > Connect (direct or pooled both work)
 ```
+
+The deployed API does not read this file; its variables are set in Render (see [Deploying](#deploying)).
+
+---
+
+## Deploying
+
+Production runs on three services: **Neon** (Postgres), **Render** (Express API) and **Vercel** (React frontend). Data is loaded into Neon from your own machine with `make pipeline-prod`; the API only reads it.
+
+### 1. Database (Neon)
+
+1. Create a Neon project (Postgres 18) and copy its connection string (Neon dashboard > **Connect**). Use the **direct** string for dumps and restores; the pooled string works for the API.
+2. Put it in `backend/.env.production` as `DATABASE_URL` for the pipeline (see [Environment Variables](#environment-variables)).
+3. Schema: nothing to do by hand. The API applies pending migrations on start-up (below). To load existing data into an empty database, see [docs/backup-configuration.md](docs/backup-configuration.md#restoring-into-a-fresh-neon-database).
+
+### 2. API (Render)
+
+The service is defined as code in [render.yaml](render.yaml) (a Render Blueprint: Node 20, free plan, Ohio, health check `/health`, auto-deploy on every commit to `main`).
+
+1. In Render, **New > Blueprint**, pick this repo and branch `main`.
+2. Fill in the prompted variables (they use `sync: false` so they are never stored in git):
+
+| Variable         | Value                                                                                          |
+| ---------------- | ---------------------------------------------------------------------------------------------- |
+| `DATABASE_URL`   | Neon connection string                                                                         |
+| `FRONTEND_URL`   | Vercel production URL, no trailing slash (used for CORS)                                       |
+| `FRONTEND_URL_2` | Optional second allowed origin, e.g. a custom domain                                           |
+| `TRUST_PROXY`    | Set by the blueprint to `3` (Render sits behind Cloudflare + an internal proxy); leave it      |
+| `LOG_CLIENT_IP`  | Set by the blueprint to `false`; `true` logs `req.ip` and `X-Forwarded-For` for debugging only |
+
+`PORT` is injected by Render, `NODE_ENV=production` is set by the blueprint, and logs go to stdout. There is no season variable; the API follows the latest season in the database.
+
+3. The build installs only the backend workspace (`pnpm install --frozen-lockfile --filter backend...`, pnpm pinned to the CI version) and starts with `node src/index.js`. Check `https://<service>.onrender.com/health`.
+
+> The free plan sleeps after inactivity, so the first request after a pause is slow (cold start).
+
+### Migrations
+
+Migrations run automatically every time the API starts, so a deploy applies any new ones (idempotent, guarded by an advisory lock, recorded in `schema_migrations`). To add one, create the next numbered file in `backend/migrations/` and register it in `backend/migrations/index.js` (a test fails if you forget). To run them without deploying:
+
+```bash
+set -a && source backend/.env.production && set +a
+pnpm --filter backend migrate
+```
+
+### 3. Frontend (Vercel)
+
+1. Import the repo in Vercel with **Root Directory** `frontend` (Vite preset).
+2. Set `VITE_API_URL` to the API base **including `/api`**, e.g. `https://<service>.onrender.com/api`. It is baked in at build time, so redeploy after changing it. Without it the app calls `/api` on its own origin.
+3. Add the resulting Vercel URL to the API's `FRONTEND_URL` in Render, otherwise browsers will block the API calls (CORS).
+
+### 4. Update production data
+
+From your machine (nba.com blocks cloud IPs): `make pipeline-prod`. See [Makefile Reference](#makefile-reference).
 
 ---
 
@@ -157,20 +212,20 @@ DATABASE_URL=postgresql://...   # from Railway dashboard
 
 ### Data Pipeline
 
-| Target               | Description                                                   |
-| -------------------- | ------------------------------------------------------------- |
-| `make fetch`         | Fetch new games from nba_api → local DB                       |
-| `make derive`        | Derive team stats + rankings                                  |
-| `make pipeline`      | Full local pipeline: fetch → derive → rankings                |
-| `make backfill`      | One-time backfill of 24 V3 advanced columns → local DB        |
-| `make backfill-prod` | Same backfill against Railway DB (run locally post-migration) |
+| Target               | Description                                                |
+| -------------------- | ---------------------------------------------------------- |
+| `make fetch`         | Fetch new games from nba_api → local DB                    |
+| `make derive`        | Derive team stats + rankings                               |
+| `make pipeline`      | Full local pipeline: fetch → derive → rankings (no backup) |
+| `make backfill`      | One-time backfill of 24 V3 advanced columns → local DB     |
+| `make backfill-prod` | Same backfill against the production (Neon) DB             |
 
 ### Production
 
 | Target               | Description                                                             |
 | -------------------- | ----------------------------------------------------------------------- |
-| `make fetch-prod`    | Fetch games → Railway DB                                                |
-| `make derive-prod`   | Derive stats + rankings                                                 |
+| `make fetch-prod`    | Fetch games → production (Neon) DB                                      |
+| `make derive-prod`   | Derive stats + rankings on the production DB                            |
 | `make pipeline-prod` | Full production pipeline: fetch → backfill → derive → rankings → backup |
 
 ### Manual fetch
@@ -197,17 +252,17 @@ Override the target URL: `BASE_URL=https://your-server.com make k6-load`
 
 ### Automation
 
-| Target                | Description                                                   |
-| --------------------- | ------------------------------------------------------------- |
-| `make install-cron`   | Install launchd job — runs `pipeline-prod` daily at 09:00 UTC |
-| `make uninstall-cron` | Remove launchd job                                            |
-| `make logs-clean`     | Delete `logs/pipeline_prod.log` if it exceeds 50 MB           |
+| Target                | Description                                                     |
+| --------------------- | --------------------------------------------------------------- |
+| `make install-cron`   | Install launchd job — runs `pipeline-prod` daily at 05:00 local |
+| `make uninstall-cron` | Remove launchd job                                              |
+| `make logs-clean`     | Delete `logs/pipeline_prod.log` if it exceeds 50 MB             |
 
 ---
 
 ## GitHub Actions
 
-Two workflows run **automatically** on a schedule. The rest are triggered manually.
+CI runs on every push and PR. Two workflows are also **scheduled** (daily pipeline, weekly backup); the rest are manual. GitHub disables scheduled workflows after 60 days without repo activity, so re-enable them in the Actions tab if they stop firing.
 
 | Workflow                                   | Trigger                                   | What it does                                                                       | Secrets needed                           |
 | ------------------------------------------ | ----------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------- |
@@ -221,7 +276,7 @@ Two workflows run **automatically** on a schedule. The rest are triggered manual
 
 ## Automated Local Pipeline
 
-The GitHub Actions daily job (10:00 UTC) only derives and ranks — it cannot fetch new games because nba.com blocks cloud IPs. A macOS `launchd` job runs `make pipeline-prod` locally at **09:00 UTC daily**, ensuring production data is always fresh before the derive step.
+The GitHub Actions daily job (10:00 UTC) only derives and ranks — it cannot fetch new games because nba.com blocks cloud IPs. A macOS `launchd` job can run `make pipeline-prod` locally at **05:00 local time daily** (the `StartCalendarInterval` in `launchd/com.topfivin2.pipeline.plist`). Automation is currently parked: macOS blocks launchd jobs from reading `~/Documents`, so for now run `make pipeline-prod` by hand (tracked in #200).
 
 ### Prerequisites
 
@@ -234,7 +289,7 @@ The GitHub Actions daily job (10:00 UTC) only derives and ranks — it cannot fe
 make install-cron
 ```
 
-This substitutes the absolute repo path into `launchd/com.topfivin2.pipeline.plist` and installs it to `~/Library/LaunchAgents/`. The job runs `make pipeline-prod` (fetch → derive → rankings → backup) daily at 09:00 UTC.
+This substitutes the absolute repo path into `launchd/com.topfivin2.pipeline.plist` and installs it to `~/Library/LaunchAgents/`. The job runs `make pipeline-prod` (fetch → derive → rankings → backup) daily at 05:00 local time.
 
 ### Monitor
 
@@ -250,7 +305,7 @@ make uninstall-cron
 
 ### Notes
 
-- The machine must be **on and awake** at 09:00 UTC for the job to fire on schedule. `StartCalendarInterval` automatically re-runs a missed job the next time the machine wakes — no extra configuration needed. Since `fetch_nba_stats.py` skips already-collected games, a catch-up run is safe.
+- The machine must be **on and awake** at 05:00 local time for the job to fire on schedule. `StartCalendarInterval` automatically re-runs a missed job the next time the machine wakes — no extra configuration needed. Since `fetch_nba_stats.py` skips already-collected games, a catch-up run is safe.
 - `logs/pipeline_prod.log` is gitignored and grows ~100 lines per day. Run `make logs-clean` to remove it if it exceeds 50 MB.
 - To reproduce this setup on a new machine: `make install-cron` (the plist template is committed at `launchd/com.topfivin2.pipeline.plist`).
 
@@ -417,15 +472,15 @@ pnpm test             # run in watch mode during development
 
 ```bash
 cd backend
-npm test              # run all tests once
-npm test -- --watch  # run in watch mode during development
+pnpm test             # run all tests once
+pnpm test -- --watch  # run in watch mode during development
 ```
 
 #### Run all tests
 
 ```bash
-cd frontend && pnpm test -- --run && cd ..
-cd backend && npm test
+pnpm --filter frontend test -- --run
+pnpm --filter backend test
 ```
 
 ### Ship it (feature branch → PR → merge)
@@ -442,13 +497,13 @@ The complete workflow for merging code to main:
 2. **Make changes & test locally**
    - Edit files and commit atomically
    - Test changes in the browser (dev server running)
-   - Ensure linting passes: `npm run lint` in frontend/backend
+   - Ensure linting passes: `pnpm --filter backend lint && pnpm --filter frontend lint`
 
 3. **Run full test suite** (required before pushing)
 
    ```bash
-   cd frontend && pnpm test -- --run && cd ..
-   cd backend && npm test
+   pnpm --filter frontend test -- --run
+   pnpm --filter backend test
    ```
 
    - All tests must pass before proceeding

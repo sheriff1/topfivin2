@@ -8,11 +8,11 @@ services:
 # ── Application ──────────────────────────────────────────────────────────────
 dev:
 	$(MAKE) services
-	cd backend && npm run dev &
+	cd backend && pnpm run dev &
 	cd frontend && pnpm dev
 
 backend:
-	cd backend && npm run dev
+	cd backend && pnpm run dev
 
 frontend:
 	cd frontend && pnpm dev
@@ -20,7 +20,8 @@ frontend:
 # ── Data pipeline ─────────────────────────────────────────────────────────────
 # Local targets (fetch, derive, pipeline) use backend/.env → localhost postgres
 # Production targets (fetch-prod, derive-prod, pipeline-prod) use backend/.env.production → production PostgreSQL
-# pipeline-prod: fetch → 9 V3 scripts (IS NULL guard) → derive → rankings → backup# backup / backup-clean always target production
+# pipeline-prod: fetch → 9 V3 scripts (IS NULL guard) → derive → rankings → backup
+# backup / backup-clean always target production
 
 fetch:
 	source .venv/bin/activate && \
@@ -302,7 +303,7 @@ archive-season:
 
 # ── Automation (launchd) ─────────────────────────────────────────────────────
 # install-cron installs a macOS launchd job that runs make pipeline-prod daily
-# at 09:00 UTC — one hour before the GitHub Actions derive job (10:00 UTC).
+# at 05:00 local time (see launchd/com.topfivin2.pipeline.plist).
 # Prerequisite: backend/.env.production and .venv must already exist.
 # Monitor: tail -f logs/pipeline_prod.log
 
@@ -311,7 +312,7 @@ install-cron:
 	sed 's|__REPO_DIR__|$(CURDIR)|g' launchd/com.topfivin2.pipeline.plist \
 	  > $(HOME)/Library/LaunchAgents/com.topfivin2.pipeline.plist
 	launchctl load $(HOME)/Library/LaunchAgents/com.topfivin2.pipeline.plist
-	@echo "✅ launchd job installed — runs make pipeline-prod daily at 09:00 UTC"
+	@echo "✅ launchd job installed — runs make pipeline-prod daily at 05:00 local time"
 	@echo "   Monitor: tail -f $(LOGS_DIR)/pipeline_prod.log"
 
 uninstall-cron:

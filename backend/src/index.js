@@ -54,7 +54,7 @@ async function start() {
       logger.info("📖 API Documentation:");
       logger.info("  GET /health - Health check");
       logger.info("  GET /api/categories - List stat categories");
-      logger.info("  GET /api/rankings/:category - Get rankings for a stat");
+      logger.info("  GET /api/rankings?category= - Get rankings for a stat");
       logger.info("  GET /api/team/:teamId/stats - Get team stats");
       logger.info("  GET /api/team/:teamId/rankings - Get team rankings");
     });
