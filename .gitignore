@@ -59,3 +59,10 @@ Thumbs.db
 dist/
 build/
 nba_stats.dump
+
+# Playwright
+playwright-report/
+test-results/
+
+# Vercel
+.vercel/
