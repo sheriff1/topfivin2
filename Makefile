@@ -19,7 +19,8 @@ frontend:
 
 # ── Data pipeline ─────────────────────────────────────────────────────────────
 # Local targets (fetch, derive, pipeline) use backend/.env → localhost postgres
-# Production targets (fetch-prod, derive-prod, pipeline-prod) use backend/.env.production → Railway# pipeline-prod: fetch → 9 V3 scripts (IS NULL guard) → derive → rankings → backup# backup / backup-clean always target production
+# Production targets (fetch-prod, derive-prod, pipeline-prod) use backend/.env.production → production PostgreSQL
+# pipeline-prod: fetch → 9 V3 scripts (IS NULL guard) → derive → rankings → backup# backup / backup-clean always target production
 
 fetch:
 	source .venv/bin/activate && \
@@ -221,9 +222,9 @@ backfill-prod:
 	python scripts/fetch_hustle_stats.py 2>&1 | tee $(LOGS_DIR)/backfill_prod_hustle.log
 	@echo "✅ All prod backfill scripts complete — run: make derive-prod"
 
-# ── Run a migration against Railway production ──────────────────────────────
+# ── Run a migration against production ──────────────────────────────
 # Usage: make migrate-prod MIGRATION=005_add_missing_stats
-# Runs the specified migration file against DATABASE_URL (Railway).
+# Runs the specified migration file against DATABASE_URL.
 migrate-prod:
 	set -a && source backend/.env.production && set +a && \
 	node backend/migrations/$(MIGRATION).js
@@ -243,7 +244,7 @@ check-progress-prod:
 	python scripts/check_backfill_progress.py
 
 # ── Sync advanced columns local → prod (use instead of backfill-prod when local DB is already filled) ──
-# Reads the 24 V3 columns directly from local game_stats and batch-UPDATEs Railway.
+# Reads the 24 V3 columns directly from local game_stats and batch-UPDATEs.
 # No NBA API calls — immune to rate limiting. Completes in seconds not hours.
 sync-advanced-prod:
 	source .venv/bin/activate && \
@@ -253,7 +254,7 @@ sync-advanced-prod:
 	@echo "✅ Advanced columns synced local → production"
 
 # ── Sync migration-005 columns local → prod (use instead of backfill-missing against prod) ──
-# Reads the 17 new game_stats columns from local and batch-UPDATEs Railway.
+# Reads the 17 new game_stats columns from local and batch-UPDATEs.
 # No NBA API calls — immune to rate limiting.
 sync-missing-prod:
 	source .venv/bin/activate && \
@@ -263,7 +264,7 @@ sync-missing-prod:
 	@echo "✅ Migration-005 columns synced local → production"
 
 # ── Sync ALL backfilled columns local → prod (use after migration 009 to avoid NBA API) ──
-# Reads all 139 backfilled game_stats columns from local and batch-UPDATEs Railway.
+# Reads all 139 backfilled game_stats columns from local and batch-UPDATEs.
 # No NBA API calls — immune to rate limiting. Run after: make migrate-prod MIGRATION=009_add_remaining_team_stats
 sync-prod:
 	source .venv/bin/activate && \
@@ -276,9 +277,17 @@ backup:
 	@mkdir -p backups
 	@echo "📦 Backing up production database..."
 	@set -a && source backend/.env.production && set +a && \
-	pg_dump $$DATABASE_URL -F c -f backups/nba_stats_$$(date +%Y%m%d_%H%M%S).dump \
-	&& echo "✅ Backup saved to backups/" \
-	|| echo "⚠️  Local pg_dump skipped (version mismatch with Railway PostgreSQL 18). Backups run automatically via GitHub Actions weekly."
+	OUT=backups/nba_stats_$$(date +%Y%m%d_%H%M%S).dump && \
+	TMP=$$OUT.partial && \
+	if pg_dump "$$DATABASE_URL" -F c -f "$$TMP" 2>backups/.pg_dump.err \
+	   && [ -s "$$TMP" ] && pg_restore --list "$$TMP" >/dev/null 2>&1; then \
+	  mv "$$TMP" "$$OUT" && echo "✅ Backup saved to $$OUT"; \
+	else \
+	  rm -f -- "$$TMP"; \
+	  echo "❌ Backup FAILED — no dump written. pg_dump said:" >&2; \
+	  sed -E 's#postgres(ql)?://[^ ]*#<url>#g' backups/.pg_dump.err >&2; \
+	  exit 1; \
+	fi
 
 backup-clean:
 	@find backups/ -name "*.dump" -mtime +7 -delete

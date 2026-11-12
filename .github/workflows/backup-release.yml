@@ -27,7 +27,7 @@ jobs:
           sudo apt-get update
           sudo apt-get install -y postgresql-client-18
 
-      - name: Run pg_dump against Railway
+      - name: Run pg_dump against production database
         env:
           DATABASE_URL: ${{ secrets.DATABASE_URL }}
         run: |
