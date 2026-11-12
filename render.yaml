@@ -9,13 +9,13 @@ services:
     plan: free
     branch: main
     autoDeployTrigger: commit
-    # Repo root (not `backend`) so pnpm can see the workspace lockfile. pnpm is pinned to match CI.
-    buildCommand: corepack enable && corepack prepare pnpm@10.30.3 --activate && pnpm install --frozen-lockfile --filter backend...
+    # Repo root (not `backend`) so pnpm can see the workspace lockfile. corepack installs the pnpm
+    # version pinned by "packageManager" in the root package.json (same one CI uses).
+    buildCommand: corepack enable && pnpm install --frozen-lockfile --filter backend...
     startCommand: cd backend && node src/index.js
     healthCheckPath: /health
     envVars:
-      - key: NODE_VERSION
-        value: 20
+      # Node version comes from .nvmrc at the repo root (no NODE_VERSION env var, so there is one place to bump).
       - key: NODE_ENV
         value: production
       # Neon connection string (pooled or direct). Set in the dashboard.

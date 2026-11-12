@@ -14,13 +14,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # pnpm version comes from "packageManager" in the root package.json
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.3
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version-file: ".nvmrc"
           cache: "pnpm"
 
       - name: Install dependencies
@@ -36,13 +35,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # pnpm version comes from "packageManager" in the root package.json
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.3
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version-file: ".nvmrc"
           cache: "pnpm"
 
       - name: Install dependencies
@@ -61,13 +59,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # pnpm version comes from "packageManager" in the root package.json
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.3
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version-file: ".nvmrc"
           cache: "pnpm"
 
       - name: Install dependencies
@@ -83,13 +80,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # pnpm version comes from "packageManager" in the root package.json
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.3
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version-file: ".nvmrc"
           cache: "pnpm"
 
       - name: Install dependencies
@@ -110,13 +106,12 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
+      # pnpm version comes from "packageManager" in the root package.json
       - uses: pnpm/action-setup@v4
-        with:
-          version: 10.30.3
 
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version-file: ".nvmrc"
           cache: "pnpm"
 
       - name: Install dependencies

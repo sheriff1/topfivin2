@@ -3,6 +3,10 @@
   "version": "1.0.0",
   "description": "TopFivin2 - NBA Stats & Rankings Platform",
   "private": true,
+  "packageManager": "pnpm@10.30.3",
+  "engines": {
+    "node": ">=20"
+  },
   "workspaces": [
     "backend",
     "frontend"
@@ -13,11 +17,11 @@
   "lint-staged": {
     "backend/**/*.{js,cjs}": [
       "prettier --write",
-      "backend/node_modules/.bin/eslint --fix"
+      "pnpm --filter backend exec eslint --fix"
     ],
     "frontend/**/*.{js,jsx}": [
       "prettier --write",
-      "frontend/node_modules/.bin/eslint --fix --config frontend/eslint.config.cjs"
+      "pnpm --filter frontend exec eslint --fix"
     ],
     "frontend/**/*.{html,css}": "prettier --write",
     "*.{json,md,yml,yaml}": "prettier --write"
