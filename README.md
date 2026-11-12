@@ -49,7 +49,7 @@ nba_api (Python — run locally)
 
 PostgreSQL stores all data. An in-process cache holds ranking responses (5-minute TTL; fresh data appears within 5 minutes of the daily derive).
 
-> **Note:** `fetch_nba_stats.py` must run **locally** — nba.com actively blocks cloud IP ranges (GitHub Actions, Render). In practice the whole production pipeline is run by hand with `make pipeline-prod`; the scheduled GitHub Actions derive job is a backup for the derive + rank steps (see [GitHub Actions](#github-actions)).
+> **Note:** `fetch_nba_stats.py` must run **locally** — nba.com actively blocks cloud IP ranges (GitHub Actions, Render). In practice the whole production pipeline is run by hand with `make pipeline-prod`; a scheduled freshness check on GitHub Actions alerts you if a fetch is missed (see [GitHub Actions](#github-actions)).
 
 ---
 
@@ -257,64 +257,35 @@ Override the target URL: `BASE_URL=https://your-server.com make k6-load`
 
 ### Automation
 
-| Target                | Description                                                     |
-| --------------------- | --------------------------------------------------------------- |
-| `make install-cron`   | Install launchd job — runs `pipeline-prod` daily at 05:00 local |
-| `make uninstall-cron` | Remove launchd job                                              |
-| `make logs-clean`     | Delete `logs/pipeline_prod.log` if it exceeds 50 MB             |
+| Target            | Description                                         |
+| ----------------- | --------------------------------------------------- |
+| `make logs-clean` | Delete `logs/pipeline_prod.log` if it exceeds 50 MB |
 
 ---
 
 ## GitHub Actions
 
-CI runs on every push and PR. Two workflows are also **scheduled** (daily pipeline, weekly backup); the rest are manual. GitHub disables scheduled workflows after 60 days without repo activity, so re-enable them in the Actions tab if they stop firing.
+CI runs on every push and PR. Two workflows are also **scheduled** (daily freshness check, weekly backup); the rest are manual. The daily data fetch itself is **manual** (`make pipeline-prod`, see [docs/manual-fetch.md](docs/manual-fetch.md)). GitHub disables scheduled workflows after 60 days without repo activity; the freshness check re-enables itself and the backup on every run to guard against that.
 
-| Workflow                                   | Trigger                                   | What it does                                                                       | Secrets needed                           |
-| ------------------------------------------ | ----------------------------------------- | ---------------------------------------------------------------------------------- | ---------------------------------------- |
-| **CI** (`ci.yml`)                          | Push / PR to `main`                       | Dependency audit, lint, unit tests (backend + frontend), E2E (Playwright)          | —                                        |
-| **NBA Data Pipeline** (`nba-pipeline.yml`) | **Daily 10:00 UTC** (auto) + manual       | Derives team stats + rankings on production                                        | `DATABASE_URL`                           |
-| **DB Backup** (`backup-release.yml`)       | **Every Sunday 2:00 UTC** (auto) + manual | `pg_dump` production DB → GitHub Release                                           | `DATABASE_URL`                           |
-| **Load Tests** (`load-test.yml`)           | Manual                                    | k6 smoke / load / stress against a target URL                                      | —                                        |
-| **Season Archive** (`season-archive.yml`)  | Manual                                    | Exports season CSVs + full DB dump → GitHub Release tagged `season-archive-{YEAR}` | `DATABASE_URL`; optional input: `season` |
+| Workflow                                         | Trigger                                   | What it does                                                                                                                                               | Secrets needed                           |
+| ------------------------------------------------ | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------- |
+| **CI** (`ci.yml`)                                | Push / PR to `main`                       | Dependency audit, lint, unit tests (backend + frontend), E2E (Playwright)                                                                                  | —                                        |
+| **Data Freshness Check** (`freshness-check.yml`) | **Daily 14:00 UTC** (auto) + manual       | Fails when the newest stored game is more than 3 days old during the season (skips Jun 25 – Oct 20 and the All-Star break); re-enables scheduled workflows | `DATABASE_URL`                           |
+| **DB Backup** (`backup-release.yml`)             | **Every Sunday 2:00 UTC** (auto) + manual | `pg_dump` production DB → GitHub Release                                                                                                                   | `DATABASE_URL`                           |
+| **Load Tests** (`load-test.yml`)                 | Manual                                    | k6 smoke / load / stress against a target URL                                                                                                              | —                                        |
+| **Season Archive** (`season-archive.yml`)        | Manual                                    | Exports season CSVs + full DB dump → GitHub Release tagged `season-archive-{YEAR}`                                                                         | `DATABASE_URL`; optional input: `season` |
 
 ---
 
-## Automated Local Pipeline
+## Daily Data Fetch (manual)
 
-The GitHub Actions daily job (10:00 UTC) only derives and ranks — it cannot fetch new games because nba.com blocks cloud IPs. A macOS `launchd` job can run `make pipeline-prod` locally at **05:00 local time daily** (the `StartCalendarInterval` in `launchd/com.topfivin2.pipeline.plist`). Automation is currently parked: macOS blocks launchd jobs from reading `~/Documents`, so for now run `make pipeline-prod` by hand (tracked in #200).
+The daily fetch is run by hand: `make pipeline-prod` (fetch → derive → rankings → backup) on a machine with a residential IP, because nba.com blocks cloud IPs. See [docs/manual-fetch.md](docs/manual-fetch.md) for the runbook. Automation was tried (macOS `launchd`) and dropped; the decision is recorded in #200.
 
-### Prerequisites
-
-- `backend/.env.production` exists with a valid `DATABASE_URL`
-- `.venv` is set up (`python3.13 -m venv .venv && pip install -r requirements.txt`)
-
-### Install
-
-```bash
-make install-cron
-```
-
-This substitutes the absolute repo path into `launchd/com.topfivin2.pipeline.plist` and installs it to `~/Library/LaunchAgents/`. The job runs `make pipeline-prod` (fetch → derive → rankings → backup) daily at 05:00 local time.
+If a fetch is missed, the **Data Freshness Check** workflow fails and GitHub emails you. A catch-up run is safe because the fetch skips games already stored.
 
 **Social images are on demand.** `pipeline-prod` does not generate them. Run `make social-images-prod` (or `make derive-prod`, which includes the step) when you want to post; output goes to `backend/social_images/` (gitignored, needs the cairo library). The local `make pipeline` does generate them.
 
-### Monitor
-
-```bash
-tail -f logs/pipeline_prod.log
-```
-
-### Uninstall
-
-```bash
-make uninstall-cron
-```
-
-### Notes
-
-- The machine must be **on and awake** at 05:00 local time for the job to fire on schedule. `StartCalendarInterval` automatically re-runs a missed job the next time the machine wakes — no extra configuration needed. Since `fetch_nba_stats.py` skips already-collected games, a catch-up run is safe.
-- `logs/pipeline_prod.log` is gitignored and grows ~100 lines per day. Run `make logs-clean` to remove it if it exceeds 50 MB.
-- To reproduce this setup on a new machine: `make install-cron` (the plist template is committed at `launchd/com.topfivin2.pipeline.plist`).
+`logs/pipeline_prod.log` is gitignored. Run `make logs-clean` to remove it if it exceeds 50 MB.
 
 ---
 

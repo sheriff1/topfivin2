@@ -1,0 +1,54 @@
+name: Data Freshness Check
+
+# Game data is fetched by hand (`make pipeline-prod`) because NBA.com blocks
+# cloud IPs. This job fails (GitHub emails the failure) when the newest stored
+# game is older than the limit during the season, so a missed fetch is noticed.
+# It also re-enables the other scheduled workflows so GitHub's 60-day
+# inactivity auto-disable cannot silence them again.
+
+on:
+  workflow_dispatch:
+    inputs:
+      today:
+        description: "Override today's date (YYYY-MM-DD) to test a stale/fresh result"
+        required: false
+      max_days:
+        description: "Override the staleness limit in days (default 3)"
+        required: false
+  schedule:
+    - cron: "0 14 * * *"
+
+permissions:
+  actions: write
+  contents: read
+
+jobs:
+  keep-alive:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Re-enable scheduled workflows
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh workflow enable freshness-check.yml --repo "$GITHUB_REPOSITORY"
+          gh workflow enable backup-release.yml --repo "$GITHUB_REPOSITORY"
+
+  freshness:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install psycopg2
+        run: pip install psycopg2-binary==2.9.13
+
+      - name: Check newest game date
+        working-directory: backend
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          FRESHNESS_TODAY: ${{ inputs.today }}
+          FRESHNESS_MAX_DAYS: ${{ inputs.max_days || '3' }}
+        run: python scripts/check_freshness.py
