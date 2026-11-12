@@ -37,5 +37,10 @@ services:
       # X-Forwarded-For on each request when re-checking after a Render networking change.
       - key: LOG_CLIENT_IP
         value: false
+      # Sentry error monitoring (#194). Leave the DSN unset to disable it.
+      - key: SENTRY_DSN
+        sync: false
+      - key: SENTRY_ENVIRONMENT
+        value: production
       # PORT is injected by Render. Logs go to stdout (no LOG_TO_FILES), since the disk is ephemeral.
       # No season variable: the API derives the current season from stored data.
