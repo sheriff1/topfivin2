@@ -11,7 +11,7 @@ const { apiLimiter } = require("./middleware/rateLimiter");
 const app = express();
 
 // Trust the host's proxy hops so req.ip (and express-rate-limit) see the real client IP.
-// Number of hops is set via TRUST_PROXY (default 1); verify it per host, see render.yaml.
+// Hop count comes from TRUST_PROXY (default 1, fine locally); Render needs 3, see render.yaml.
 const trustProxy = process.env.TRUST_PROXY;
 app.set(
   "trust proxy",
