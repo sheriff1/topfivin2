@@ -19,7 +19,7 @@ import warnings
 # Import shared configuration
 from team_constants import TEAM_ABBR_TO_ID
 from season_utils import calendar_season
-from game_status import final_game_ids
+from game_status import final_game_ids, needs_status_check, should_skip
 import psycopg2
 from psycopg2.extras import Json
 import requests
@@ -259,6 +259,18 @@ def fetch_season_games(season):
             else:
                 print(f"❌ Error fetching games after {SEASON_RETRY_ATTEMPTS} attempts: {error_msg}")
                 return [], None
+
+def fetch_game_status(game_id):
+    """gameStatus from BoxScoreSummaryV3 (1 not started, 2 in progress, 3 final), or None on any failure.
+
+    Single attempt, fail-open: the summary endpoint errors permanently for some finished games.
+    """
+    try:
+        apply_request_delay()
+        summary = boxscoresummaryv3.BoxScoreSummaryV3(game_id=game_id).get_dict()['boxScoreSummary']
+        return int(summary['gameStatus'])
+    except Exception:
+        return None
 
 def extract_team_stats(game_id, game_date, team_mapping):
     """
@@ -639,6 +651,20 @@ def main():
     for gid in not_final:
         print(f"   ⏭  {gid}: not final, skipping")
     game_ids = [gid for gid in game_ids if gid in final_ids]
+
+    # Confirm recent games with the authoritative status (W/L alone may not catch live games)
+    dates = {g['game_id']: g['game_date'] for g in game_details}
+    today = datetime.now().date()
+    confirmed = []
+    for gid in game_ids:
+        if needs_status_check(dates.get(gid), today):
+            status = fetch_game_status(gid)
+            if should_skip(status):
+                print(f"   ⏭  {gid}: not final (status {status}), skipping")
+                not_final.append(gid)
+                continue
+        confirmed.append(gid)
+    game_ids = confirmed
 
     skipped = len(set(g['game_id'] for g in game_details)) - len(game_ids) - len(not_final)
     print(f"\n📊 Starting full season fetch for {season}...")
