@@ -187,10 +187,11 @@ export function AuditTab({ season }) {
 
   return (
     <div className="space-y-6">
+      <h1 className="text-3xl font-bold">Audit</h1>
       {/* Filters */}
       <div className="card bg-base-200 shadow-xl">
         <div className="card-body">
-          <h3 className="card-title text-lg">Filters</h3>
+          <h2 className="card-title text-lg">Filters</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div className="form-control">
               <label className="label">
