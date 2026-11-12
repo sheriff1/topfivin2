@@ -34,9 +34,21 @@ const validateRankings = [
  * TEAMS VALIDATION SCHEMAS
  */
 
+// Optional ?season= (4-digit start year); routes default to the latest stored season
+const optionalSeason = query("season")
+  .optional()
+  .trim()
+  .isString()
+  .withMessage("Season must be a string")
+  .isLength({ min: 4, max: 4 })
+  .withMessage("Season must be 4 digits")
+  .isNumeric()
+  .withMessage("Season must be numeric");
+
 // GET /api/teams
 const validateTeams = [
   query("team_id").optional().isInt({ min: 1 }).withMessage("Team ID must be a positive integer"),
+  optionalSeason,
 ];
 
 // GET /api/teams/abbr/:abbreviation
@@ -50,6 +62,7 @@ const validateTeamByAbbr = [
     .isAlpha()
     .withMessage("Abbreviation must contain only letters")
     .toUpperCase(),
+  optionalSeason,
 ];
 
 // GET /api/team/:teamId/stats

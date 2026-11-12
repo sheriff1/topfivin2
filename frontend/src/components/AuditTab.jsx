@@ -102,6 +102,12 @@ export function AuditTab({ season }) {
     }
   }, [auditSeason, limit, offset, statusFilter, dateFilter]);
 
+  // A different season starts from the first page with no open row
+  useEffect(() => {
+    setOffset(0);
+    setExpandedGameId(null);
+  }, [auditSeason]);
+
   useEffect(() => {
     fetchAuditData();
   }, [fetchAuditData]);

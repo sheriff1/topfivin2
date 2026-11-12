@@ -386,8 +386,8 @@ export async function setupApiMocks(page) {
     });
   });
 
-  // /api/teams  (exact path, no suffix)
-  await page.route("**/api/teams", (route) =>
+  // /api/teams  (exact path, optional ?season=)
+  await page.route(/\/api\/teams(\?.*)?$/, (route) =>
     route.fulfill({
       status: 200,
       contentType: "application/json",

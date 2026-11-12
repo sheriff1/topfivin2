@@ -330,6 +330,10 @@ Routes that take `?season=` default to the latest stored season when it is omitt
 
 **Season rollover is automatic.** There is no season environment variable. The current season is the latest one stored in the database (`GET /api/seasons`), and the site, API and every derive/rank/social/archive step follow it. Only the fetch step uses the calendar (October starts a new season; override with `FETCH_SEASON`). When the first game of a new season is stored it becomes current, with no config change. See [docs/manual-fetch.md](docs/manual-fetch.md).
 
+**Browsing previous seasons.** Every table is keyed by `season`, and the pipeline only replaces the season it is refreshing (`clear_season_data()` deletes `team_stats` and `stat_rankings` for that one season; `games` and `game_stats` are never deleted), so earlier seasons stay available. When two or more seasons are stored, the navbar shows a season picker (from `available`). The choice is remembered in the browser (`localStorage`) and applies to rankings, teams, team pages, the game, and the audit views. Picking the latest season goes back to following it automatically.
+
+**Storage impact.** One season is roughly 1.5 MB of table data (about 0.4 MB of `stat_rankings`, 30 KB of `team_stats`, 75 KB of `games` and 1 MB of `game_stats`, measured from a backup holding two seasons). Neon's free tier allows 0.5 GB, so keeping every season is not a concern for a long time. Old seasons can still be exported with `make archive-season` before any manual cleanup.
+
 ### Rankings
 
 | Method | Endpoint                                 | Description                                       |
@@ -340,12 +344,12 @@ Routes that take `?season=` default to the latest stored season when it is omitt
 
 ### Teams
 
-| Method | Endpoint                                 | Description                                |
-| ------ | ---------------------------------------- | ------------------------------------------ |
-| `GET`  | `/api/teams`                             | All 30 teams (optional `?team_id=` filter) |
-| `GET`  | `/api/teams/abbr/:abbreviation`          | Team by abbreviation (e.g., `LAL`)         |
-| `GET`  | `/api/team/:teamId/stats?season=2025`    | Season stats for a team                    |
-| `GET`  | `/api/team/:teamId/rankings?season=2025` | All-category rankings for a team           |
+| Method | Endpoint                                 | Description                                                                  |
+| ------ | ---------------------------------------- | ---------------------------------------------------------------------------- |
+| `GET`  | `/api/teams?season=2025`                 | All 30 teams (optional `?team_id=` filter); `trophy_count` is for the season |
+| `GET`  | `/api/teams/abbr/:abbreviation`          | Team by abbreviation (e.g., `LAL`); optional `?season=` for `trophy_count`   |
+| `GET`  | `/api/team/:teamId/stats?season=2025`    | Season stats for a team                                                      |
+| `GET`  | `/api/team/:teamId/rankings?season=2025` | All-category rankings for a team                                             |
 
 ### Audit
 

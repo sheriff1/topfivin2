@@ -48,5 +48,15 @@ test("season label comes from the API, not a hardcoded value", async ({ page }) 
   await setupApiMocks(page);
   await page.goto("/about");
   await expect(page.getByText(/for the 2026-27 NBA season/)).toBeVisible();
-  await expect(page.getByText(/2025-26/)).toHaveCount(0);
+  // The season picker lists 2025-26 as a choice, so only check the About text itself
+  await expect(page.getByText(/for the 2025-26 NBA season/)).toHaveCount(0);
+});
+
+test("season picker switches the season used by the API requests", async ({ page }) => {
+  await setupApiMocks(page);
+  await page.goto("/about");
+  await expect(page.getByText(/for the 2026-27 NBA season/)).toBeVisible();
+
+  await page.getByRole("combobox", { name: "Season" }).first().selectOption("2025");
+  await expect(page.getByText(/for the 2025-26 NBA season/)).toBeVisible();
 });
