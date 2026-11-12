@@ -59,21 +59,6 @@ app.get("/ready", async (req, res) => {
   }
 });
 
-// TEMPORARY (#194): verify Sentry on the deployed API. Remove after the check.
-// 404 unless SENTRY_TEST_TOKEN is set and sent in the x-debug-token header.
-app.get("/debug-sentry", (req, res, next) => {
-  const token = process.env.SENTRY_TEST_TOKEN;
-  if (!token || req.get("x-debug-token") !== token) return res.status(404).end();
-  if (req.query.mode === "log") {
-    logger.error("[API] /debug-sentry - logger path test", {
-      stack: new Error("Sentry logger-path test").stack,
-      requestId: req.id,
-    });
-    return res.json({ sent: "logger", requestId: req.id });
-  }
-  next(new Error("Sentry express-path test"));
-});
-
 app.use("/api", apiLimiter, apiRoutes);
 
 app.use((err, req, res, next) => {

@@ -16,13 +16,21 @@ describe("sentry scrubbing", () => {
         cookies: { a: "b" },
         data: { x: 1 },
         query_string: "q=1",
-        headers: { Authorization: "Bearer x", Cookie: "a=b", "user-agent": "jest" },
+        url: "https://api.example.com/api/rankings?category=pts&q=1",
+        headers: {
+          Authorization: "Bearer x",
+          Cookie: "a=b",
+          "CF-Connecting-IP": "9.9.9.9",
+          "x-forwarded-for": "9.9.9.9, 1.1.1.1",
+          "user-agent": "jest",
+        },
       },
       user: { ip_address: "1.2.3.4" },
     });
     expect(event.request.cookies).toBeUndefined();
     expect(event.request.data).toBeUndefined();
     expect(event.request.query_string).toBeUndefined();
+    expect(event.request.url).toBe("https://api.example.com/api/rankings");
     expect(event.request.headers).toEqual({ "user-agent": "jest" });
     expect(event.user.ip_address).toBeUndefined();
   });
