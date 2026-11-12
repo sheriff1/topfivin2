@@ -5,7 +5,8 @@ const API_BASE_URL = import.meta.env.VITE_API_URL || "/api";
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
-  timeout: 10000,
+  // A free-tier host that has been idle can take 30-60s to wake up, so allow for that on the first request.
+  timeout: 60000,
 });
 
 export { apiClient, API_BASE_URL };

@@ -35,8 +35,8 @@ describe("useApi Hooks", () => {
       expect(apiClient.defaults.baseURL).toBe(API_BASE_URL);
     });
 
-    it("should have timeout set to 10000ms", () => {
-      expect(apiClient.defaults.timeout).toBe(10000);
+    it("should have timeout set to 60000ms", () => {
+      expect(apiClient.defaults.timeout).toBe(60000);
     });
 
     it("should have proper axios methods", () => {
@@ -89,21 +89,21 @@ describe("useApi Hooks", () => {
     it("should have proper configuration applied", () => {
       // Verify the configuration we expect
       expect(apiClient.defaults.baseURL).toBe("/api");
-      expect(apiClient.defaults.timeout).toBe(10000);
+      expect(apiClient.defaults.timeout).toBe(60000);
     });
   });
 
   // Test timeout configuration
   describe("Timeout configuration", () => {
     it("should have 10 second timeout for API calls", () => {
-      expect(apiClient.defaults.timeout).toBe(10000);
+      expect(apiClient.defaults.timeout).toBe(60000);
     });
 
     it("should preserve timeout across multiple accesses", () => {
       const timeout1 = apiClient.defaults.timeout;
       const timeout2 = apiClient.defaults.timeout;
       expect(timeout1).toBe(timeout2);
-      expect(timeout1).toBe(10000);
+      expect(timeout1).toBe(60000);
     });
   });
 
@@ -119,7 +119,7 @@ describe("useApi Hooks", () => {
     });
 
     it("should use the correct timeout for all requests", () => {
-      expect(apiClient.defaults.timeout).toBe(10000);
+      expect(apiClient.defaults.timeout).toBe(60000);
     });
   });
 
@@ -140,7 +140,7 @@ describe("useApi Hooks", () => {
   describe("Configuration stability", () => {
     it("should maintain configuration after module load", () => {
       expect(apiClient.defaults.baseURL).toBe("/api");
-      expect(apiClient.defaults.timeout).toBe(10000);
+      expect(apiClient.defaults.timeout).toBe(60000);
     });
 
     it("should have consistent configuration across test runs", () => {

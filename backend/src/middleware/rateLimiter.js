@@ -13,7 +13,7 @@ const apiLimiter = rateLimit({
   message: "Too many requests from this IP address, please try again after 15 minutes",
   standardHeaders: true, // Return rate limit info in the RateLimit-* headers
   legacyHeaders: false, // Disable the X-RateLimit-* headers
-  skip: (req) => isDev || req.path === "/health",
+  skip: (req) => isDev || req.path === "/health" || req.path === "/ready",
 });
 
 /**

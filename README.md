@@ -176,7 +176,7 @@ The service is defined as code in [render.yaml](render.yaml) (a Render Blueprint
 
 3. The build installs only the backend workspace (`corepack pnpm install --frozen-lockfile --filter backend...`, pnpm version from `packageManager`, same as CI) and starts with `node src/index.js`. Check `https://<service>.onrender.com/health`.
 
-> The free plan sleeps after inactivity, so the first request after a pause is slow (cold start).
+> The free plan sleeps after inactivity, so the first request after a pause can take 30-60s (cold start). The frontend allows for this (60s request timeout, retries, and a "waking up" message after 3s). There is deliberately no keep-alive ping: it would use most of Render's free monthly hours and Neon auto-suspends anyway. `/health` is shallow and is what Render polls; `/ready` also runs `SELECT 1` against the database, so use it for manual checks only (it wakes a suspended Neon database).
 
 ### Migrations
 

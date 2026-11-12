@@ -5,6 +5,7 @@ const logger = require("./utils/logger");
 const correlationId = require("./middleware/correlationId");
 const requestLogger = require("./middleware/requestLogger");
 
+const db = require("./db/postgresClient");
 const apiRoutes = require("./routes/api");
 const { apiLimiter } = require("./middleware/rateLimiter");
 
@@ -44,6 +45,17 @@ app.get("/health", (req, res) => {
     timestamp: new Date().toISOString(),
     api: "ok",
   });
+});
+
+// Deep readiness check (touches the database). Not for the host's health check: on Neon it would
+// keep waking an auto-suspended database. Use /health for that.
+app.get("/ready", async (req, res) => {
+  try {
+    await db.query("SELECT 1");
+    res.json({ status: "ready", timestamp: new Date().toISOString(), api: "ok", database: "ok" });
+  } catch {
+    res.status(503).json({ status: "unavailable", api: "ok", database: "error" });
+  }
 });
 
 app.use("/api", apiLimiter, apiRoutes);
