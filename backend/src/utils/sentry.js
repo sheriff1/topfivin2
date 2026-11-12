@@ -2,7 +2,18 @@ const Sentry = require("@sentry/node");
 
 // Redact credentials that can leak into error messages (e.g. pg connection errors).
 const URL_CREDENTIALS = /([a-z][a-z0-9+.-]*:\/\/)[^\s/@:]+:[^\s/@]+@/gi;
-const SENSITIVE_HEADERS = ["authorization", "cookie", "set-cookie", "x-api-key"];
+// Credentials, plus headers that carry the visitor's IP (Cloudflare and Render add these)
+const SENSITIVE_HEADERS = [
+  "authorization",
+  "cookie",
+  "set-cookie",
+  "x-api-key",
+  "cf-connecting-ip",
+  "true-client-ip",
+  "x-forwarded-for",
+  "x-real-ip",
+  "forwarded",
+];
 
 function scrubString(value) {
   return typeof value === "string" ? value.replace(URL_CREDENTIALS, "$1[redacted]@") : value;
@@ -24,6 +35,7 @@ function scrubEvent(event) {
     delete event.request.cookies;
     delete event.request.data;
     delete event.request.query_string; // query strings could carry user input
+    if (typeof event.request.url === "string") event.request.url = event.request.url.split("?")[0];
     for (const name of Object.keys(event.request.headers || {})) {
       if (SENSITIVE_HEADERS.includes(name.toLowerCase())) delete event.request.headers[name];
     }
