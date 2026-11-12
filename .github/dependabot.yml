@@ -1,0 +1,38 @@
+# Dependabot: weekly, grouped minor/patch updates per ecosystem. Major bumps are never
+# grouped, so each arrives as its own PR for manual review. Nothing is auto-merged (#238).
+version: 2
+updates:
+  # Root pnpm workspace (backend + frontend); Dependabot reads pnpm-lock.yaml
+  - package-ecosystem: npm
+    directory: "/"
+    schedule:
+      interval: weekly
+    open-pull-requests-limit: 5
+    groups:
+      npm-minor-patch:
+        update-types: [minor, patch]
+    ignore:
+      # ESLint is held at 9 in both packages until plugins support 10 (#235)
+      - dependency-name: eslint
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@eslint/js"
+        update-types: ["version-update:semver-major"]
+
+  - package-ecosystem: github-actions
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      actions-minor-patch:
+        update-types: [minor, patch]
+
+  - package-ecosystem: pip
+    directory: "/"
+    schedule:
+      interval: weekly
+    groups:
+      pip-minor-patch:
+        update-types: [minor, patch]
+    ignore:
+      # Pinned to a git commit on purpose
+      - dependency-name: nba_api

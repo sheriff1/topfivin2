@@ -57,7 +57,8 @@ PostgreSQL stores all data. An in-process cache holds ranking responses (5-minut
 
 ### Prerequisites
 
-- Node.js 20+, pnpm
+- Node.js 20+ (the version CI and Render use is pinned in [.nvmrc](.nvmrc); `nvm use` picks it up)
+- pnpm (the version is pinned by `packageManager` in the root [package.json](package.json); run `corepack enable` and it is used automatically)
 - Python 3.13
 - PostgreSQL 16+ running locally (`make services` starts it via Homebrew)
 
@@ -158,7 +159,7 @@ Production runs on three services: **Neon** (Postgres), **Render** (Express API)
 
 ### 2. API (Render)
 
-The service is defined as code in [render.yaml](render.yaml) (a Render Blueprint: Node 20, free plan, Ohio, health check `/health`, auto-deploy on every commit to `main`).
+The service is defined as code in [render.yaml](render.yaml) (a Render Blueprint: Node version from `.nvmrc`, free plan, Ohio, health check `/health`, auto-deploy on every commit to `main`).
 
 1. In Render, **New > Blueprint**, pick this repo and branch `main`.
 2. Fill in the prompted variables (they use `sync: false` so they are never stored in git):
@@ -173,7 +174,7 @@ The service is defined as code in [render.yaml](render.yaml) (a Render Blueprint
 
 `PORT` is injected by Render, `NODE_ENV=production` is set by the blueprint, and logs go to stdout. There is no season variable; the API follows the latest season in the database.
 
-3. The build installs only the backend workspace (`pnpm install --frozen-lockfile --filter backend...`, pnpm pinned to the CI version) and starts with `node src/index.js`. Check `https://<service>.onrender.com/health`.
+3. The build installs only the backend workspace (`pnpm install --frozen-lockfile --filter backend...`, pnpm version from `packageManager`, same as CI) and starts with `node src/index.js`. Check `https://<service>.onrender.com/health`.
 
 > The free plan sleeps after inactivity, so the first request after a pause is slow (cold start).
 

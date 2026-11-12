@@ -18,9 +18,14 @@ Five jobs run on every push and PR to main. Four run in parallel; `e2e` waits fo
 | `frontend-tests` | Frontend Tests   | Vitest test suite + Vite production build for the frontend             |
 | `e2e`            | E2E Tests        | Playwright end-to-end tests (`needs: frontend-tests`)                  |
 
-- **Node Version**: 20 LTS
-- **Package Manager**: pnpm 10.30.3
+- **Node Version**: read from [`.nvmrc`](../../.nvmrc) (`setup-node` `node-version-file`)
+- **Package Manager**: pnpm, version read from `packageManager` in the root `package.json` (`pnpm/action-setup` with no `version`)
+- **Bumping**: change `.nvmrc` / `packageManager` once; CI and Render both follow
 - **Install**: `pnpm install --frozen-lockfile` (each job installs independently)
+
+## Dependency updates
+
+[`.github/dependabot.yml`](../dependabot.yml) opens weekly PRs: minor/patch grouped per ecosystem (npm, GitHub Actions, pip); major bumps arrive as separate PRs and are reviewed by hand. ESLint majors and the `nba_api` git pin are ignored. Nothing is auto-merged: `main` has no branch protection or required checks, so GitHub auto-merge would merge before CI finishes.
 
 ## Trigger Events
 
