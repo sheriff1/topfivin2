@@ -1,4 +1,4 @@
-.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod social-images social-images-prod social-image-manual backup backup-clean archive-season k6-smoke k6-load k6-stress fetch-advanced-extras fetch-misc fetch-hustle fetch-summary fetch-fourfactors fetch-scoring fetch-starters-bench fetch-playertrack backfill backfill-prod backfill-missing sync-advanced-prod sync-missing-prod sync-prod migrate-prod check-progress check-progress-prod install-cron uninstall-cron logs-clean
+.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod social-images social-images-prod social-image-manual backup backup-clean archive-season k6-smoke k6-load k6-stress fetch-advanced-extras fetch-misc fetch-hustle fetch-summary fetch-fourfactors fetch-scoring fetch-starters-bench fetch-playertrack backfill backfill-prod backfill-missing sync-advanced-prod sync-missing-prod sync-prod migrate-prod check-progress check-progress-prod logs-clean
 
 # ── Infrastructure ───────────────────────────────────────────────────────────
 services:
@@ -300,25 +300,6 @@ archive-season:
 	set -a && source backend/.env.production && set +a && \
 	ARCHIVE_DIR=season_archive $(if $(SEASON),ARCHIVE_SEASON=$(SEASON)) python backend/scripts/archive_season.py
 	@echo "✅ Season archive complete — CSVs + checksums in season_archive/"
-
-# ── Automation (launchd) ─────────────────────────────────────────────────────
-# install-cron installs a macOS launchd job that runs make pipeline-prod daily
-# at 05:00 local time (see launchd/com.topfivin2.pipeline.plist).
-# Prerequisite: backend/.env.production and .venv must already exist.
-# Monitor: tail -f logs/pipeline_prod.log
-
-install-cron:
-	mkdir -p $(LOGS_DIR)
-	sed 's|__REPO_DIR__|$(CURDIR)|g' launchd/com.topfivin2.pipeline.plist \
-	  > $(HOME)/Library/LaunchAgents/com.topfivin2.pipeline.plist
-	launchctl load $(HOME)/Library/LaunchAgents/com.topfivin2.pipeline.plist
-	@echo "✅ launchd job installed — runs make pipeline-prod daily at 05:00 local time"
-	@echo "   Monitor: tail -f $(LOGS_DIR)/pipeline_prod.log"
-
-uninstall-cron:
-	-launchctl unload $(HOME)/Library/LaunchAgents/com.topfivin2.pipeline.plist
-	-rm -f $(HOME)/Library/LaunchAgents/com.topfivin2.pipeline.plist
-	@echo "🗑️  launchd job removed"
 
 logs-clean:
 	@find $(LOGS_DIR) -name "pipeline_prod.log" -size +50M -delete && \

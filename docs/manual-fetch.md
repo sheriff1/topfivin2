@@ -1,6 +1,6 @@
 # Manual fetch runbook
 
-The NBA API blocks cloud IPs, so fetching runs **on your Mac** (residential IP) and writes straight to the production (Neon) database. Nothing fetches automatically unless the launchd job is installed (`launchctl list | grep topfivin2`; see `make install-cron`). The GitHub Actions `NBA Data Pipeline` workflow only derives and ranks what is already stored (daily 10:00 UTC).
+The NBA API blocks cloud IPs, so fetching runs **on your Mac** (residential IP) and writes straight to the production (Neon) database. Nothing fetches automatically: this is the permanent model (#200). The scheduled `Data Freshness Check` workflow (daily 14:00 UTC) fails and emails you when the newest stored game is more than 3 days old during the season, so a missed run gets noticed.
 
 ## Prerequisites
 
@@ -41,7 +41,7 @@ Note: a new season's first fetch creates its rows, which makes it the "current" 
 1. **Logs**: each step prints `✅ … complete`; a non-zero exit stops the chain. `make backup` now fails loudly (non-zero, no empty file).
 2. **API**: `GET /api/seasons` shows the current season; `GET /api/rankings` returns teams with up-to-date game counts. Use the deployed API once it exists (before that, ask for a read-only check rather than querying production by hand).
 3. **Backup**: a new non-empty `backups/nba_stats_<timestamp>.dump` exists (`pg_restore --list <file> | head`).
-4. **GitHub**: run the `NBA Data Pipeline (Derive & Rank)` workflow (`gh workflow run nba-pipeline.yml`) and confirm it succeeds; `Database Backup to GitHub Releases` runs weekly (Sun 02:00 UTC) and can be dispatched the same way.
+4. **GitHub**: run `gh workflow run freshness-check.yml` and confirm it succeeds (it fails if the newest game is over 3 days old; pass `-f today=YYYY-MM-DD` to test). `Database Backup to GitHub Releases` runs weekly (Sun 02:00 UTC) and can be dispatched the same way.
 
 ## Common failures
 
