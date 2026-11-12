@@ -1,5 +1,5 @@
 # Dependabot: weekly, grouped minor/patch updates per ecosystem. Major bumps are never
-# grouped, so each arrives as its own PR for manual review. Nothing is auto-merged (#238).
+# grouped, so each arrives as its own PR for manual review. Minor/patch PRs are auto-merged by dependabot-automerge.yml (#238).
 version: 2
 updates:
   # Root pnpm workspace (backend + frontend); Dependabot reads pnpm-lock.yaml

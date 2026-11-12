@@ -25,7 +25,7 @@ Five jobs run on every push and PR to main. Four run in parallel; `e2e` waits fo
 
 ## Dependency updates
 
-[`.github/dependabot.yml`](../dependabot.yml) opens weekly PRs: minor/patch grouped per ecosystem (npm, GitHub Actions, pip); major bumps arrive as separate PRs and are reviewed by hand. ESLint majors and the `nba_api` git pin are ignored. Nothing is auto-merged: `main` has no branch protection or required checks, so GitHub auto-merge would merge before CI finishes.
+[`.github/dependabot.yml`](../dependabot.yml) opens weekly PRs: minor/patch grouped per ecosystem (npm, GitHub Actions, pip); major bumps arrive as separate PRs and are reviewed by hand. ESLint majors and the `nba_api` git pin are ignored. Minor/patch PRs are squash auto-merged by `dependabot-automerge.yml` once the required checks pass; majors are never auto-merged. `main` is protected: the five CI jobs (Dependency Audit, Lint & Format, Backend Tests, Frontend Tests, E2E Tests) are required, force-push and deletion are blocked, and admins can still bypass.
 
 ## Trigger Events
 
