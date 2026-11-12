@@ -1,0 +1,33 @@
+# Render Blueprint for the topfivin2 API (Express + Postgres on Neon).
+# Create it from the dashboard: New > Blueprint > pick this repo. Render prompts for the
+# `sync: false` values below; they are never stored in git.
+services:
+  - type: web
+    name: topfivin2-api
+    runtime: node
+    region: ohio
+    plan: free
+    branch: main
+    autoDeployTrigger: commit
+    # Repo root (not `backend`) so pnpm can see the workspace lockfile.
+    buildCommand: corepack enable && pnpm install --frozen-lockfile --filter backend...
+    startCommand: pnpm --filter backend start
+    healthCheckPath: /health
+    envVars:
+      - key: NODE_VERSION
+        value: 20
+      - key: NODE_ENV
+        value: production
+      # Neon connection string (pooled or direct). Set in the dashboard.
+      - key: DATABASE_URL
+        sync: false
+      # Vercel production URL(s), used for CORS. Set in the dashboard.
+      - key: FRONTEND_URL
+        sync: false
+      - key: FRONTEND_URL_2
+        sync: false
+      # Proxy hops to trust for req.ip (see backend/src/app.js and #203).
+      - key: TRUST_PROXY
+        value: 1
+      # PORT is injected by Render. Logs go to stdout (no LOG_TO_FILES), since the disk is ephemeral.
+      # CURRENT_SEASON is intentionally absent: the API derives the season from stored data.
