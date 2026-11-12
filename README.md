@@ -9,7 +9,7 @@ A full-stack web app that fetches NBA team statistics from the official NBA.com 
 | Layer              | Technologies                                                                  |
 | ------------------ | ----------------------------------------------------------------------------- |
 | **Frontend**       | React 19, React Router 7, TanStack Query 5, Tailwind CSS 4, DaisyUI 5, Vite 6 |
-| **Backend**        | Node.js 20, Express 5, PostgreSQL (pg), Helmet, Winston, Jest                 |
+| **Backend**        | Node.js 26, Express 5, PostgreSQL (pg), Helmet, Winston, Jest                 |
 | **Data Pipeline**  | Python 3.13, nba_api, psycopg2                                                |
 | **Infrastructure** | Neon (Postgres), Render (API), Vercel (frontend), GitHub Actions CI/CD        |
 
@@ -57,7 +57,7 @@ PostgreSQL stores all data. An in-process cache holds ranking responses (5-minut
 
 ### Prerequisites
 
-- Node.js 20+ (the version CI and Render use is pinned in [.nvmrc](.nvmrc); `nvm use` picks it up)
+- Node.js 26+ (the version CI and Render use is pinned in [.nvmrc](.nvmrc); `nvm use` picks it up)
 - pnpm (the version is pinned by `packageManager` in the root [package.json](package.json); run `corepack enable` and it is used automatically)
 - Python 3.13
 - PostgreSQL 16+ running locally (`make services` starts it via Homebrew)
