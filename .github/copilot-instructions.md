@@ -65,7 +65,7 @@ frontend/
 
 ## Environment Files
 
-- `backend/.env` — local DB credentials (`DB_HOST`, `DB_USER`, `DB_NAME=nba_stats`, `PORT=5001`, `CURRENT_SEASON`)
+- `backend/.env` — local DB credentials (`DB_HOST`, `DB_USER`, `DB_NAME=nba_stats`, `PORT=5001`)
 - `backend/.env.production` — Railway credentials (`DATABASE_URL`) — **gitignored, never commit**
 
 ---
@@ -215,6 +215,6 @@ Backfill scripts hit rate limits around ~600 games during bulk backfills.
 ## Deployment Infrastructure
 
 - **Backend + DB**: Railway — `DATABASE_URL` set as env vars in Railway service
-- **Frontend**: Vercel — env vars: `REACT_APP_API_URL`, `REACT_APP_CURRENT_SEASON`
+- **Frontend**: Vercel — env vars: `VITE_API_URL`
 - Railway uses PORT=8080 (auto-injected) — not 5001
 - NBA API calls must run locally (Railway IPs are blocked by stats.nba.com)
