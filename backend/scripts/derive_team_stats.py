@@ -546,14 +546,17 @@ def derive_team_stats():
         print(f"  📊 Total games in database: {games_count}")
         
         # Show sample
-        print(f"\n📋 Sample TEAM_STATS (top 5 by PPG):")
+        cursor.execute("SELECT MAX(season) FROM team_stats")
+        sample_season = cursor.fetchone()[0]
+        print(f"\n📋 Sample TEAM_STATS (season {sample_season}, top 5 by PPG):")
         cursor.execute("""
             SELECT ts.team_id, t.team_name, ts.games_played, ts.pts_avg, ts.reb_avg, ts.ast_avg, ts.fg_pct, ts.three_p_pct, ts.ft_pct
             FROM team_stats ts
             JOIN teams t ON t.team_id = ts.team_id
+            WHERE ts.season = %s
             ORDER BY ts.pts_avg DESC
             LIMIT 5
-        """)
+        """, (sample_season,))
         
         for team_id, team_name, games, ppg, rpg, apg, fg_pct, three_p_pct, ft_pct in cursor.fetchall():
             print(f"  {team_name}: {games} games | {ppg:.1f} PPG, {rpg:.1f} RPG, {apg:.1f} APG | {fg_pct:.1f}% FG, {three_p_pct:.1f}% 3P, {ft_pct:.1f}% FT")
