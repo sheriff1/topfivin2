@@ -1,5 +1,10 @@
 const logger = require("../utils/logger");
 
+// Diagnostic for verifying `trust proxy` behind a host (see #203): when LOG_CLIENT_IP=true,
+// each request line also carries req.ip and the raw X-Forwarded-For chain. Off by default
+// so client IPs are not written to logs routinely.
+const LOG_CLIENT_IP = process.env.LOG_CLIENT_IP === "true";
+
 /**
  * Logs one structured line per HTTP request after the response is sent.
  * Uses the res.on('finish') event so the status code and latency are known.
@@ -24,6 +29,7 @@ function requestLogger(req, res, next) {
       statusCode: res.statusCode,
       duration: Date.now() - start,
       requestId: req.id,
+      ...(LOG_CLIENT_IP && { ip: req.ip, forwardedFor: req.headers["x-forwarded-for"] }),
     });
   });
 

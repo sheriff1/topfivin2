@@ -29,5 +29,8 @@ services:
       # Proxy hops to trust for req.ip (see backend/src/app.js and #203).
       - key: TRUST_PROXY
         value: 1
+      # Temporary: log req.ip + X-Forwarded-For to verify TRUST_PROXY (#203). Remove afterwards.
+      - key: LOG_CLIENT_IP
+        value: true
       # PORT is injected by Render. Logs go to stdout (no LOG_TO_FILES), since the disk is ephemeral.
       # CURRENT_SEASON is intentionally absent: the API derives the season from stored data.
