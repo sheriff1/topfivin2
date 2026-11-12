@@ -10,8 +10,9 @@ services:
     branch: main
     autoDeployTrigger: commit
     # Repo root (not `backend`) so pnpm can see the workspace lockfile. corepack installs the pnpm
-    # version pinned by "packageManager" in the root package.json (same one CI uses).
-    buildCommand: corepack enable && pnpm install --frozen-lockfile --filter backend...
+    # version pinned by "packageManager" in the root package.json (same one CI uses). No `corepack enable`: it
+    # fails on Render ("EROFS ... unlink /usr/bin/pnpm"), `corepack pnpm` works without it.
+    buildCommand: corepack pnpm install --frozen-lockfile --filter backend...
     startCommand: cd backend && node src/index.js
     healthCheckPath: /health
     envVars:

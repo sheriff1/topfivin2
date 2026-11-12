@@ -58,7 +58,7 @@ PostgreSQL stores all data. An in-process cache holds ranking responses (5-minut
 ### Prerequisites
 
 - Node.js 26+ (the version CI and Render use is pinned in [.nvmrc](.nvmrc); `nvm use` picks it up)
-- pnpm (the version is pinned by `packageManager` in the root [package.json](package.json); run `corepack enable` and it is used automatically)
+- pnpm (the version is pinned by `packageManager` in the root [package.json](package.json); with corepack, `corepack enable` makes it used automatically; Node 25+ no longer bundles corepack, so install it with `npm i -g corepack` first)
 - Python 3.13
 - PostgreSQL 16+ running locally (`make services` starts it via Homebrew)
 
@@ -174,7 +174,7 @@ The service is defined as code in [render.yaml](render.yaml) (a Render Blueprint
 
 `PORT` is injected by Render, `NODE_ENV=production` is set by the blueprint, and logs go to stdout. There is no season variable; the API follows the latest season in the database.
 
-3. The build installs only the backend workspace (`pnpm install --frozen-lockfile --filter backend...`, pnpm version from `packageManager`, same as CI) and starts with `node src/index.js`. Check `https://<service>.onrender.com/health`.
+3. The build installs only the backend workspace (`corepack pnpm install --frozen-lockfile --filter backend...`, pnpm version from `packageManager`, same as CI) and starts with `node src/index.js`. Check `https://<service>.onrender.com/health`.
 
 > The free plan sleeps after inactivity, so the first request after a pause is slow (cold start).
 
