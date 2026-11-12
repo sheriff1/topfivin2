@@ -1,4 +1,4 @@
-.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod social-images social-images-prod social-image-manual backup backup-clean archive-season k6-smoke k6-load k6-stress fetch-advanced-extras fetch-misc fetch-hustle fetch-summary fetch-fourfactors fetch-scoring fetch-starters-bench fetch-playertrack backfill backfill-prod backfill-missing sync-advanced-prod sync-missing-prod sync-prod migrate-prod check-progress check-progress-prod logs-clean
+.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod social-images social-images-prod social-image-manual backup backup-clean restore-local archive-season k6-smoke k6-load k6-stress fetch-advanced-extras fetch-misc fetch-hustle fetch-summary fetch-fourfactors fetch-scoring fetch-starters-bench fetch-playertrack backfill backfill-prod backfill-missing sync-advanced-prod sync-missing-prod sync-prod migrate-prod check-progress check-progress-prod logs-clean
 
 # ── Infrastructure ───────────────────────────────────────────────────────────
 services:
@@ -288,6 +288,31 @@ backup:
 	  echo "❌ Backup FAILED — no dump written. pg_dump said:" >&2; \
 	  sed -E 's#postgres(ql)?://[^ ]*#<url>#g' backups/.pg_dump.err >&2; \
 	  exit 1; \
+	fi
+
+# Restores the newest backups/*.dump (or DUMP=path) into the local DB (DB_NAME from backend/.env).
+# Never deletes anything: the dump is restored into a timestamped temp DB, and only if it loaded
+# is the current DB renamed to <DB_NAME>_prev_<timestamp> and the temp DB renamed into place.
+# Remove old copies yourself with `dropdb`. pg_restore may warn about newer pg_dump settings
+# (e.g. transaction_timeout); that is tolerated, the games-table check is what gates the swap.
+restore-local:
+	@set -a && source backend/.env && set +a && \
+	DUMP="$(or $(DUMP),$$(ls -t backups/*.dump 2>/dev/null | head -1))" && \
+	{ [ -n "$$DUMP" ] && [ -f "$$DUMP" ] || { echo "❌ No dump found (run make backup or pass DUMP=path)" >&2; exit 1; }; } && \
+	TS=$$(date +%Y%m%d_%H%M%S) && \
+	TMPDB="$${DB_NAME}_restore_$$TS" && PREV="$${DB_NAME}_prev_$$TS" && \
+	echo "📥 Restoring $$DUMP into $$TMPDB..." && \
+	createdb "$$TMPDB" && \
+	{ pg_restore --no-owner --no-privileges -d "$$TMPDB" "$$DUMP" 2>backups/.pg_restore.err || true; } && \
+	ROWS=$$(psql -Atc "select count(*) from games" "$$TMPDB" 2>/dev/null || echo 0) && \
+	if [ "$${ROWS:-0}" -gt 0 ]; then \
+	  psql postgres -qc "select pg_terminate_backend(pid) from pg_stat_activity where datname = '$$DB_NAME' and pid <> pg_backend_pid()" >/dev/null && \
+	  { psql postgres -qc "alter database \"$$DB_NAME\" rename to \"$$PREV\"" 2>/dev/null && echo "📦 Previous local DB kept as $$PREV" || true; } && \
+	  psql postgres -qc "alter database \"$$TMPDB\" rename to \"$$DB_NAME\"" && \
+	  echo "✅ $$DB_NAME restored ($$ROWS games, newest $$(psql -Atc 'select max(game_date) from games' "$$DB_NAME"))"; \
+	else \
+	  echo "❌ Restore failed (no games loaded); $$DB_NAME left untouched. Leftover DB: $$TMPDB (dropdb it when done). pg_restore said:" >&2; \
+	  sed -E 's#postgres(ql)?://[^ ]*#<url>#g' backups/.pg_restore.err >&2; exit 1; \
 	fi
 
 backup-clean:
