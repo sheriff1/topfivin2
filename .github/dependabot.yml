@@ -34,5 +34,5 @@ updates:
       pip-minor-patch:
         update-types: [minor, patch]
     ignore:
-      # Pinned to a git commit on purpose
+      # nba_api is now a PyPI pin (was a git commit, #195); upgrades are reviewed by hand
       - dependency-name: nba_api

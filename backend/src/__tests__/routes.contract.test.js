@@ -15,8 +15,6 @@ jest.mock("../cache/memoryCache", () => ({
 // Bypass rate limiting in tests
 jest.mock("../middleware/rateLimiter", () => ({
   apiLimiter: (req, res, next) => next(),
-  rankingsLimiter: (req, res, next) => next(),
-  teamStatsLimiter: (req, res, next) => next(),
 }));
 
 const app = require("../app");

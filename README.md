@@ -178,6 +178,10 @@ The service is defined as code in [render.yaml](render.yaml) (a Render Blueprint
 
 > The free plan sleeps after inactivity, so the first request after a pause can take 30-60s (cold start). The frontend allows for this (60s request timeout, retries, and a "waking up" message after 3s). There is deliberately no keep-alive ping: it would use most of Render's free monthly hours and Neon auto-suspends anyway. `/health` is shallow and is what Render polls; `/ready` also runs `SELECT 1` against the database, so use it for manual checks only (it wakes a suspended Neon database).
 
+### Rate limiting
+
+All `/api` routes share one limiter (`apiLimiter`: 200 requests per 15 minutes per IP; `/health` and `/ready` are exempt, and it is off in development). It uses `express-rate-limit`'s default in-memory store, so counters reset on every restart (including cold starts) and are **not shared between instances**. That is fine for the single Render instance; if the API ever runs more than one instance, or abuse appears, switch to a shared store (e.g. Postgres-backed) or host-level rate limiting.
+
 ### Migrations
 
 Migrations run automatically every time the API starts, so a deploy applies any new ones (idempotent, guarded by an advisory lock, recorded in `schema_migrations`). To add one, create the next numbered file in `backend/migrations/` and register it in `backend/migrations/index.js` (a test fails if you forget). To run them without deploying:
@@ -291,6 +295,8 @@ make install-cron
 ```
 
 This substitutes the absolute repo path into `launchd/com.topfivin2.pipeline.plist` and installs it to `~/Library/LaunchAgents/`. The job runs `make pipeline-prod` (fetch → derive → rankings → backup) daily at 05:00 local time.
+
+**Social images are on demand.** `pipeline-prod` does not generate them. Run `make social-images-prod` (or `make derive-prod`, which includes the step) when you want to post; output goes to `backend/social_images/` (gitignored, needs the cairo library). The local `make pipeline` does generate them.
 
 ### Monitor
 

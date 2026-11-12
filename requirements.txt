@@ -4,7 +4,7 @@ CairoSVG==2.9.1
 certifi==2026.10.23
 charset-normalizer==3.5.2
 idna==3.20
-nba_api @ git+https://github.com/swar/nba_api.git@15eb0edeedb12671bb2b41367e3b9fa80941fc74
+nba_api==1.12.0
 numpy==2.5.4
 pandas==2.3.3
 psycopg2-binary==2.9.13
