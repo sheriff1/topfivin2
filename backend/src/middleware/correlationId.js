@@ -1,4 +1,5 @@
 const { randomUUID } = require("crypto");
+const { tagRequest } = require("../utils/sentry");
 
 /**
  * Assigns a unique request ID to every incoming request.
@@ -9,6 +10,7 @@ const { randomUUID } = require("crypto");
 function correlationId(req, res, next) {
   req.id = randomUUID();
   res.setHeader("X-Request-ID", req.id);
+  tagRequest(req.id);
   next();
 }
 

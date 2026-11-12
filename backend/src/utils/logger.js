@@ -1,6 +1,7 @@
 const winston = require("winston");
 const path = require("path");
 const fs = require("fs");
+const { isEnabled: sentryEnabled, captureLoggedError } = require("./sentry");
 
 // Define custom log levels with colors
 const customLevels = {
@@ -82,6 +83,18 @@ if (isProduction) {
       ),
     })
   );
+}
+
+if (sentryEnabled()) {
+  // Production hook: forward error/fatal entries to Sentry. Entries flagged `sentryReported`
+  // were already captured by Sentry's Express error handler, so skip them to avoid duplicates.
+  class SentryTransport extends winston.Transport {
+    log(info, callback) {
+      if (!info.sentryReported) captureLoggedError(info);
+      callback();
+    }
+  }
+  transports.push(new SentryTransport({ level: "error" }));
 }
 
 // Create logger instance

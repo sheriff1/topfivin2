@@ -2,6 +2,7 @@ const express = require("express");
 const cors = require("cors");
 const helmet = require("helmet");
 const logger = require("./utils/logger");
+const { Sentry, isEnabled: sentryEnabled } = require("./utils/sentry");
 const correlationId = require("./middleware/correlationId");
 const requestLogger = require("./middleware/requestLogger");
 
@@ -70,6 +71,10 @@ app.use((err, req, res, next) => {
   next(err);
 });
 
+// Sentry's Express error handler (reports 5xx errors with request context, then passes them on).
+// A no-op when Sentry is not initialised.
+if (sentryEnabled()) Sentry.setupExpressErrorHandler(app);
+
 // Catch-all error handler — must be last; keeps 4-arg signature for Express error handling
 
 app.use((err, req, res, _next) => {
@@ -79,6 +84,7 @@ app.use((err, req, res, _next) => {
     method: req.method,
     path: req.path,
     requestId: req.id,
+    sentryReported: sentryEnabled(), // captured above by setupExpressErrorHandler
   });
   res.status(500).json({ success: false, message: "An unexpected error occurred" });
 });

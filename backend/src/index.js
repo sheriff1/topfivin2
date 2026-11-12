@@ -1,5 +1,8 @@
 require("dotenv").config();
 
+// Must run before the app (and its dependencies) are loaded so Sentry can instrument them
+require("./utils/sentry").initSentry();
+
 const logger = require("./utils/logger");
 
 // Validate environment variables early, before any services initialize

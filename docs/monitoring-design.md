@@ -1,9 +1,9 @@
 # Error Monitoring Design
 
-**Issue:** #64  
-**Status:** Foundation complete — Sentry integration deferred until production deployment  
+**Issue:** #64, #194  
+**Status:** Sentry integrated (API and browser), opt-in via DSN env vars  
 **Depends on:** #52 (structured logging), #55 (error sanitization)  
-**Last updated:** March 2026
+**Last updated:** November 2026
 
 ---
 
@@ -13,7 +13,7 @@
 2. [What Was Added in This Issue](#2-what-was-added-in-this-issue)
 3. [Log Format Reference](#3-log-format-reference)
 4. [Request Correlation](#4-request-correlation)
-5. [Future Sentry Integration](#5-future-sentry-integration)
+5. [Sentry Integration](#5-sentry-integration)
 6. [Alternative Monitoring Tools](#6-alternative-monitoring-tools)
 7. [Environment Variables](#7-environment-variables)
 8. [Decision Log](#8-decision-log)
@@ -53,7 +53,7 @@ The logger uses a custom 6-level hierarchy and outputs structured JSON to stdout
 
 **Graceful shutdown:** on `SIGTERM`/`SIGINT` the API stops accepting connections, waits for in-flight requests (up to `SHUTDOWN_TIMEOUT_MS`, default 10000), closes the Postgres pool, and exits 0 (exits 1 on error or timeout). Manual check: start the API, run `kill -TERM <pid>`, and confirm the "Received SIGTERM" and "Shutdown complete" log lines and exit code 0.
 
-**Production hook:** add further production transports in `logger.js` (Sentry, Datadog, Cloud Logging). See [Section 5](#5-future-sentry-integration).
+**Production hook:** `logger.js` adds a Sentry transport when Sentry is enabled; other transports can be added there too. See [Section 5](#5-sentry-integration).
 
 ### What is logged today
 
@@ -190,123 +190,34 @@ Client response
 grep "a3f72b1c-4d88-4e2a-b9f3-1234567890ab" backend/logs/combined.log | jq .
 ```
 
-**When Sentry is added:** pass `requestId` as a tag so Sentry events automatically link to the correct log lines. See [Section 5](#5-future-sentry-integration).
+Sentry events carry `requestId` as a tag, so they link to the correct log lines. See [Section 5](#5-sentry-integration).
 
 ---
 
-## 5. Future Sentry Integration
+## 5. Sentry Integration
 
-When the app is deployed to a production environment, Sentry should be integrated to provide real-time error alerting with full context. Implementation is intentionally deferred — Sentry requires a DSN which only exists once a Sentry project is created.
+Implemented in #194. Sentry is **opt-in**: nothing is initialised unless a DSN is set, so local development and tests are unaffected. Free-tier check (Nov 2026): the Developer plan is still free (one user, ~5,000 errors/month, email alerts), which is plenty here, so Sentry stays.
 
-### Overview
+### API (`@sentry/node`)
 
-Sentry captures: unhandled exceptions, `logger.error()` breadcrumbs, performance traces, and request context.
+| Piece                      | Where                                         | What it does                                                                                                                                                                                                            |
+| -------------------------- | --------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `initSentry()`             | `utils/sentry.js`, called first in `index.js` | Initialises only if `SENTRY_DSN` is set (never when `NODE_ENV=test`). `environment` = `SENTRY_ENVIRONMENT` or `NODE_ENV`; `release` = `RENDER_GIT_COMMIT`; `tracesSampleRate: 0` (errors only); `sendDefaultPii: false` |
+| `tagRequest()`             | `middleware/correlationId.js`                 | Tags every event of a request with `requestId`, matching the `X-Request-ID` header and log lines                                                                                                                        |
+| `setupExpressErrorHandler` | `app.js`, before the catch-all handler        | Reports errors that reach Express (5xx) with request context                                                                                                                                                            |
+| `SentryTransport`          | `utils/logger.js` (the production hook)       | Route handlers catch errors and call `logger.error`, so they never reach Express; this transport reports those. The catch-all handler logs with `sentryReported: true` so the same error is not sent twice              |
+| `scrubEvent`               | `beforeSend` in `utils/sentry.js`             | Redacts `scheme://user:pass@` credentials in messages, exceptions, extras and breadcrumbs; drops cookies, request bodies, query strings, auth/cookie headers and client IP                                              |
 
-### Step 1 — Install package
+### Browser (`@sentry/react`)
 
-```bash
-pnpm --filter backend add @sentry/node
-```
+`frontend/src/index.jsx` initialises it only in production builds when `VITE_SENTRY_DSN` is set (errors only, no tracing, no replay, no default PII) and wraps the app in `Sentry.ErrorBoundary`.
 
-### Step 2 — Initialize in `index.js`
+### Setup
 
-Sentry must initialize **before** any other `require()` calls to instrument all loaded modules:
-
-```js
-// backend/src/index.js — add at the very top, before dotenv
-const Sentry = require("@sentry/node");
-
-if (process.env.SENTRY_DSN) {
-  Sentry.init({
-    dsn: process.env.SENTRY_DSN,
-    environment: process.env.SENTRY_ENVIRONMENT || process.env.NODE_ENV || "development",
-    tracesSampleRate: process.env.NODE_ENV === "production" ? 0.1 : 1.0,
-    integrations: [Sentry.expressIntegration()],
-  });
-}
-```
-
-### Step 3 — Add request handler middleware in `app.js`
-
-```js
-// app.js — add after correlationId, before requestLogger
-const Sentry = require("@sentry/node");
-
-if (process.env.SENTRY_DSN) {
-  app.use(Sentry.expressRequestHandler());
-  // Sets Sentry transaction from req.method + req.path
-}
-```
-
-### Step 4 — Tag errors with requestId
-
-In the global error handler (`app.js`), pass `requestId` as a Sentry tag:
-
-```js
-app.use((err, req, res, _next) => {
-  if (process.env.SENTRY_DSN) {
-    Sentry.withScope((scope) => {
-      scope.setTag("requestId", req.id);
-      scope.setTag("path", req.path);
-      Sentry.captureException(err);
-    });
-  }
-
-  logger.error("Unhandled error", {
-    message: err.message,
-    stack: err.stack,
-    method: req.method,
-    path: req.path,
-    requestId: req.id,
-  });
-
-  res.status(500).json({ success: false, message: "An unexpected error occurred" });
-});
-```
-
-### Step 5 — Add Winston transport for Sentry (optional)
-
-To forward all `error`-level logs to Sentry (not just unhandled Express errors), add a transport in `logger.js` inside the production hook block:
-
-```js
-// logger.js — inside the "add production transports here" block
-if (process.env.SENTRY_DSN) {
-  const Sentry = require("@sentry/node");
-  logger.add(
-    new winston.transports.Stream({
-      level: "error",
-      stream: {
-        write(message) {
-          const entry = JSON.parse(message);
-          Sentry.captureMessage(entry.message, {
-            level: "error",
-            extra: { stack: entry.stack, requestId: entry.requestId },
-          });
-        },
-      },
-    })
-  );
-}
-```
-
-### Step 6 — Add `@sentry/node` to `.env.example`
-
-```bash
-# Sentry (optional — error monitoring)
-SENTRY_DSN=            # From Sentry project settings → Client Keys
-SENTRY_ENVIRONMENT=    # production | staging | development
-```
-
-### Checklist before enabling Sentry in production
-
-- [ ] Create Sentry project at sentry.io (Node.js platform)
-- [ ] Copy DSN to `SENTRY_ENVIRONMENT` in production env
-- [ ] Set `SENTRY_ENVIRONMENT=production`
-- [ ] Verify `tracesSampleRate` is ≤ 0.1 for production (avoid performance overhead)
-- [ ] Confirm PII scrubbing — Sentry's default `sendDefaultPii: false` is correct; do not set it to `true`
-- [ ] Test with a deliberate `throw new Error("test")` in a dev environment and confirm the event appears in Sentry
-
----
+1. Create two projects at sentry.io: Node.js (API) and React (browser). Copy each DSN.
+2. Render (service `topfivin2-api`): set `SENTRY_DSN`; `SENTRY_ENVIRONMENT=production` comes from `render.yaml`.
+3. Vercel (project `topfivein`, Production): set `VITE_SENTRY_DSN` (and optionally `VITE_SENTRY_ENVIRONMENT`), then redeploy, since Vite bakes it in at build time.
+4. Verify: trigger an error (for example stop the database or temporarily throw in a route) and check that the event appears with a `requestId` tag. Use that tag to find the matching log lines in Render.
 
 ## 6. Alternative Monitoring Tools
 
@@ -326,12 +237,18 @@ All tools consume the same JSON log format — no changes to `logger.js` format 
 
 ## 7. Environment Variables
 
-New variables to add to `backend/.env.example` when Sentry is enabled:
+API (`backend/.env.example`, Render):
 
 ```bash
-# Error Monitoring (optional — add when deploying to production)
 SENTRY_DSN=                # Sentry project DSN; leave blank to disable Sentry
 SENTRY_ENVIRONMENT=        # production | staging | development (default: NODE_ENV)
+```
+
+Frontend (`frontend/.env.example`, Vercel):
+
+```bash
+VITE_SENTRY_DSN=           # Browser Sentry project DSN; leave blank to disable
+VITE_SENTRY_ENVIRONMENT=   # default: production
 ```
 
 No new environment variables are required for the logging foundation itself — `crypto.randomUUID()` is a Node.js built-in and requires no configuration.
@@ -349,3 +266,4 @@ No new environment variables are required for the logging foundation itself — 
 | March 2026 | `X-Request-ID` set on every response                     | Allows clients, browser DevTools, and Sentry front-end SDK to correlate with server-side logs               |
 | March 2026 | Sentry integration deferred                              | Requires a DSN which only exists at deployment time; foundation is ready, no code changes needed to add it  |
 | March 2026 | `@sentry/node` not added to `package.json` yet           | Unused dependencies increase supply-chain risk; add only when DSN is available and Sentry is being wired up |
+| Nov 2026   | Sentry integrated (#194), free Developer plan kept       | Free tier still covers a prototype; errors only (no tracing/replay) to preserve quota; opt-in via DSN       |
