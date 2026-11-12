@@ -10,8 +10,20 @@ const { apiLimiter } = require("./middleware/rateLimiter");
 
 const app = express();
 
-// Trust first proxy (Railway) so express-rate-limit reads real client IP
-app.set("trust proxy", 1);
+// Trust the host's proxy hops so req.ip (and express-rate-limit) see the real client IP.
+// Number of hops is set via TRUST_PROXY (default 1); verify it per host, see render.yaml.
+const trustProxy = process.env.TRUST_PROXY;
+app.set(
+  "trust proxy",
+  trustProxy === undefined || trustProxy === "" ? 1 : parseTrustProxy(trustProxy)
+);
+
+function parseTrustProxy(value) {
+  if (/^\d+$/.test(value)) return Number(value);
+  if (value === "true") return true;
+  if (value === "false") return false;
+  return value; // e.g. "loopback" or a CIDR list, passed through to Express
+}
 
 const allowedOrigins = [
   "http://localhost:3000",
