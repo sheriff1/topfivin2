@@ -37,4 +37,4 @@ services:
       - key: LOG_CLIENT_IP
         value: false
       # PORT is injected by Render. Logs go to stdout (no LOG_TO_FILES), since the disk is ephemeral.
-      # CURRENT_SEASON is intentionally absent: the API derives the season from stored data.
+      # No season variable: the API derives the current season from stored data.

@@ -266,6 +266,8 @@ make uninstall-cron
 
 Routes that take `?season=` default to the latest stored season when it is omitted (404 if the database is empty). The lookup is cached for 5 minutes.
 
+**Season rollover is automatic.** There is no season environment variable. The current season is the latest one stored in the database (`GET /api/seasons`), and the site, API and every derive/rank/social/archive step follow it. Only the fetch step uses the calendar (October starts a new season; override with `FETCH_SEASON`). When the first game of a new season is stored it becomes current, with no config change. See [docs/manual-fetch.md](docs/manual-fetch.md).
+
 ### Rankings
 
 | Method | Endpoint                                 | Description                                       |
