@@ -530,14 +530,14 @@ describe("GET /api/seasons", () => {
 });
 
 describe("default season", () => {
-  const originalEnv = process.env.CURRENT_SEASON;
+  const originalEnv = process.env.SEASON;
   afterEach(() => {
-    if (originalEnv === undefined) delete process.env.CURRENT_SEASON;
-    else process.env.CURRENT_SEASON = originalEnv;
+    if (originalEnv === undefined) delete process.env.SEASON;
+    else process.env.SEASON = originalEnv;
   });
 
-  it("uses the latest stored season when ?season= is absent, ignoring CURRENT_SEASON", async () => {
-    process.env.CURRENT_SEASON = "1999";
+  it("uses the latest stored season when ?season= is absent, ignoring any SEASON env var", async () => {
+    process.env.SEASON = "1999";
     db.query
       .mockResolvedValueOnce({ rows: [{ season: "2026" }, { season: "2025" }] })
       .mockResolvedValueOnce({ rows: [], rowCount: 0 });

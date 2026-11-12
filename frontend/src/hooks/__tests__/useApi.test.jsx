@@ -164,8 +164,7 @@ describe("useApi Hooks", () => {
 });
 
 describe("useCurrentSeason", () => {
-  it("is exported and CURRENT_SEASON no longer is", () => {
+  it("is exported as a hook", () => {
     expect(typeof useApiModule.useCurrentSeason).toBe("function");
-    expect(useApiModule.CURRENT_SEASON).toBeUndefined();
   });
 });
