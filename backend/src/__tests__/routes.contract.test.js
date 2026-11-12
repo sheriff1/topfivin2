@@ -61,6 +61,22 @@ describe("GET /health — contract", () => {
   });
 });
 
+describe("GET /ready", () => {
+  it("returns 200 when the database answers", async () => {
+    db.query.mockResolvedValueOnce({ rows: [{ "?column?": 1 }] });
+    const res = await request(app).get("/ready");
+    expect(res.status).toBe(200);
+    expect(res.body.database).toBe("ok");
+  });
+
+  it("returns 503 when the database query fails", async () => {
+    db.query.mockRejectedValueOnce(new Error("down"));
+    const res = await request(app).get("/ready");
+    expect(res.status).toBe(503);
+    expect(res.body.database).toBe("error");
+  });
+});
+
 // ---------------------------------------------------------------------------
 // GET /api/categories
 // ---------------------------------------------------------------------------
