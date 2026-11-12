@@ -3,7 +3,7 @@
 ## Project Overview
 
 NBA team stats dashboard. React frontend + Node.js/Express backend + PostgreSQL database.
-Hosted on Railway (backend + DB) and Vercel (frontend).
+Hosted on Render (backend), Neon (Postgres) and Vercel (frontend).
 
 ---
 
@@ -13,10 +13,10 @@ Hosted on Railway (backend + DB) and Vercel (frontend).
 | --------------- | ------------------------------------------------------------- |
 | Frontend        | React 19, React Router 7, Tailwind CSS 4.2, DaisyUI 5.5, Vite |
 | Backend         | Node.js, Express, `backend/src/index.js`                      |
-| Database        | PostgreSQL (local: `nba_stats`, production: Railway)          |
+| Database        | PostgreSQL (local: `nba_stats`, production: Neon)             |
 | Cache           | In-memory TTL cache                                           |
 | Scripts         | Python 3 (`.venv` at repo root)                               |
-| Package manager | `pnpm` (frontend), `npm` (backend)                            |
+| Package manager | `pnpm` workspace (backend + frontend)                         |
 
 ---
 
@@ -24,7 +24,7 @@ Hosted on Railway (backend + DB) and Vercel (frontend).
 
 - Frontend: `http://localhost:3000`
 - Backend: `http://localhost:5001`
-- Production backend: Railway (PORT=8080 auto-injected)
+- Production backend: Render (PORT injected by Render)
 
 ---
 
@@ -51,7 +51,7 @@ backend/
       postgresClient.js
     cache/
       memoryCache.js
-  migrations/              — Node.js migration files (001–009), run against Railway via make migrate-prod
+  migrations/              — Node.js migration files (001–009), applied automatically on API start-up (or `pnpm --filter backend migrate`)
   scripts/                 — Python data pipeline scripts (fetch, derive, sync)
 frontend/
   src/
@@ -66,7 +66,7 @@ frontend/
 ## Environment Files
 
 - `backend/.env` — local DB credentials (`DB_HOST`, `DB_USER`, `DB_NAME=nba_stats`, `PORT=5001`)
-- `backend/.env.production` — Railway credentials (`DATABASE_URL`) — **gitignored, never commit**
+- `backend/.env.production` — Neon credentials (`DATABASE_URL`) for the pipeline — **gitignored, never commit**
 
 ---
 
@@ -92,9 +92,9 @@ frontend/
 - `stat_rankings` — one row per team per stat category (3,450 rows = 30 teams × 115 categories)
 - `teams` — 30 teams, team metadata + colors
 
-### Migrations (001–009, applied in order)
+### Migrations (001–013, applied in order)
 
-All use `ADD COLUMN IF NOT EXISTS` — safe to re-run. Applied to production via:
+Idempotent and tracked in `schema_migrations`. The API applies pending ones on every start-up; to apply a single file manually:
 
 ```bash
 make migrate-prod MIGRATION=<migration_name_without_.js>
@@ -122,11 +122,11 @@ make derive                # derive_team_stats.py + derive_rankings.py
 ### Production deployment (after local pipeline):
 
 ```bash
-make sync-prod             # sync_to_prod.py — copies 139 columns from local → Railway game_stats
-make derive-prod           # same as derive but targets Railway DB
+make sync-prod             # sync_to_prod.py — copies 139 columns from local → production game_stats
+make derive-prod           # same as derive but targets the production DB
 ```
 
-### Full production pipeline (fetches + derives on Railway DB directly):
+### Full production pipeline (fetches + derives on the production DB directly):
 
 ```bash
 make pipeline-prod
@@ -141,12 +141,12 @@ make dev                   # Start services + backend + frontend
 make backend               # Backend only (nodemon)
 make frontend              # Frontend only (vite)
 make pipeline              # fetch + derive (local)
-make migrate-prod MIGRATION=<name>  # Apply a migration to Railway
-make sync-prod             # Sync game_stats columns local → Railway
-make derive-prod           # Rebuild team_stats + rankings on Railway
+make migrate-prod MIGRATION=<name>  # Apply one migration file to production
+make sync-prod             # Sync game_stats columns local → production
+make derive-prod           # Rebuild team_stats + rankings on production
 make check-progress        # Show backfill completion per column (local)
-make check-progress-prod   # Same against Railway
-make backup                # pg_dump Railway → local backups/
+make check-progress-prod   # Same against production
+make backup                # pg_dump production → local backups/
 ```
 
 ---
@@ -161,8 +161,8 @@ make backup                # pg_dump Railway → local backups/
 
 ```bash
 # 1. Run all tests first — must pass before pushing
-cd backend && npm test
-cd frontend && npm test
+pnpm --filter backend test
+pnpm --filter frontend test
 
 # 2. Push branch
 git push -u origin feature/your-feature-name
@@ -214,7 +214,9 @@ Backfill scripts hit rate limits around ~600 games during bulk backfills.
 
 ## Deployment Infrastructure
 
-- **Backend + DB**: Railway — `DATABASE_URL` set as env vars in Railway service
-- **Frontend**: Vercel — env vars: `VITE_API_URL`
-- Railway uses PORT=8080 (auto-injected) — not 5001
-- NBA API calls must run locally (Railway IPs are blocked by stats.nba.com)
+- **Backend**: Render (blueprint: `render.yaml`) — env vars `DATABASE_URL`, `FRONTEND_URL`, `FRONTEND_URL_2`, `TRUST_PROXY`
+- **Database**: Neon Postgres
+- **Frontend**: Vercel — env var `VITE_API_URL` (API base including `/api`)
+- Render injects `PORT` — not 5001
+- NBA API calls must run locally (cloud IPs are blocked by stats.nba.com)
+- See the README "Deploying" section for the full procedure

@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Sync ALL backfilled game_stats columns from local DB → production Railway DB.
+Sync ALL backfilled game_stats columns from local DB → production DB.
 
 Replaces sync_advanced_to_prod.py and sync_missing_to_prod.py, and adds
 the new columns introduced by migrations 007, 008 and 009.
@@ -137,7 +137,7 @@ def main():
     print("SYNC: sync_to_prod.py")
     print(f"Columns: {len(COLUMNS)} total (mig 004 + 005 + 007 + 008 + 009)")
     print("Source:  local DB (DB_HOST/DB_USER/DB_NAME)")
-    print("Target:  Railway DB (DATABASE_URL)")
+    print("Target:  production DB (DATABASE_URL)")
     print("=" * 60)
 
     local_conn = local_connect()

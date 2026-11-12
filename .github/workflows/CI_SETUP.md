@@ -8,7 +8,7 @@ This project uses a single unified GitHub Actions workflow (`ci.yml`) to run all
 
 ### **Unified CI** (`ci.yml`)
 
-All four jobs run in parallel on every push and PR to main.
+Five jobs run on every push and PR to main. Four run in parallel; `e2e` waits for `frontend-tests`.
 
 | Job              | Name             | What it does                                                           |
 | ---------------- | ---------------- | ---------------------------------------------------------------------- |
@@ -16,6 +16,7 @@ All four jobs run in parallel on every push and PR to main.
 | `lint`           | Lint & Format    | Prettier format check + ESLint for both backend and frontend           |
 | `backend-tests`  | Backend Tests    | Jest test suite for the backend                                        |
 | `frontend-tests` | Frontend Tests   | Vitest test suite + Vite production build for the frontend             |
+| `e2e`            | E2E Tests        | Playwright end-to-end tests (`needs: frontend-tests`)                  |
 
 - **Node Version**: 20 LTS
 - **Package Manager**: pnpm 10.30.3
@@ -43,6 +44,7 @@ To enforce that all checks pass before PR merge:
    - `Lint & Format`
    - `Backend Tests`
    - `Frontend Tests`
+   - `E2E Tests`
 5. Enable **Require branches to be up to date before merging**
 6. Enable **Dismiss stale pull request approvals when new commits are pushed**
 
@@ -55,7 +57,7 @@ To enforce that all checks pass before PR merge:
 
 ### In Pull Requests
 
-- GitHub automatically shows all four job statuses at the bottom of the PR
+- GitHub automatically shows all five job statuses at the bottom of the PR
 - Red X = failure (all checks must pass before merge button enables)
 - Green checkmark = all checks passed
 
@@ -118,6 +120,5 @@ pnpm --filter frontend build
 ## Future Enhancements
 
 - [ ] Add code coverage reporting
-- [ ] Add E2E test workflow (#46)
 - [ ] Integration test workflow (#43)
 - [ ] Staging deployment on merge to main (#63)

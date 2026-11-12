@@ -78,7 +78,7 @@ The same `requireAuth` middleware handles both: it checks for an `Authorization:
      - Sends refresh token in request body
      - Receives new access token (+ optionally a new refresh token)
 8. On logout, client calls POST /api/auth/logout
-     - Server adds refresh token to a short-lived blocklist (Redis key with TTL = token expiry)
+     - Server adds refresh token to a short-lived blocklist (in-process cache entry with TTL = token expiry, or a DB table if it must survive restarts)
      - Client deletes both tokens from localStorage
 ```
 
@@ -211,7 +211,7 @@ CREATE INDEX idx_api_keys_revoked ON api_keys (revoked_at) WHERE revoked_at IS N
 
 - `password_hash` and `key_hash` must never appear in API responses
 - `email` should always be lowercased before storage and lookup to prevent duplicate accounts
-- No `refresh_tokens` table is needed if using a Redis blocklist for logout (TTL = token expiry); add one if Redis-less operation is required
+- Logout blocklisting needs somewhere to store revoked refresh tokens. Redis was dropped from the stack, so use a `refresh_tokens` table (or an in-process TTL cache if losing revocations on restart is acceptable)
 
 ---
 
@@ -334,11 +334,11 @@ These endpoints do not exist yet. They are specified here to guide future implem
 
 ### Auth endpoints (`/api/auth`)
 
-| Method | Path                | Auth required  | Body / Response                                                                |
-| ------ | ------------------- | -------------- | ------------------------------------------------------------------------------ |
-| POST   | `/api/auth/login`   | No             | Body: `{ email, password }` → `{ accessToken, refreshToken }`                  |
-| POST   | `/api/auth/refresh` | No             | Body: `{ refreshToken }` → `{ accessToken }`                                   |
-| POST   | `/api/auth/logout`  | Yes (any role) | Body: `{ refreshToken }` → `204 No Content`; blocklists refresh token in Redis |
+| Method | Path                | Auth required  | Body / Response                                                       |
+| ------ | ------------------- | -------------- | --------------------------------------------------------------------- |
+| POST   | `/api/auth/login`   | No             | Body: `{ email, password }` → `{ accessToken, refreshToken }`         |
+| POST   | `/api/auth/refresh` | No             | Body: `{ refreshToken }` → `{ accessToken }`                          |
+| POST   | `/api/auth/logout`  | Yes (any role) | Body: `{ refreshToken }` → `204 No Content`; blocklists refresh token |
 
 ### API key management (`/api/admin/api-keys`)
 
@@ -353,7 +353,7 @@ These endpoints do not exist yet. They are specified here to guide future implem
 | Method | Path                      | Required role      | Notes                                                          |
 | ------ | ------------------------- | ------------------ | -------------------------------------------------------------- |
 | POST   | `/api/admin/data/refresh` | `admin`, `service` | Triggers NBA stats re-fetch; replaces manual Python script run |
-| DELETE | `/api/admin/cache`        | `admin`, `service` | Flushes Redis cache for rankings/stats                         |
+| DELETE | `/api/admin/cache`        | `admin`, `service` | Flushes in-process cache for rankings/stats                    |
 | PATCH  | `/api/admin/data/:gameId` | `admin`, `service` | Corrects a specific game's stats record                        |
 
 ### User management (`/api/admin/users`)

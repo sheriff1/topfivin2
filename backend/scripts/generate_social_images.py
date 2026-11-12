@@ -9,7 +9,7 @@ Output: backend/social_images/YYYY-MM-DD/<ABBR>.png
 
 Run via:
     make social-images        (local)
-    make social-images-prod   (production / Railway DB)
+    make social-images-prod   (production DB)
 """
 import io
 import os

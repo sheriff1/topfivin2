@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 """
-Sync the 24 V3 advanced columns from local game_stats to production Railway DB.
+Sync the 24 V3 advanced columns from local game_stats to production DB.
 
 Use this instead of make backfill-prod when the local DB already has all the
 data — avoids re-fetching from the NBA API (which rate-limits after ~600 calls).
@@ -48,7 +48,7 @@ def local_connect():
 
 
 def prod_connect():
-    """Connect to Railway DB using DATABASE_URL env var."""
+    """Connect to production DB using DATABASE_URL env var."""
     url = os.getenv("DATABASE_URL", "")
     if not url:
         print("❌  DATABASE_URL not set. Source backend/.env.production before running.")
@@ -61,7 +61,7 @@ def main():
     print("SYNC: sync_advanced_to_prod.py")
     print(f"Columns: {len(COLUMNS)} advanced V3 columns")
     print("Source:  local DB (DB_HOST/DB_USER/DB_NAME)")
-    print("Target:  Railway DB (DATABASE_URL)")
+    print("Target:  production DB (DATABASE_URL)")
     print("=" * 60)
 
     local_conn = local_connect()
