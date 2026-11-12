@@ -17,9 +17,10 @@ const router = express.Router();
 /**
  * GET /api/teams
  * Returns team info (name, colors, logo)
- * Query params: ?team_id=1610612738
+ * Query params: ?team_id=1610612738&season=2025 (season defaults to the latest stored season;
+ * it scopes trophy_count, the number of top-5 rankings that season)
  */
-router.get("/teams", validateTeams, validationMiddleware, async (req, res) => {
+router.get("/teams", validateTeams, validationMiddleware, resolveSeason, async (req, res) => {
   try {
     const { team_id } = req.query;
 
@@ -28,14 +29,14 @@ router.get("/teams", validateTeams, validationMiddleware, async (req, res) => {
         t.id, t.team_id, t.team_name, t.logo_url, t.team_colors,
         COALESCE((
           SELECT COUNT(*) FROM stat_rankings sr
-          WHERE sr.team_id = t.team_id AND sr.rank <= 5
+          WHERE sr.team_id = t.team_id AND sr.rank <= 5 AND sr.season = $1
         ), 0)::int AS trophy_count
       FROM teams t
     `;
-    const params = [];
+    const params = [req.season];
 
     if (team_id) {
-      query += " WHERE t.team_id = $1";
+      query += " WHERE t.team_id = $2";
       params.push(team_id);
     }
 
@@ -60,11 +61,13 @@ router.get("/teams", validateTeams, validationMiddleware, async (req, res) => {
  * GET /api/teams/abbr/:abbreviation
  * Returns team info by team abbreviation (e.g., BOS, LAL)
  * Used for URL routing with team abbreviations
+ * Query params: ?season=2025 (defaults to the latest stored season; scopes trophy_count)
  */
 router.get(
   "/teams/abbr/:abbreviation",
   validateTeamByAbbr,
   validationMiddleware,
+  resolveSeason,
   async (req, res) => {
     try {
       const abbr = req.params.abbreviation.toUpperCase();
@@ -84,10 +87,10 @@ router.get(
         `SELECT t.id, t.team_id, t.team_name, t.logo_url, t.team_colors,
           COALESCE((
             SELECT COUNT(*) FROM stat_rankings sr
-            WHERE sr.team_id = t.team_id AND sr.rank <= 5
+            WHERE sr.team_id = t.team_id AND sr.rank <= 5 AND sr.season = $2
           ), 0)::int AS trophy_count
          FROM teams t WHERE t.team_id = $1`,
-        [teamId]
+        [teamId, req.season]
       );
 
       if (result.rows.length === 0) {

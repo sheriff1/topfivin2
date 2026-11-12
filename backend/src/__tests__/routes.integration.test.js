@@ -173,6 +173,30 @@ describe("GET /api/teams", () => {
     expect(res.body.data[0].team_id).toBe(1610612751);
   });
 
+  it("scopes trophy_count to the requested season", async () => {
+    db.query.mockResolvedValue({ rows: mockTeamRows, rowCount: 2 });
+
+    const res = await request(app).get("/api/teams?season=2024");
+    expect(res.status).toBe(200);
+    const [sql, params] = db.query.mock.calls[0];
+    expect(sql).toContain("sr.season = $1");
+    expect(params).toEqual(["2024"]);
+  });
+
+  it("combines season and team_id parameters", async () => {
+    db.query.mockResolvedValue({ rows: [mockTeamRows[0]], rowCount: 1 });
+
+    await request(app).get("/api/teams?team_id=1610612751&season=2024");
+    const [sql, params] = db.query.mock.calls[0];
+    expect(sql).toContain("t.team_id = $2");
+    expect(params).toEqual(["2024", "1610612751"]);
+  });
+
+  it("returns 400 for an invalid season on /api/teams", async () => {
+    const res = await request(app).get("/api/teams?season=bad");
+    expect(res.status).toBe(400);
+  });
+
   it("returns 400 for non-integer team_id", async () => {
     const res = await request(app).get("/api/teams?team_id=abc");
     expect(res.status).toBe(400);
@@ -207,6 +231,16 @@ describe("GET /api/teams/abbr/:abbreviation", () => {
     expect(res.status).toBe(200);
     expect(res.body.success).toBe(true);
     expect(res.body.data).toHaveProperty("team_id");
+  });
+
+  it("scopes trophy_count to the requested season", async () => {
+    db.query.mockResolvedValue({ rows: [mockTeamRow], rowCount: 1 });
+
+    const res = await request(app).get("/api/teams/abbr/BOS?season=2024");
+    expect(res.status).toBe(200);
+    const [sql, params] = db.query.mock.calls[0];
+    expect(sql).toContain("sr.season = $2");
+    expect(params[1]).toBe("2024");
   });
 
   it("returns 400 for abbreviation that is not exactly 3 letters", async () => {

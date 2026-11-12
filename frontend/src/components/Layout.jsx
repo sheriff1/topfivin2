@@ -10,7 +10,7 @@ function getInitialTheme() {
   return window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
 }
 
-export function Layout({ children }) {
+export function Layout({ children, seasonPicker = null }) {
   const location = useLocation();
   const { pathname } = location;
   const [menuOpen, setMenuOpen] = useState(false);
@@ -99,6 +99,7 @@ export function Layout({ children }) {
           {/* Desktop nav */}
           <nav className="hidden md:flex gap-1 items-center">
             {navLinks}
+            {seasonPicker}
             <label className="toggle text-base-content">
               <input
                 type="checkbox"
@@ -238,6 +239,7 @@ export function Layout({ children }) {
             >
               About
             </Link>
+            {seasonPicker}
             <label className="toggle text-base-content scale-150">
               <input
                 type="checkbox"
