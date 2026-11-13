@@ -97,7 +97,7 @@ export function Layout({ children, seasonPicker = null }) {
         </div>
         <div className="navbar-end !w-auto flex-1">
           {/* Desktop nav */}
-          <nav className="hidden md:flex gap-0 lg:gap-1 items-center">
+          <nav className="hidden lg:flex gap-1 items-center">
             {navLinks}
             {seasonPicker}
             <label className="toggle text-base-content shrink-0">
@@ -144,7 +144,7 @@ export function Layout({ children, seasonPicker = null }) {
           {/* Mobile hamburger button */}
           <button
             type="button"
-            className="btn btn-ghost btn-sm md:hidden"
+            className="btn btn-ghost btn-sm lg:hidden"
             onClick={() => setMenuOpen(true)}
             aria-label="Open menu"
           >
