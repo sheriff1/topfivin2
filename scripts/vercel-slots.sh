@@ -22,15 +22,19 @@ done
 python3 -I - "$dir" "$LIMIT" "$HOLD_BELOW" <<'PY'
 import sys, json, glob, collections
 d, limit, hold = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
-c = collections.Counter(); total = 0
+c = collections.Counter(); states = collections.Counter(); total = 0
 for f in glob.glob(d + "/*.json"):
     for x in json.load(open(f)).get("deployments", []):
         total += 1
+        states[x.get("state")] += 1
         c[(x.get("name"), x.get("target") or "preview")] += 1
 for (name, target), n in sorted(c.items(), key=lambda i: -i[1]):
     print(f"{n:4d}  {name} ({target})")
 free = limit - total
+skipped = states.get("CANCELED", 0)
 print(f"\nTotal last 24h: {total}/{limit}  free: {max(free, 0)}")
+print(f"  built/other: {total - skipped}   skipped (CANCELED): {skipped}")
+print("  (unproven: whether skipped builds count toward the limit; see docs/deploy-budget.md)")
 if free < hold:
     print(f"HOLD: fewer than {hold} free slots. Do not merge yet.")
     sys.exit(1)

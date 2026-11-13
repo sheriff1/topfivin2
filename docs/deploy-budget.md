@@ -33,4 +33,4 @@ fewer than 5 slots are free. If held, wait; the oldest deployments roll off hour
 
 Builds skipped by the ignore step show up as `CANCELED` deployments in the team's 24h listing, and
 `make vercel-slots` counts them (the total rose by one after a skipped push on 2026-11-12). Whether Vercel
-enforces the 100/day limit on them is being confirmed; see the result appended below.
+enforces the 100/day limit on them is unproven. `make vercel-slots` prints built and skipped counts separately: if a deploy is refused while built < 100, skipped builds count; if deploys keep succeeding with the total at or above 100, they don't.
