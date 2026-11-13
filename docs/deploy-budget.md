@@ -24,8 +24,10 @@ fewer than 5 slots are free. If held, wait; the oldest deployments roll off hour
   `frontend/vercel.json` runs `frontend/scripts/vercel-ignore-build.sh`, which skips the build unless
   `frontend/` or the root `package.json` / `pnpm-lock.yaml` / `pnpm-workspace.yaml` changed.
   Keep that script's path list in sync if the frontend starts depending on other directories.
-- Dashboard settings (not in the repo): skip deployments for unaffected projects in the monorepo
-  (Root Directory settings), and disable previews for branches that don't need them (e.g. `dependabot/*`).
+- Previews are disabled for `dependabot/**` and `docs/**` branches via `git.deploymentEnabled` in
+  `frontend/vercel.json` (this is not a dashboard setting). Name a branch `docs/...` if it needs no preview.
+- Dashboard setting (not in the repo): skip deployments for unaffected projects in the monorepo
+  (Root Directory settings).
 
 ## Do skipped builds count?
 

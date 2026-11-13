@@ -1,3 +1,9 @@
 {
-  "ignoreCommand": "sh scripts/vercel-ignore-build.sh"
+  "ignoreCommand": "sh scripts/vercel-ignore-build.sh",
+  "git": {
+    "deploymentEnabled": {
+      "dependabot/**": false,
+      "docs/**": false
+    }
+  }
 }
