@@ -359,7 +359,7 @@ Stat rankings are computed from season averages across all collected games. A sm
 
 **Cause:** These games appear to have incomplete records in the NBA API — likely postponed or rescheduled games that were never fully recorded. All 7 failed on every retry attempt.
 
-**Impact:** Negligible. `COALESCE` treats missing values as 0 in season averages. With 70+ games per team in a season, 7 missing games shift any affected average by less than 0.1%.
+**Impact:** Season averages skip games with no data for a stat (`AVG` ignores NULLs), so a missing game no longer drags an average toward 0. Totals (`SUM(COALESCE(x, 0))`) still treat missing as 0. A team with no data at all for a stat shows 0 rather than NULL (rankings sort NULLs first). Averages for stats not yet backfilled for the latest games are computed from the games that do have data until the backfill runs; rerun the derive step afterwards.
 
 ---
 

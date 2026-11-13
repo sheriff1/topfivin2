@@ -26,36 +26,9 @@ def load_env():
 
 load_env()
 
-def derive_team_stats():
-    """Derive aggregated team stats from game stats"""
-    print("\n" + "=" * 60)
-    print("PHASE 5: DERIVE TEAM_STATS FROM GAME_STATS")
-    print("=" * 60)
-    
-    database_url = os.getenv('DATABASE_URL', '')
-    if database_url:
-        conn = psycopg2.connect(database_url)
-    else:
-        conn = psycopg2.connect(
-            host=os.getenv('DB_HOST', 'localhost'),
-            port=int(os.getenv('DB_PORT', 5432)),
-            user=os.getenv('DB_USER', 'postgres'),
-            password=os.getenv('DB_PASSWORD', ''),
-            database=os.getenv('DB_NAME', 'nba_stats'),
-        )
-    cursor = conn.cursor()
-    
-    # Debug: Print database host being used
-    if database_url:
-        match = re.search(r'@([^:/]+)', database_url)
-        db_host = match.group(1) if match else 'unknown'
-        print(f"  🔌 Connecting to database: {db_host}")
-    
-    try:
-        print("\n🔄 Deriving team stats from game stats...")
-        
-        # SQL to aggregate game_stats into team_stats
-        insert_stats_sql = """
+# SQL to aggregate game_stats into team_stats. Averages skip NULLs (AVG ignores them;
+# COALESCE(AVG, 0) only covers a team with no data at all); totals keep SUM(COALESCE).
+INSERT_STATS_SQL = """
         INSERT INTO team_stats (
             team_id, season,
             games_played,
@@ -143,191 +116,191 @@ def derive_team_stats():
             SUM(COALESCE(blk, 0)) as blk,
             SUM(COALESCE(pf, 0)) as pf,
             SUM(COALESCE(pts, 0)) as pts,
-            ROUND(AVG(COALESCE(fg, 0))::numeric, 1) as fg_avg,
-            ROUND(AVG(COALESCE(fga, 0))::numeric, 1) as fga_avg,
-            ROUND(AVG(COALESCE(three_p, 0))::numeric, 1) as three_p_avg,
-            ROUND(AVG(COALESCE(reb, 0))::numeric, 1) as reb_avg,
-            ROUND(AVG(COALESCE(ast, 0))::numeric, 1) as ast_avg,
-            ROUND(AVG(COALESCE(tov, 0))::numeric, 1) as tov_avg,
-            ROUND(AVG(COALESCE(stl, 0))::numeric, 1) as stl_avg,
-            ROUND(AVG(COALESCE(blk, 0))::numeric, 1) as blk_avg,
-            ROUND(AVG(COALESCE(pts, 0))::numeric, 1) as pts_avg,
-            ROUND(AVG(COALESCE(orb_pct, 0))::numeric, 4) as orb_pct,
-            ROUND(AVG(COALESCE(drb_pct, 0))::numeric, 4) as drb_pct,
-            ROUND(AVG(COALESCE(trb_pct, 0))::numeric, 4) as trb_pct,
-            ROUND(AVG(COALESCE(ast_pct, 0))::numeric, 4) as ast_pct,
-            ROUND(AVG(COALESCE(tov_pct, 0))::numeric, 1) as tov_pct,
-            ROUND(AVG(COALESCE(usg_pct, 0))::numeric, 4) as usg_pct,
-            ROUND(AVG(COALESCE(ts_pct, 0))::numeric, 4) as ts_pct,
+            ROUND(COALESCE(AVG(fg), 0)::numeric, 1) as fg_avg,
+            ROUND(COALESCE(AVG(fga), 0)::numeric, 1) as fga_avg,
+            ROUND(COALESCE(AVG(three_p), 0)::numeric, 1) as three_p_avg,
+            ROUND(COALESCE(AVG(reb), 0)::numeric, 1) as reb_avg,
+            ROUND(COALESCE(AVG(ast), 0)::numeric, 1) as ast_avg,
+            ROUND(COALESCE(AVG(tov), 0)::numeric, 1) as tov_avg,
+            ROUND(COALESCE(AVG(stl), 0)::numeric, 1) as stl_avg,
+            ROUND(COALESCE(AVG(blk), 0)::numeric, 1) as blk_avg,
+            ROUND(COALESCE(AVG(pts), 0)::numeric, 1) as pts_avg,
+            ROUND(COALESCE(AVG(orb_pct), 0)::numeric, 4) as orb_pct,
+            ROUND(COALESCE(AVG(drb_pct), 0)::numeric, 4) as drb_pct,
+            ROUND(COALESCE(AVG(trb_pct), 0)::numeric, 4) as trb_pct,
+            ROUND(COALESCE(AVG(ast_pct), 0)::numeric, 4) as ast_pct,
+            ROUND(COALESCE(AVG(tov_pct), 0)::numeric, 1) as tov_pct,
+            ROUND(COALESCE(AVG(usg_pct), 0)::numeric, 4) as usg_pct,
+            ROUND(COALESCE(AVG(ts_pct), 0)::numeric, 4) as ts_pct,
             -- BoxScoreAdvancedV3 extras
-            ROUND(AVG(COALESCE(ortg, 0))::numeric, 4) as ortg,
-            ROUND(AVG(COALESCE(drtg, 0))::numeric, 4) as drtg,
-            ROUND(AVG(COALESCE(net_rtg, 0))::numeric, 4) as net_rtg,
-            ROUND(AVG(COALESCE(efg_pct, 0))::numeric, 4) as efg_pct,
-            ROUND(AVG(COALESCE(pace, 0))::numeric, 4) as pace,
-            ROUND(AVG(COALESCE(possessions, 0))::numeric, 4) as possessions,
-            ROUND(AVG(COALESCE(pie, 0))::numeric, 4) as pie,
+            ROUND(COALESCE(AVG(ortg), 0)::numeric, 4) as ortg,
+            ROUND(COALESCE(AVG(drtg), 0)::numeric, 4) as drtg,
+            ROUND(COALESCE(AVG(net_rtg), 0)::numeric, 4) as net_rtg,
+            ROUND(COALESCE(AVG(efg_pct), 0)::numeric, 4) as efg_pct,
+            ROUND(COALESCE(AVG(pace), 0)::numeric, 4) as pace,
+            ROUND(COALESCE(AVG(possessions), 0)::numeric, 4) as possessions,
+            ROUND(COALESCE(AVG(pie), 0)::numeric, 4) as pie,
             -- BoxScoreAdvancedV3 estimated variants (migration 008)
-            ROUND(AVG(COALESCE(e_ortg, 0))::numeric, 4) as e_ortg,
-            ROUND(AVG(COALESCE(e_drtg, 0))::numeric, 4) as e_drtg,
-            ROUND(AVG(COALESCE(e_net_rtg, 0))::numeric, 4) as e_net_rtg,
-            ROUND(AVG(COALESCE(e_pace, 0))::numeric, 4) as e_pace,
+            ROUND(COALESCE(AVG(e_ortg), 0)::numeric, 4) as e_ortg,
+            ROUND(COALESCE(AVG(e_drtg), 0)::numeric, 4) as e_drtg,
+            ROUND(COALESCE(AVG(e_net_rtg), 0)::numeric, 4) as e_net_rtg,
+            ROUND(COALESCE(AVG(e_pace), 0)::numeric, 4) as e_pace,
             -- BoxScoreSummaryV3 DF7 extras
-            ROUND(AVG(COALESCE(biggest_lead, 0))::numeric, 1) as biggest_lead,
-            ROUND(AVG(COALESCE(bench_points, 0))::numeric, 1) as bench_points,
-            ROUND(AVG(COALESCE(lead_changes, 0))::numeric, 1) as lead_changes,
-            ROUND(AVG(COALESCE(times_tied, 0))::numeric, 1) as times_tied,
-            ROUND(AVG(COALESCE(biggest_scoring_run, 0))::numeric, 1) as biggest_scoring_run,
+            ROUND(COALESCE(AVG(biggest_lead), 0)::numeric, 1) as biggest_lead,
+            ROUND(COALESCE(AVG(bench_points), 0)::numeric, 1) as bench_points,
+            ROUND(COALESCE(AVG(lead_changes), 0)::numeric, 1) as lead_changes,
+            ROUND(COALESCE(AVG(times_tied), 0)::numeric, 1) as times_tied,
+            ROUND(COALESCE(AVG(biggest_scoring_run), 0)::numeric, 1) as biggest_scoring_run,
             -- BoxScoreMiscV3
-            ROUND(AVG(COALESCE(pts_paint, 0))::numeric, 1) as pts_paint,
-            ROUND(AVG(COALESCE(pts_fast_break, 0))::numeric, 1) as pts_fast_break,
-            ROUND(AVG(COALESCE(pts_second_chance, 0))::numeric, 1) as pts_second_chance,
-            ROUND(AVG(COALESCE(pts_off_to, 0))::numeric, 1) as pts_off_to,
-            ROUND(AVG(COALESCE(opp_pts_paint, 0))::numeric, 1) as opp_pts_paint,
-            ROUND(AVG(COALESCE(opp_pts_fast_break, 0))::numeric, 1) as opp_pts_fast_break,
+            ROUND(COALESCE(AVG(pts_paint), 0)::numeric, 1) as pts_paint,
+            ROUND(COALESCE(AVG(pts_fast_break), 0)::numeric, 1) as pts_fast_break,
+            ROUND(COALESCE(AVG(pts_second_chance), 0)::numeric, 1) as pts_second_chance,
+            ROUND(COALESCE(AVG(pts_off_to), 0)::numeric, 1) as pts_off_to,
+            ROUND(COALESCE(AVG(opp_pts_paint), 0)::numeric, 1) as opp_pts_paint,
+            ROUND(COALESCE(AVG(opp_pts_fast_break), 0)::numeric, 1) as opp_pts_fast_break,
             -- BoxScoreMiscV3 new extras
-            ROUND(AVG(COALESCE(opp_pts_off_to, 0))::numeric, 1) as opp_pts_off_to,
-            ROUND(AVG(COALESCE(opp_pts_second_chance, 0))::numeric, 1) as opp_pts_second_chance,
-            ROUND(AVG(COALESCE(blk_against, 0))::numeric, 1) as blk_against,
-            ROUND(AVG(COALESCE(fouls_drawn, 0))::numeric, 1) as fouls_drawn,
+            ROUND(COALESCE(AVG(opp_pts_off_to), 0)::numeric, 1) as opp_pts_off_to,
+            ROUND(COALESCE(AVG(opp_pts_second_chance), 0)::numeric, 1) as opp_pts_second_chance,
+            ROUND(COALESCE(AVG(blk_against), 0)::numeric, 1) as blk_against,
+            ROUND(COALESCE(AVG(fouls_drawn), 0)::numeric, 1) as fouls_drawn,
             -- BoxScoreHustleV2
-            ROUND(AVG(COALESCE(contested_shots, 0))::numeric, 1) as contested_shots,
-            ROUND(AVG(COALESCE(deflections, 0))::numeric, 1) as deflections,
-            ROUND(AVG(COALESCE(screen_assists, 0))::numeric, 1) as screen_assists,
-            ROUND(AVG(COALESCE(screen_assist_pts, 0))::numeric, 1) as screen_assist_pts,
-            ROUND(AVG(COALESCE(box_outs, 0))::numeric, 1) as box_outs,
-            ROUND(AVG(COALESCE(loose_balls_recovered, 0))::numeric, 1) as loose_balls_recovered,
+            ROUND(COALESCE(AVG(contested_shots), 0)::numeric, 1) as contested_shots,
+            ROUND(COALESCE(AVG(deflections), 0)::numeric, 1) as deflections,
+            ROUND(COALESCE(AVG(screen_assists), 0)::numeric, 1) as screen_assists,
+            ROUND(COALESCE(AVG(screen_assist_pts), 0)::numeric, 1) as screen_assist_pts,
+            ROUND(COALESCE(AVG(box_outs), 0)::numeric, 1) as box_outs,
+            ROUND(COALESCE(AVG(loose_balls_recovered), 0)::numeric, 1) as loose_balls_recovered,
             -- BoxScoreHustleV2 new extras
-            ROUND(AVG(COALESCE(contested_shots_2pt, 0))::numeric, 1) as contested_shots_2pt,
-            ROUND(AVG(COALESCE(contested_shots_3pt, 0))::numeric, 1) as contested_shots_3pt,
-            ROUND(AVG(COALESCE(charges_drawn, 0))::numeric, 1) as charges_drawn,
-            ROUND(AVG(COALESCE(loose_balls_off, 0))::numeric, 1) as loose_balls_off,
-            ROUND(AVG(COALESCE(loose_balls_def, 0))::numeric, 1) as loose_balls_def,
-            ROUND(AVG(COALESCE(box_outs_off, 0))::numeric, 1) as box_outs_off,
-            ROUND(AVG(COALESCE(box_outs_def, 0))::numeric, 1) as box_outs_def,
+            ROUND(COALESCE(AVG(contested_shots_2pt), 0)::numeric, 1) as contested_shots_2pt,
+            ROUND(COALESCE(AVG(contested_shots_3pt), 0)::numeric, 1) as contested_shots_3pt,
+            ROUND(COALESCE(AVG(charges_drawn), 0)::numeric, 1) as charges_drawn,
+            ROUND(COALESCE(AVG(loose_balls_off), 0)::numeric, 1) as loose_balls_off,
+            ROUND(COALESCE(AVG(loose_balls_def), 0)::numeric, 1) as loose_balls_def,
+            ROUND(COALESCE(AVG(box_outs_off), 0)::numeric, 1) as box_outs_off,
+            ROUND(COALESCE(AVG(box_outs_def), 0)::numeric, 1) as box_outs_def,
             -- BoxScoreSummaryV3 new extras
-            ROUND(AVG(COALESCE(tov_team, 0))::numeric, 1) as tov_team,
-            ROUND(AVG(COALESCE(tov_total, 0))::numeric, 1) as tov_total,
-            ROUND(AVG(COALESCE(reb_team, 0))::numeric, 1) as reb_team,
+            ROUND(COALESCE(AVG(tov_team), 0)::numeric, 1) as tov_team,
+            ROUND(COALESCE(AVG(tov_total), 0)::numeric, 1) as tov_total,
+            ROUND(COALESCE(AVG(reb_team), 0)::numeric, 1) as reb_team,
             -- BoxScoreAdvancedV3 new extras
-            ROUND(AVG(COALESCE(ast_to_tov, 0))::numeric, 4) as ast_to_tov,
-            ROUND(AVG(COALESCE(ast_ratio, 0))::numeric, 4) as ast_ratio,
-            ROUND(AVG(COALESCE(tov_ratio, 0))::numeric, 4) as tov_ratio,
-            ROUND(AVG(COALESCE(pace_per40, 0))::numeric, 4) as pace_per40,
-            ROUND(AVG(COALESCE(box_out_team_reb, 0))::numeric, 1) as box_out_team_reb,
-            ROUND(AVG(COALESCE(box_out_player_reb, 0))::numeric, 1) as box_out_player_reb,
+            ROUND(COALESCE(AVG(ast_to_tov), 0)::numeric, 4) as ast_to_tov,
+            ROUND(COALESCE(AVG(ast_ratio), 0)::numeric, 4) as ast_ratio,
+            ROUND(COALESCE(AVG(tov_ratio), 0)::numeric, 4) as tov_ratio,
+            ROUND(COALESCE(AVG(pace_per40), 0)::numeric, 4) as pace_per40,
+            ROUND(COALESCE(AVG(box_out_team_reb), 0)::numeric, 1) as box_out_team_reb,
+            ROUND(COALESCE(AVG(box_out_player_reb), 0)::numeric, 1) as box_out_player_reb,
             -- Per-game averages for traditional counting stats
-            ROUND(AVG(COALESCE(oreb, 0))::numeric, 1) as oreb_avg,
-            ROUND(AVG(COALESCE(dreb, 0))::numeric, 1) as dreb_avg,
-            ROUND(AVG(COALESCE(pf, 0))::numeric, 1) as pf_avg,
-            ROUND(AVG(COALESCE(plus_minus, 0))::numeric, 1) as pm_avg,
+            ROUND(COALESCE(AVG(oreb), 0)::numeric, 1) as oreb_avg,
+            ROUND(COALESCE(AVG(dreb), 0)::numeric, 1) as dreb_avg,
+            ROUND(COALESCE(AVG(pf), 0)::numeric, 1) as pf_avg,
+            ROUND(COALESCE(AVG(plus_minus), 0)::numeric, 1) as pm_avg,
             -- Starters/bench split stats
-            ROUND(AVG(COALESCE(starters_fg, 0))::numeric, 1)   as starters_fg,
-            ROUND(AVG(COALESCE(starters_fga, 0))::numeric, 1)  as starters_fga,
+            ROUND(COALESCE(AVG(starters_fg), 0)::numeric, 1)   as starters_fg,
+            ROUND(COALESCE(AVG(starters_fga), 0)::numeric, 1)  as starters_fga,
             CASE WHEN SUM(COALESCE(starters_fga, 0)) > 0
                  THEN ROUND(100.0 * SUM(COALESCE(starters_fg, 0)) / SUM(COALESCE(starters_fga, 0)), 1)
                  ELSE 0 END as starters_fg_pct,
-            ROUND(AVG(COALESCE(starters_three_p, 0))::numeric, 1)  as starters_three_p,
-            ROUND(AVG(COALESCE(starters_three_pa, 0))::numeric, 1) as starters_three_pa,
+            ROUND(COALESCE(AVG(starters_three_p), 0)::numeric, 1)  as starters_three_p,
+            ROUND(COALESCE(AVG(starters_three_pa), 0)::numeric, 1) as starters_three_pa,
             CASE WHEN SUM(COALESCE(starters_three_pa, 0)) > 0
                  THEN ROUND(100.0 * SUM(COALESCE(starters_three_p, 0)) / SUM(COALESCE(starters_three_pa, 0)), 1)
                  ELSE 0 END as starters_three_p_pct,
-            ROUND(AVG(COALESCE(starters_ft, 0))::numeric, 1)   as starters_ft,
-            ROUND(AVG(COALESCE(starters_fta, 0))::numeric, 1)  as starters_fta,
+            ROUND(COALESCE(AVG(starters_ft), 0)::numeric, 1)   as starters_ft,
+            ROUND(COALESCE(AVG(starters_fta), 0)::numeric, 1)  as starters_fta,
             CASE WHEN SUM(COALESCE(starters_fta, 0)) > 0
                  THEN ROUND(100.0 * SUM(COALESCE(starters_ft, 0)) / SUM(COALESCE(starters_fta, 0)), 1)
                  ELSE 0 END as starters_ft_pct,
-            ROUND(AVG(COALESCE(starters_oreb, 0))::numeric, 1) as starters_oreb,
-            ROUND(AVG(COALESCE(starters_dreb, 0))::numeric, 1) as starters_dreb,
-            ROUND(AVG(COALESCE(starters_reb, 0))::numeric, 1)  as starters_reb,
-            ROUND(AVG(COALESCE(starters_ast, 0))::numeric, 1)  as starters_ast,
-            ROUND(AVG(COALESCE(starters_stl, 0))::numeric, 1)  as starters_stl,
-            ROUND(AVG(COALESCE(starters_blk, 0))::numeric, 1)  as starters_blk,
-            ROUND(AVG(COALESCE(starters_tov, 0))::numeric, 1)  as starters_tov,
-            ROUND(AVG(COALESCE(starters_pf, 0))::numeric, 1)   as starters_pf,
-            ROUND(AVG(COALESCE(starters_pts, 0))::numeric, 1)  as starters_pts,
-            ROUND(AVG(COALESCE(starters_pm, 0))::numeric, 1)   as starters_pm,
-            ROUND(AVG(COALESCE(bench_fg, 0))::numeric, 1)      as bench_fg,
-            ROUND(AVG(COALESCE(bench_fga, 0))::numeric, 1)     as bench_fga,
+            ROUND(COALESCE(AVG(starters_oreb), 0)::numeric, 1) as starters_oreb,
+            ROUND(COALESCE(AVG(starters_dreb), 0)::numeric, 1) as starters_dreb,
+            ROUND(COALESCE(AVG(starters_reb), 0)::numeric, 1)  as starters_reb,
+            ROUND(COALESCE(AVG(starters_ast), 0)::numeric, 1)  as starters_ast,
+            ROUND(COALESCE(AVG(starters_stl), 0)::numeric, 1)  as starters_stl,
+            ROUND(COALESCE(AVG(starters_blk), 0)::numeric, 1)  as starters_blk,
+            ROUND(COALESCE(AVG(starters_tov), 0)::numeric, 1)  as starters_tov,
+            ROUND(COALESCE(AVG(starters_pf), 0)::numeric, 1)   as starters_pf,
+            ROUND(COALESCE(AVG(starters_pts), 0)::numeric, 1)  as starters_pts,
+            ROUND(COALESCE(AVG(starters_pm), 0)::numeric, 1)   as starters_pm,
+            ROUND(COALESCE(AVG(bench_fg), 0)::numeric, 1)      as bench_fg,
+            ROUND(COALESCE(AVG(bench_fga), 0)::numeric, 1)     as bench_fga,
             CASE WHEN SUM(COALESCE(bench_fga, 0)) > 0
                  THEN ROUND(100.0 * SUM(COALESCE(bench_fg, 0)) / SUM(COALESCE(bench_fga, 0)), 1)
                  ELSE 0 END as bench_fg_pct,
-            ROUND(AVG(COALESCE(bench_three_p, 0))::numeric, 1)  as bench_three_p,
-            ROUND(AVG(COALESCE(bench_three_pa, 0))::numeric, 1) as bench_three_pa,
+            ROUND(COALESCE(AVG(bench_three_p), 0)::numeric, 1)  as bench_three_p,
+            ROUND(COALESCE(AVG(bench_three_pa), 0)::numeric, 1) as bench_three_pa,
             CASE WHEN SUM(COALESCE(bench_three_pa, 0)) > 0
                  THEN ROUND(100.0 * SUM(COALESCE(bench_three_p, 0)) / SUM(COALESCE(bench_three_pa, 0)), 1)
                  ELSE 0 END as bench_three_p_pct,
-            ROUND(AVG(COALESCE(bench_ft, 0))::numeric, 1)      as bench_ft,
-            ROUND(AVG(COALESCE(bench_fta, 0))::numeric, 1)     as bench_fta,
+            ROUND(COALESCE(AVG(bench_ft), 0)::numeric, 1)      as bench_ft,
+            ROUND(COALESCE(AVG(bench_fta), 0)::numeric, 1)     as bench_fta,
             CASE WHEN SUM(COALESCE(bench_fta, 0)) > 0
                  THEN ROUND(100.0 * SUM(COALESCE(bench_ft, 0)) / SUM(COALESCE(bench_fta, 0)), 1)
                  ELSE 0 END as bench_ft_pct,
-            ROUND(AVG(COALESCE(bench_oreb, 0))::numeric, 1)    as bench_oreb,
-            ROUND(AVG(COALESCE(bench_dreb, 0))::numeric, 1)    as bench_dreb,
-            ROUND(AVG(COALESCE(bench_reb, 0))::numeric, 1)     as bench_reb,
-            ROUND(AVG(COALESCE(bench_ast, 0))::numeric, 1)     as bench_ast,
-            ROUND(AVG(COALESCE(bench_stl, 0))::numeric, 1)     as bench_stl,
-            ROUND(AVG(COALESCE(bench_blk, 0))::numeric, 1)     as bench_blk,
-            ROUND(AVG(COALESCE(bench_tov, 0))::numeric, 1)     as bench_tov,
-            ROUND(AVG(COALESCE(bench_pf, 0))::numeric, 1)      as bench_pf,
-            ROUND(AVG(COALESCE(bench_pts, 0))::numeric, 1)     as bench_pts,
-            ROUND(AVG(COALESCE(bench_pm, 0))::numeric, 1)      as bench_pm,
+            ROUND(COALESCE(AVG(bench_oreb), 0)::numeric, 1)    as bench_oreb,
+            ROUND(COALESCE(AVG(bench_dreb), 0)::numeric, 1)    as bench_dreb,
+            ROUND(COALESCE(AVG(bench_reb), 0)::numeric, 1)     as bench_reb,
+            ROUND(COALESCE(AVG(bench_ast), 0)::numeric, 1)     as bench_ast,
+            ROUND(COALESCE(AVG(bench_stl), 0)::numeric, 1)     as bench_stl,
+            ROUND(COALESCE(AVG(bench_blk), 0)::numeric, 1)     as bench_blk,
+            ROUND(COALESCE(AVG(bench_tov), 0)::numeric, 1)     as bench_tov,
+            ROUND(COALESCE(AVG(bench_pf), 0)::numeric, 1)      as bench_pf,
+            ROUND(COALESCE(AVG(bench_pts), 0)::numeric, 1)     as bench_pts,
+            ROUND(COALESCE(AVG(bench_pm), 0)::numeric, 1)      as bench_pm,
             -- Game context
-            ROUND(AVG(COALESCE(attendance, 0))::numeric, 0)    as attendance,
-            ROUND(AVG(COALESCE(duration_mins, 0))::numeric, 2) as duration_mins,
-            ROUND(AVG(COALESCE(q1_pts, 0))::numeric, 1)        as q1_pts,
-            ROUND(AVG(COALESCE(q2_pts, 0))::numeric, 1)        as q2_pts,
-            ROUND(AVG(COALESCE(q3_pts, 0))::numeric, 1)        as q3_pts,
-            ROUND(AVG(COALESCE(q4_pts, 0))::numeric, 1)        as q4_pts,
+            ROUND(COALESCE(AVG(attendance), 0)::numeric, 0)    as attendance,
+            ROUND(COALESCE(AVG(duration_mins), 0)::numeric, 2) as duration_mins,
+            ROUND(COALESCE(AVG(q1_pts), 0)::numeric, 1)        as q1_pts,
+            ROUND(COALESCE(AVG(q2_pts), 0)::numeric, 1)        as q2_pts,
+            ROUND(COALESCE(AVG(q3_pts), 0)::numeric, 1)        as q3_pts,
+            ROUND(COALESCE(AVG(q4_pts), 0)::numeric, 1)        as q4_pts,
             -- BoxScoreAdvancedV3 extras (migration 009)
-            ROUND(AVG(COALESCE(dreb_pct, 0))::numeric, 4)      as dreb_pct,
-            ROUND(AVG(COALESCE(reb_pct, 0))::numeric, 4)       as reb_pct,
-            ROUND(AVG(COALESCE(e_tov_pct, 0))::numeric, 1)     as e_tov_pct,
-            ROUND(AVG(COALESCE(e_usage_pct, 0))::numeric, 4)   as e_usage_pct,
+            ROUND(COALESCE(AVG(dreb_pct), 0)::numeric, 4)      as dreb_pct,
+            ROUND(COALESCE(AVG(reb_pct), 0)::numeric, 4)       as reb_pct,
+            ROUND(COALESCE(AVG(e_tov_pct), 0)::numeric, 1)     as e_tov_pct,
+            ROUND(COALESCE(AVG(e_usage_pct), 0)::numeric, 4)   as e_usage_pct,
             -- BoxScoreFourFactorsV3 (migration 009)
-            ROUND(AVG(COALESCE(ft_rate, 0))::numeric, 4)       as ft_rate,
-            ROUND(AVG(COALESCE(tm_tov_pct, 0))::numeric, 1)    as tm_tov_pct,
-            ROUND(AVG(COALESCE(oreb_pct, 0))::numeric, 4)      as oreb_pct,
-            ROUND(AVG(COALESCE(opp_efg_pct, 0))::numeric, 4)   as opp_efg_pct,
-            ROUND(AVG(COALESCE(opp_ft_rate, 0))::numeric, 4)   as opp_ft_rate,
-            ROUND(AVG(COALESCE(opp_tov_pct, 0))::numeric, 1)   as opp_tov_pct,
-            ROUND(AVG(COALESCE(opp_oreb_pct, 0))::numeric, 4)  as opp_oreb_pct,
+            ROUND(COALESCE(AVG(ft_rate), 0)::numeric, 4)       as ft_rate,
+            ROUND(COALESCE(AVG(tm_tov_pct), 0)::numeric, 1)    as tm_tov_pct,
+            ROUND(COALESCE(AVG(oreb_pct), 0)::numeric, 4)      as oreb_pct,
+            ROUND(COALESCE(AVG(opp_efg_pct), 0)::numeric, 4)   as opp_efg_pct,
+            ROUND(COALESCE(AVG(opp_ft_rate), 0)::numeric, 4)   as opp_ft_rate,
+            ROUND(COALESCE(AVG(opp_tov_pct), 0)::numeric, 1)   as opp_tov_pct,
+            ROUND(COALESCE(AVG(opp_oreb_pct), 0)::numeric, 4)  as opp_oreb_pct,
             -- BoxScoreSummaryV3 extra (migration 009)
-            ROUND(AVG(COALESCE(pts_from_tov, 0))::numeric, 1)  as pts_from_tov,
+            ROUND(COALESCE(AVG(pts_from_tov), 0)::numeric, 1)  as pts_from_tov,
             -- BoxScoreScoringV3 scoring % distribution (migration 009)
-            ROUND(AVG(COALESCE(pct_fga_2pt, 0))::numeric, 4)   as pct_fga_2pt,
-            ROUND(AVG(COALESCE(pct_fga_3pt, 0))::numeric, 4)   as pct_fga_3pt,
-            ROUND(AVG(COALESCE(pct_pts_2pt, 0))::numeric, 4)   as pct_pts_2pt,
-            ROUND(AVG(COALESCE(pct_pts_2pt_mr, 0))::numeric, 4) as pct_pts_2pt_mr,
-            ROUND(AVG(COALESCE(pct_pts_3pt, 0))::numeric, 4)   as pct_pts_3pt,
-            ROUND(AVG(COALESCE(pct_pts_fb, 0))::numeric, 4)    as pct_pts_fb,
-            ROUND(AVG(COALESCE(pct_pts_ft, 0))::numeric, 4)    as pct_pts_ft,
-            ROUND(AVG(COALESCE(pct_pts_off_tov, 0))::numeric, 4) as pct_pts_off_tov,
-            ROUND(AVG(COALESCE(pct_pts_paint, 0))::numeric, 4) as pct_pts_paint,
-            ROUND(AVG(COALESCE(pct_ast_2pm, 0))::numeric, 4)   as pct_ast_2pm,
-            ROUND(AVG(COALESCE(pct_uast_2pm, 0))::numeric, 4)  as pct_uast_2pm,
-            ROUND(AVG(COALESCE(pct_ast_3pm, 0))::numeric, 4)   as pct_ast_3pm,
-            ROUND(AVG(COALESCE(pct_uast_3pm, 0))::numeric, 4)  as pct_uast_3pm,
-            ROUND(AVG(COALESCE(pct_ast_fgm, 0))::numeric, 4)   as pct_ast_fgm,
-            ROUND(AVG(COALESCE(pct_uast_fgm, 0))::numeric, 4)  as pct_uast_fgm,
+            ROUND(COALESCE(AVG(pct_fga_2pt), 0)::numeric, 4)   as pct_fga_2pt,
+            ROUND(COALESCE(AVG(pct_fga_3pt), 0)::numeric, 4)   as pct_fga_3pt,
+            ROUND(COALESCE(AVG(pct_pts_2pt), 0)::numeric, 4)   as pct_pts_2pt,
+            ROUND(COALESCE(AVG(pct_pts_2pt_mr), 0)::numeric, 4) as pct_pts_2pt_mr,
+            ROUND(COALESCE(AVG(pct_pts_3pt), 0)::numeric, 4)   as pct_pts_3pt,
+            ROUND(COALESCE(AVG(pct_pts_fb), 0)::numeric, 4)    as pct_pts_fb,
+            ROUND(COALESCE(AVG(pct_pts_ft), 0)::numeric, 4)    as pct_pts_ft,
+            ROUND(COALESCE(AVG(pct_pts_off_tov), 0)::numeric, 4) as pct_pts_off_tov,
+            ROUND(COALESCE(AVG(pct_pts_paint), 0)::numeric, 4) as pct_pts_paint,
+            ROUND(COALESCE(AVG(pct_ast_2pm), 0)::numeric, 4)   as pct_ast_2pm,
+            ROUND(COALESCE(AVG(pct_uast_2pm), 0)::numeric, 4)  as pct_uast_2pm,
+            ROUND(COALESCE(AVG(pct_ast_3pm), 0)::numeric, 4)   as pct_ast_3pm,
+            ROUND(COALESCE(AVG(pct_uast_3pm), 0)::numeric, 4)  as pct_uast_3pm,
+            ROUND(COALESCE(AVG(pct_ast_fgm), 0)::numeric, 4)   as pct_ast_fgm,
+            ROUND(COALESCE(AVG(pct_uast_fgm), 0)::numeric, 4)  as pct_uast_fgm,
             -- PlayerTrack stats aggregations
-            ROUND(AVG(COALESCE(distance, 0))::numeric, 2)      as distance,
-            ROUND(AVG(COALESCE(reb_chances_off, 0))::numeric, 1) as reb_chances_off,
-            ROUND(AVG(COALESCE(reb_chances_def, 0))::numeric, 1) as reb_chances_def,
-            ROUND(AVG(COALESCE(reb_chances_total, 0))::numeric, 1) as reb_chances_total,
-            ROUND(AVG(COALESCE(touches, 0))::numeric, 1)       as touches,
-            ROUND(AVG(COALESCE(secondary_ast, 0))::numeric, 1) as secondary_ast,
-            ROUND(AVG(COALESCE(ft_ast, 0))::numeric, 1)        as ft_ast,
-            ROUND(AVG(COALESCE(passes, 0))::numeric, 1)        as passes,
-            ROUND(AVG(COALESCE(contested_fgm, 0))::numeric, 1) as contested_fgm,
-            ROUND(AVG(COALESCE(contested_fga, 0))::numeric, 1) as contested_fga,
-            ROUND(AVG(COALESCE(contested_fg_pct, 0))::numeric, 3) as contested_fg_pct,
-            ROUND(AVG(COALESCE(uncontested_fgm, 0))::numeric, 1) as uncontested_fgm,
-            ROUND(AVG(COALESCE(uncontested_fga, 0))::numeric, 1) as uncontested_fga,
-            ROUND(AVG(COALESCE(uncontested_fg_pct, 0))::numeric, 3) as uncontested_fg_pct,
-            ROUND(AVG(COALESCE(dar_fgm, 0))::numeric, 1)       as dar_fgm,
-            ROUND(AVG(COALESCE(dar_fga, 0))::numeric, 1)       as dar_fga,
-            ROUND(AVG(COALESCE(dar_fg_pct, 0))::numeric, 3)    as dar_fg_pct,
+            ROUND(COALESCE(AVG(distance), 0)::numeric, 2)      as distance,
+            ROUND(COALESCE(AVG(reb_chances_off), 0)::numeric, 1) as reb_chances_off,
+            ROUND(COALESCE(AVG(reb_chances_def), 0)::numeric, 1) as reb_chances_def,
+            ROUND(COALESCE(AVG(reb_chances_total), 0)::numeric, 1) as reb_chances_total,
+            ROUND(COALESCE(AVG(touches), 0)::numeric, 1)       as touches,
+            ROUND(COALESCE(AVG(secondary_ast), 0)::numeric, 1) as secondary_ast,
+            ROUND(COALESCE(AVG(ft_ast), 0)::numeric, 1)        as ft_ast,
+            ROUND(COALESCE(AVG(passes), 0)::numeric, 1)        as passes,
+            ROUND(COALESCE(AVG(contested_fgm), 0)::numeric, 1) as contested_fgm,
+            ROUND(COALESCE(AVG(contested_fga), 0)::numeric, 1) as contested_fga,
+            ROUND(COALESCE(AVG(contested_fg_pct), 0)::numeric, 3) as contested_fg_pct,
+            ROUND(COALESCE(AVG(uncontested_fgm), 0)::numeric, 1) as uncontested_fgm,
+            ROUND(COALESCE(AVG(uncontested_fga), 0)::numeric, 1) as uncontested_fga,
+            ROUND(COALESCE(AVG(uncontested_fg_pct), 0)::numeric, 3) as uncontested_fg_pct,
+            ROUND(COALESCE(AVG(dar_fgm), 0)::numeric, 1)       as dar_fgm,
+            ROUND(COALESCE(AVG(dar_fga), 0)::numeric, 1)       as dar_fga,
+            ROUND(COALESCE(AVG(dar_fg_pct), 0)::numeric, 3)    as dar_fg_pct,
             -- Wins/losses derived from game_stats.win column
             SUM(COALESCE(win, 0))                               as wins,
             COUNT(*) - SUM(COALESCE(win, 0))                    as losses,
@@ -514,7 +487,37 @@ def derive_team_stats():
             losses = EXCLUDED.losses,
             win_pct = EXCLUDED.win_pct,
             updated_at = CURRENT_TIMESTAMP
-        """
+"""
+
+
+def derive_team_stats():
+    """Derive aggregated team stats from game stats"""
+    print("\n" + "=" * 60)
+    print("PHASE 5: DERIVE TEAM_STATS FROM GAME_STATS")
+    print("=" * 60)
+    
+    database_url = os.getenv('DATABASE_URL', '')
+    if database_url:
+        conn = psycopg2.connect(database_url)
+    else:
+        conn = psycopg2.connect(
+            host=os.getenv('DB_HOST', 'localhost'),
+            port=int(os.getenv('DB_PORT', 5432)),
+            user=os.getenv('DB_USER', 'postgres'),
+            password=os.getenv('DB_PASSWORD', ''),
+            database=os.getenv('DB_NAME', 'nba_stats'),
+        )
+    cursor = conn.cursor()
+    
+    # Debug: Print database host being used
+    if database_url:
+        match = re.search(r'@([^:/]+)', database_url)
+        db_host = match.group(1) if match else 'unknown'
+        print(f"  🔌 Connecting to database: {db_host}")
+    
+    try:
+        print("\n🔄 Deriving team stats from game stats...")
+        
         
         # Precompute win column: 1 if team scored more than opponent in same game
         update_wins_sql = """
@@ -532,7 +535,7 @@ def derive_team_stats():
         win_count = cursor.fetchone()[0]
         print(f"  ✓ Precomputed win column for {win_count} game rows")
 
-        cursor.execute(insert_stats_sql)
+        cursor.execute(INSERT_STATS_SQL)
         conn.commit()
         
         # Verify results
