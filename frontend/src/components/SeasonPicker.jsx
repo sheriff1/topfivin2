@@ -9,7 +9,7 @@ export function SeasonPicker() {
 
   return (
     <select
-      className="select select-sm text-base-content"
+      className="select select-sm text-base-content w-auto shrink-0"
       value={season}
       onChange={(e) => setSeason(e.target.value)}
       aria-label="Season"

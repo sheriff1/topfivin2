@@ -90,17 +90,17 @@ export function Layout({ children, seasonPicker = null }) {
     <div className="min-h-screen bg-base-100 flex flex-col">
       {/* Navbar */}
       <div className="navbar min-h-10 bg-neutral text-neutral-content shadow-lg px-4 sticky top-0 z-50">
-        <div className="navbar-start">
+        <div className="navbar-start !w-auto shrink-0">
           <Link to="/" className="btn btn-ghost btn-sm normal-case text-lg font-bold gap-1 px-2">
             🏀 NBA Top Five In
           </Link>
         </div>
-        <div className="navbar-end">
+        <div className="navbar-end !w-auto flex-1">
           {/* Desktop nav */}
-          <nav className="hidden md:flex gap-1 items-center">
+          <nav className="hidden md:flex gap-0 lg:gap-1 items-center">
             {navLinks}
             {seasonPicker}
-            <label className="toggle text-base-content">
+            <label className="toggle text-base-content shrink-0">
               <input
                 type="checkbox"
                 value="dark"
