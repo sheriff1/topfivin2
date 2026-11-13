@@ -1,8 +1,10 @@
 import { useEffect } from "react";
 import { useCurrentSeason } from "../hooks/useApi";
+import { usePageTitle } from "../hooks/usePageTitle";
 import { formatSeasonLabel } from "../utils/season";
 
 export function AboutPage() {
+  usePageTitle("About");
   const { data: season } = useCurrentSeason();
   // Scroll to top on navigation
   useEffect(() => {

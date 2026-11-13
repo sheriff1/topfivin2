@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { useAllTeams } from "../hooks/useApi";
 import { useGameEngine } from "../hooks/useGameEngine";
+import { usePageTitle } from "../hooks/usePageTitle";
 import { formatStatValue } from "../utils/statFormatter";
 
 function getTeamColor(teamId, allTeams) {
@@ -26,6 +27,7 @@ function getTeamColor(teamId, allTeams) {
 }
 
 export function GamePage() {
+  usePageTitle("Guesser");
   const {
     score,
     highScore,

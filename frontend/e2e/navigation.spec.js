@@ -60,3 +60,14 @@ test("season picker switches the season used by the API requests", async ({ page
   await page.getByRole("combobox", { name: "Season" }).first().selectOption("2025");
   await expect(page.getByText(/for the 2025-26 NBA season/)).toBeVisible();
 });
+
+test("tab title follows the page", async ({ page }) => {
+  await page.goto("/");
+  await expect(page).toHaveTitle("NBA Top Five In");
+
+  await page.getByRole("link", { name: "Teams" }).click();
+  await expect(page).toHaveTitle("NBA Top Five In | Teams");
+
+  await page.getByRole("link", { name: "Rankings", exact: true }).click();
+  await expect(page).toHaveTitle("NBA Top Five In");
+});
