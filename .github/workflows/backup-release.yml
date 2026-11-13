@@ -36,7 +36,7 @@ jobs:
           echo "DUMP_FILE=$FILENAME" >> $GITHUB_ENV
 
       - name: Create GitHub Release and upload dump
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: db-backup-${{ github.run_number }}
           name: "DB Backup — ${{ env.DUMP_FILE }}"
