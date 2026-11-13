@@ -1,12 +1,15 @@
-# Dependabot: weekly, grouped minor/patch updates per ecosystem. Major bumps are never
+# Dependabot: monthly, staggered across the 1st/8th/15th, grouped minor/patch updates per ecosystem. Major bumps are never
 # grouped, so each arrives as its own PR for manual review. Minor/patch PRs are auto-merged by dependabot-automerge.yml (#238).
+# Staggered so merges never land in one burst: each merge to main is a Vercel production build
+# counted against the team's 100/24h limit (docs/deploy-budget.md).
 version: 2
 updates:
   # Root pnpm workspace (backend + frontend); Dependabot reads pnpm-lock.yaml
   - package-ecosystem: npm
     directory: "/"
     schedule:
-      interval: weekly
+      interval: cron
+      cronjob: "0 6 1 * *"
     open-pull-requests-limit: 5
     groups:
       npm-minor-patch:
@@ -21,7 +24,8 @@ updates:
   - package-ecosystem: github-actions
     directory: "/"
     schedule:
-      interval: weekly
+      interval: cron
+      cronjob: "0 6 8 * *"
     groups:
       actions-minor-patch:
         update-types: [minor, patch]
@@ -29,7 +33,8 @@ updates:
   - package-ecosystem: pip
     directory: "/"
     schedule:
-      interval: weekly
+      interval: cron
+      cronjob: "0 6 15 * *"
     groups:
       pip-minor-patch:
         update-types: [minor, patch]
