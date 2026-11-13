@@ -1,9 +1,14 @@
-.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod social-images social-images-prod social-image-manual backup backup-clean restore-local archive-season k6-smoke k6-load k6-stress fetch-advanced-extras fetch-misc fetch-hustle fetch-summary fetch-fourfactors fetch-scoring fetch-starters-bench fetch-playertrack backfill backfill-prod backfill-missing sync-advanced-prod sync-missing-prod sync-prod migrate-prod check-progress check-progress-prod logs-clean
+.PHONY: dev backend frontend services stop pipeline pipeline-prod fetch fetch-prod derive derive-prod social-images social-images-prod social-image-manual backup backup-clean restore-local archive-season k6-smoke k6-load k6-stress fetch-advanced-extras fetch-misc fetch-hustle fetch-summary fetch-fourfactors fetch-scoring fetch-starters-bench fetch-playertrack backfill backfill-prod backfill-missing sync-advanced-prod sync-missing-prod sync-prod migrate-prod check-progress check-progress-prod logs-clean vercel-slots
 
 # ── Infrastructure ───────────────────────────────────────────────────────────
 services:
 	@echo "Starting services..."
 	@(lsof -i :5432 > /dev/null 2>&1 && echo "✓ PostgreSQL already running on 5432") || (brew services start postgresql@16 || true)
+
+# ── Deploy budget ────────────────────────────────────────────────────────────
+# Vercel Hobby allows 100 deployments per rolling 24h across the whole team (docs/deploy-budget.md)
+vercel-slots:
+	@./scripts/vercel-slots.sh
 
 # ── Application ──────────────────────────────────────────────────────────────
 dev:
