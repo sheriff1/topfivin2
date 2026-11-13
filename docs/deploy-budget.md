@@ -27,7 +27,8 @@ fewer than 5 slots are free. If held, wait; the oldest deployments roll off hour
 - Dashboard settings (not in the repo): skip deployments for unaffected projects in the monorepo
   (Root Directory settings), and disable previews for branches that don't need them (e.g. `dependabot/*`).
 
-## Open question
+## Do skipped builds count?
 
-Whether builds skipped by the ignore step still count toward the 100/day limit was unconfirmed when this
-was written. After the first docs-only merge, run `make vercel-slots` before and after to see.
+Builds skipped by the ignore step show up as `CANCELED` deployments in the team's 24h listing, and
+`make vercel-slots` counts them (the total rose by one after a skipped push on 2026-11-12). Whether Vercel
+enforces the 100/day limit on them is being confirmed; see the result appended below.
