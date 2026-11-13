@@ -345,19 +345,9 @@ Routes that take `?season=` default to the latest stored season when it is omitt
 
 ## Data Accuracy & Completeness
 
-Stat rankings are computed from season averages across all collected games. A small number of games have permanently incomplete records in the NBA API:
+Stat rankings are computed from season averages across all collected games. A small number of games have permanently incomplete records in the NBA API (box score summary data such as bench points and lead changes, or player tracking data such as distance, touches and contested shots).
 
-| Game ID      | Missing data source       | Affected columns                                                                                                                                                                                                                                                            |
-| ------------ | ------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `0022500259` | BoxScoreSummaryV3 DF7     | `biggest_lead`, `bench_points`, `lead_changes`, `times_tied`, `biggest_scoring_run`, `pts_from_tov`                                                                                                                                                                         |
-| `0022500260` | BoxScoreSummaryV3 DF7     | same                                                                                                                                                                                                                                                                        |
-| `0022500261` | BoxScoreSummaryV3 DF7     | same                                                                                                                                                                                                                                                                        |
-| `0022500265` | BoxScoreSummaryV3 DF7     | same                                                                                                                                                                                                                                                                        |
-| `0022501026` | BoxScorePlayerTrackV3 DF1 | `distance`, `touches`, `passes`, `reb_chances_off`, `reb_chances_def`, `reb_chances_total`, `secondary_ast`, `ft_ast`, `contested_fgm`, `contested_fga`, `contested_fg_pct`, `uncontested_fgm`, `uncontested_fga`, `uncontested_fg_pct`, `dar_fgm`, `dar_fga`, `dar_fg_pct` |
-| `0022501035` | BoxScorePlayerTrackV3 DF1 | same                                                                                                                                                                                                                                                                        |
-| `0022501036` | BoxScorePlayerTrackV3 DF1 | same                                                                                                                                                                                                                                                                        |
-
-**Cause:** These games appear to have incomplete records in the NBA API — likely postponed or rescheduled games that were never fully recorded. All 7 failed on every retry attempt.
+**Cause:** These games appear to have incomplete records in the NBA API — likely postponed or rescheduled games that were never fully recorded. They failed on every retry attempt.
 
 **Impact:** Season averages skip games with no data for a stat (`AVG` ignores NULLs), so a missing game no longer drags an average toward 0. Totals (`SUM(COALESCE(x, 0))`) still treat missing as 0. A team with no data at all for a stat shows 0 rather than NULL (rankings sort NULLs first). Averages for stats not yet backfilled for the latest games are computed from the games that do have data until the backfill runs; rerun the derive step afterwards.
 
