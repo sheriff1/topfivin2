@@ -8,7 +8,7 @@ nba_api==1.12.0
 numpy==2.5.4
 pandas==2.3.3
 psycopg2-binary==2.9.13
-python-dateutil==2.9.0.post0
+python-dateutil==4.0.0
 pytz==2026.6
 requests==2.34.2
 six==1.17.0
