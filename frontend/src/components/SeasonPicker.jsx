@@ -8,17 +8,15 @@ export function SeasonPicker() {
   if (available.length < 2 || !season) return null;
 
   return (
-    <select
-      className="select select-sm text-base-content"
-      value={season}
-      onChange={(e) => setSeason(e.target.value)}
-      aria-label="Season"
-    >
-      {available.map((s) => (
-        <option key={s} value={s}>
-          {formatSeasonLabel(s)}
-        </option>
-      ))}
-    </select>
+    <label className="select select-sm text-base-content w-auto shrink-0">
+      <span className="label">Season</span>
+      <select value={season} onChange={(e) => setSeason(e.target.value)} aria-label="Season">
+        {available.map((s) => (
+          <option key={s} value={s}>
+            {formatSeasonLabel(s)}
+          </option>
+        ))}
+      </select>
+    </label>
   );
 }
