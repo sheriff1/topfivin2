@@ -45,21 +45,17 @@ export function AboutPage() {
             <div className="bg-warning/10 p-4 rounded-lg border border-warning">
               <h3 className="font-semibold text-warning mb-2">⚠️ Known Data Gaps</h3>
               <p className="text-sm mb-3">
-                7 games have permanently incomplete records in the NBA Stats API and are excluded
-                from certain stat averages:
+                A small number of games have incomplete records in the NBA Stats API for some stat
+                groups. Those games still count everywhere else; they are only left out of the
+                affected stats:
               </p>
               <ul className="list-disc list-inside space-y-1 text-sm ml-2">
-                <li>
-                  4 games missing BoxScoreSummaryV3 data (bench points, lead changes, pts from
-                  turnovers)
-                </li>
-                <li>
-                  3 games missing BoxScorePlayerTrackV3 data (distance, touches, contested shots)
-                </li>
+                <li>Box score summary data (bench points, lead changes, points from turnovers)</li>
+                <li>Player tracking data (distance, touches, contested shots)</li>
               </ul>
               <p className="text-sm mt-2">
-                Impact is negligible — missing values are treated as 0 and represent less than 0.1%
-                of each team&apos;s season average.
+                Missing values are skipped, not counted as 0, so an affected team&apos;s average for
+                that stat is computed from one game fewer. The effect on a season average is small.
               </p>
             </div>
 
@@ -73,12 +69,10 @@ export function AboutPage() {
                   <strong>Traditional Stats:</strong> Points, rebounds, assists, FG%, FT%, 3P%
                 </li>
                 <li>
-                  <strong>Advanced Stats:</strong> ORtg, DRtg, pace, true shooting %, player
-                  efficiency rating (PER)
+                  <strong>Advanced Stats:</strong> ORtg, DRtg, net rating, pace, true shooting %
                 </li>
                 <li>
-                  <strong>Four Factors:</strong> Effective FG%, turnover rate, offensive rebound %,
-                  free throw rate
+                  <strong>Four Factors:</strong> Effective FG%, turnover rate, offensive rebound %
                 </li>
                 <li>
                   <strong>Misc Stats:</strong> Points in paint, fast break points, bench points
@@ -92,17 +86,18 @@ export function AboutPage() {
             <div>
               <h3 className="font-semibold mb-2">Update Frequency</h3>
               <p className="text-sm">
-                Statistics are updated after each game is completed and official box scores are
-                published by the NBA. Processing typically occurs within hours of game completion.
+                Statistics are fetched from the NBA Stats API manually, not on an automatic
+                schedule, so the newest games can lag behind by a few days.
               </p>
             </div>
 
             <div className="bg-success/10 p-4 rounded-lg border border-success">
               <h3 className="font-semibold text-success mb-2">✓ Verified Accuracy</h3>
               <p className="text-sm">
-                All statistical calculations have been validated against official NBA box scores and
-                the NBA Stats API. Rankings and team averages are calculated directly from verified
-                game data.
+                Game stats come straight from the NBA Stats API, and rankings and team averages are
+                calculated from those game stats. They have been spot-checked against other public
+                sources, but they are not independently audited, so small discrepancies are
+                possible.
               </p>
             </div>
           </div>
