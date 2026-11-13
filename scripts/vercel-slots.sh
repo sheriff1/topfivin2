@@ -4,6 +4,7 @@
 # prints counts only, never tokens or env values. Needs: vercel CLI, python3.
 LIMIT=100
 HOLD_BELOW=5
+logdir="$(cd "$(dirname "$0")/../logs" && pwd)"
 cd "$(dirname "$0")/../frontend" || exit 2
 since=$(( ($(date +%s) - 86400) * 1000 ))
 dir=$(mktemp -d)
@@ -19,7 +20,7 @@ while [ "$page" -lt 10 ]; do
   until_arg="&until=$next"
   page=$((page + 1))
 done
-python3 -I - "$dir" "$LIMIT" "$HOLD_BELOW" <<'PY'
+SLOTS_LOG_DIR="$logdir" python3 -I - "$dir" "$LIMIT" "$HOLD_BELOW" <<'PY'
 import sys, json, glob, collections
 d, limit, hold = sys.argv[1], int(sys.argv[2]), int(sys.argv[3])
 c = collections.Counter(); states = collections.Counter(); total = 0
@@ -34,6 +35,14 @@ free = limit - total
 skipped = states.get("CANCELED", 0)
 print(f"\nTotal last 24h: {total}/{limit}  free: {max(free, 0)}")
 print(f"  built/other: {total - skipped}   skipped (CANCELED): {skipped}")
+# Append a snapshot so a later refused deploy can be matched to the nearest counts (the 24h window rolls).
+import datetime, os
+log = os.path.join(os.environ.get("SLOTS_LOG_DIR", "."), "vercel-slots.log")
+try:
+    with open(log, "a") as fh:
+        fh.write(f"{datetime.datetime.now(datetime.timezone.utc).isoformat(timespec='seconds')} total={total} built={total - skipped} canceled={skipped}\n")
+except OSError:
+    pass
 print("  (unproven: whether skipped builds count toward the limit; see docs/deploy-budget.md)")
 if free < hold:
     print(f"HOLD: fewer than {hold} free slots. Do not merge yet.")
