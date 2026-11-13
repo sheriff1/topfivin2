@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
 import { TeamCard } from "../components/TeamCard";
 import { useAllTeams } from "../hooks/useApi";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 export function TeamsPage() {
+  usePageTitle("Teams");
   const { data: teams, isLoading, error } = useAllTeams();
   const [sortOrder, setSortOrder] = useState("alpha");
 

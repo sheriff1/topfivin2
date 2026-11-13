@@ -1,7 +1,9 @@
 import { useState, useEffect } from "react";
 import { useRankings, useCurrentSeason } from "../hooks/useApi";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 export function GameCountPage() {
+  usePageTitle("Games Count by Team");
   // Scroll to top on navigation
   useEffect(() => {
     window.scrollTo(0, 0);

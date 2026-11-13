@@ -7,6 +7,7 @@ import {
   useCategories,
   useCurrentSeason,
 } from "../hooks/useApi";
+import { usePageTitle } from "../hooks/usePageTitle";
 import { formatSeasonLabel } from "../utils/season";
 import { formatStatValue, formatPercentageStat } from "../utils/statFormatter";
 
@@ -27,6 +28,7 @@ export function TeamPage() {
   const { data: stats, isLoading: statsLoading } = useTeamStats(team?.team_id);
   const { data: rankings, isLoading: rankingsLoading } = useTeamRankings(team?.team_id);
   const { data: categories } = useCategories();
+  usePageTitle(team?.team_name);
 
   // Sorting state - default to "rank" ascending (1, 2, 3...)
   const [sortColumn, setSortColumn] = useState("rank");

@@ -4,6 +4,7 @@ import { DidYouKnow } from "../components/DidYouKnow";
 import { RankingsGrid } from "../components/RankingsGrid";
 import { Top5Showcase } from "../components/Top5Showcase";
 import { useCategories, useRankings, useCurrentSeason } from "../hooks/useApi";
+import { usePageTitle } from "../hooks/usePageTitle";
 
 const CATEGORY_GROUPS = [
   {
@@ -186,6 +187,7 @@ const CATEGORY_GROUPS = [
 ];
 
 export function RankingsPage() {
+  usePageTitle();
   const [selectedCategory, setSelectedCategory] = useState(null);
   const [shouldAnimate, setShouldAnimate] = useState(true);
   const hasInitialized = useRef(false);
