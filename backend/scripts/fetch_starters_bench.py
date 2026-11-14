@@ -28,6 +28,7 @@ import time
 from datetime import datetime
 import random
 import psycopg2
+from backfill_utils import has_data
 
 # ── Load .env configuration ───────────────────────────────────────────────────
 def load_env():
@@ -194,6 +195,7 @@ def main():
 
     updated = failed = consecutive_failures = 0
     bad_data_games = []
+    waiting_games = []
     COOLDOWN_THRESHOLD = 2
     COOLDOWN_SECS      = 30  # 30 seconds
 
@@ -204,6 +206,10 @@ def main():
             try:
                 delay()
                 team_data = fetch_starters_bench(game_id)
+                if not has_data(team_data):
+                    waiting_games.append(game_id)
+                    print("⏳ no data published yet — will retry next run")
+                    break
 
                 for team_id, groups in team_data.items():
                     starters = groups.get("starters", {})
@@ -328,6 +334,8 @@ def main():
 
     print(f"\n{'='*60}")
     print(f"✅ Done — updated: {updated}  failed: {failed}")
+    if waiting_games:
+        print(f"   ⏳ Waiting for data (retried next run): {', '.join(waiting_games)}")
     if bad_data_games:
         print(f"   ⚠️  Bad data (skipped, no retry): {', '.join(bad_data_games)}")
     if failed:

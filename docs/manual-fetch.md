@@ -43,6 +43,12 @@ Note: a new season's first fetch creates its rows, which makes it the "current" 
 3. **Backup**: a new non-empty `backups/nba_stats_<timestamp>.dump` exists (`pg_restore --list <file> | head`).
 4. **GitHub**: run `gh workflow run freshness-check.yml` and confirm it succeeds (it fails if the newest game is over 3 days old; pass `-f today=YYYY-MM-DD` to test). `Database Backup to GitHub Releases` runs weekly (Sun 02:00 UTC) and can be dispatched the same way.
 
+Reading the supplementary-script summaries (`✅ Done — updated: N`):
+
+- **`updated`** games got real data written.
+- **`⏳ Waiting for data`** games: NBA returned empty values (it has not published that endpoint's data yet, often for several hours after a game; player tracking can take longer). Nothing is written and the next run retries them.
+- **`⚠️ Bad data (skipped, no retry)`** games: the endpoint errors for that game. Some are permanent NBA gaps (see the README "Data Accuracy & Completeness" table); they are skipped for that run only.
+
 ## Common failures
 
 | Symptom                                 | What to do                                                                              |

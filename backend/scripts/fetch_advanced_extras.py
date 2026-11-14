@@ -26,6 +26,7 @@ import time
 from datetime import datetime
 import random
 import psycopg2
+from backfill_utils import has_data
 
 # ── Header patch (identical to fetch_nba_stats.py) ───────────────────────────
 NBA_STATS_HEADERS = {
@@ -146,6 +147,7 @@ def main():
 
     skipped = updated = failed = consecutive_failures = 0
     bad_data_games = []
+    waiting_games = []
     COOLDOWN_THRESHOLD = 2   # consecutive failures before auto-pause
     COOLDOWN_SECS      = 30  # 30 seconds
 
@@ -156,6 +158,10 @@ def main():
             try:
                 delay()
                 team_stats = fetch_advanced(game_id)
+                if not has_data(team_stats):
+                    waiting_games.append(game_id)
+                    print("⏳ no data published yet — will retry next run")
+                    break
 
                 for team_id, stats in team_stats.items():
                     cur.execute("""
@@ -205,6 +211,8 @@ def main():
 
     print(f"\n{'='*60}")
     print(f"✅ Done — updated: {updated}  skipped: {skipped}  failed: {failed}")
+    if waiting_games:
+        print(f"   ⏳ Waiting for data (retried next run): {', '.join(waiting_games)}")
     if bad_data_games:
         print(f"   ⚠️  Bad data (skipped, no retry): {', '.join(bad_data_games)}")
     if failed:
