@@ -1,5 +1,5 @@
 # Dependabot: monthly, staggered across the 1st/8th/15th, grouped minor/patch updates per ecosystem. Major bumps are never
-# grouped, so each arrives as its own PR for manual review. Minor/patch PRs are auto-merged by dependabot-automerge.yml (#238).
+# grouped, so each arrives as its own PR for manual review; reviewers come from .github/CODEOWNERS. Minor/patch PRs are auto-merged by dependabot-automerge.yml (#238).
 # Staggered so merges never land in one burst: each merge to main is a Vercel production build
 # counted against the team's 100/24h limit (docs/deploy-budget.md).
 version: 2

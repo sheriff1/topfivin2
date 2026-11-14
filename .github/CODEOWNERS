@@ -1,0 +1,3 @@
+# Dependabot requests reviews from code owners (its own `reviewers` option was removed in 2025).
+# Major-bump PRs are held for manual review (#238/#239), so this makes sure they ping the owner.
+* @sheriff1
