@@ -68,7 +68,7 @@ jobs:
           echo "DUMP_FILE=$DUMP_FILE" >> $GITHUB_ENV
 
       - name: Create GitHub Release with all archive assets
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           tag_name: season-archive-${{ env.ARCHIVE_SEASON }}
           name: "Season Archive — ${{ env.ARCHIVE_SEASON }}"
