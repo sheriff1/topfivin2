@@ -245,6 +245,11 @@ export function GamePage() {
                 </>
               )}
             </h2>
+            {currentQuestion.lowerIsBetter && (
+              <p className="text-center text-sm opacity-70 -mt-4 mb-4">
+                Lowest value ranks first in this category
+              </p>
+            )}
 
             {/* Choices */}
             <div className="flex flex-col gap-3">

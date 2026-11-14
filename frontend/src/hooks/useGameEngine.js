@@ -1,25 +1,13 @@
 /* global localStorage */
 import { useState, useCallback, useRef, useEffect } from "react";
+import {
+  getDifficulty,
+  pickCategory,
+  buildQuestion,
+  isLowerBetter,
+  RECENT_CATEGORY_MEMORY,
+} from "../utils/gameDifficulty";
 import { useCategories, useCurrentSeason, apiClient } from "./useApi";
-
-const BASIC_CODES = [
-  "W",
-  "L",
-  "WIN_PCT",
-  "PPG",
-  "FG_PG",
-  "FGA_PG",
-  "FG%",
-  "THREE_PG",
-  "3P%",
-  "FT%",
-  "RPG",
-  "APG",
-  "SPG",
-  "BPG",
-  "TPG",
-  "PFPG",
-];
 
 const ORDINAL = ["", "1st", "2nd", "3rd", "4th", "5th"];
 
@@ -44,19 +32,6 @@ function saveHighScore(mode, score) {
   }
 }
 
-function pickRandom(arr) {
-  return arr[Math.floor(Math.random() * arr.length)];
-}
-
-function shuffleArray(arr) {
-  const copy = [...arr];
-  for (let i = copy.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [copy[i], copy[j]] = [copy[j], copy[i]];
-  }
-  return copy;
-}
-
 export function useGameEngine() {
   const { data: categories, isLoading: categoriesLoading } = useCategories();
   const { data: currentSeason } = useCurrentSeason();
@@ -72,6 +47,8 @@ export function useGameEngine() {
 
   const activeModeRef = useRef("classic");
   const autoAdvanceTimer = useRef(null);
+  // Most recent categories asked this game, so questions don't repeat a stat
+  const recentCategoriesRef = useRef([]);
   // Track mounted state to prevent state updates after unmount
   const mountedRef = useRef(true);
 
@@ -97,88 +74,39 @@ export function useGameEngine() {
       const activeMode = mode || activeModeRef.current;
       setLoading(true);
       const maxAttempts = 10;
+      const failedCodes = [];
 
       for (let attempt = 0; attempt < maxAttempts; attempt++) {
-        // Pick category based on difficulty ramp
-        let pool;
-        if (qNumber < 3) {
-          pool = categories.filter((c) => BASIC_CODES.includes(c.code));
-        } else {
-          pool = categories;
-        }
+        // After several failed attempts, fall back to an easier question rather than failing.
+        const difficulty =
+          attempt < 5 ? getDifficulty(qNumber) : Math.min(getDifficulty(qNumber), 0.1);
 
-        if (pool.length === 0) pool = categories;
-
-        const category = pickRandom(pool);
+        const category = pickCategory(categories, difficulty, Math.random, [
+          ...recentCategoriesRef.current,
+          ...failedCodes,
+        ]);
+        if (!category) break;
 
         try {
           const response = await apiClient.get("/rankings", {
             params: { category: category.code, season: currentSeason },
           });
 
-          const rankings = response.data?.rankings;
-          if (!rankings || rankings.length === 0) continue;
-
-          let correctTeam;
-          let targetRank;
-          let wrongPool;
-
-          if (activeMode === "classic") {
-            // Classic: pick a random team from top 5
-            const top5 = rankings.filter((r) => r.rank >= 1 && r.rank <= 5);
-            if (top5.length === 0) continue;
-
-            correctTeam = pickRandom(top5);
-            targetRank = correctTeam.rank;
-
-            // Check for ties
-            const teamsAtRank = rankings.filter((r) => r.rank === targetRank);
-            if (teamsAtRank.length > 1) continue;
-
-            // Wrong choices: outside top 5, with >2 rank buffer from boundary
-            wrongPool = rankings.filter((r) => r.rank > 7);
-          } else {
-            // Challenge: guess specific rank (existing logic)
-            const maxRank = qNumber < 3 ? 3 : 5;
-            targetRank = Math.floor(Math.random() * maxRank) + 1;
-
-            correctTeam = rankings.find((r) => r.rank === targetRank);
-            if (!correctTeam) continue;
-
-            // Check for ties
-            const teamsAtRank = rankings.filter((r) => r.rank === targetRank);
-            if (teamsAtRank.length > 1) continue;
-
-            // Wrong choices: ranked lower, >2 away from target
-            wrongPool = rankings.filter(
-              (r) => r.rank > targetRank && Math.abs(r.rank - targetRank) > 2
-            );
+          const built = buildQuestion({
+            rankings: response.data?.rankings,
+            mode: activeMode,
+            difficulty,
+          });
+          if (!built) {
+            failedCodes.push(category.code);
+            continue;
           }
 
-          if (wrongPool.length < 2) continue;
+          const { correct: correctTeam, targetRank, choices } = built;
 
-          const shuffledWrong = shuffleArray(wrongPool);
-          const wrongChoices = shuffledWrong.slice(0, 2);
-
-          const choices = shuffleArray([
-            {
-              team_id: correctTeam.team_id,
-              team_name: correctTeam.team_name,
-              logo_url: correctTeam.logo_url,
-              rank: correctTeam.rank,
-              value: correctTeam.value,
-              isCorrect: true,
-            },
-            ...wrongChoices.map((t) => ({
-              team_id: t.team_id,
-              team_name: t.team_name,
-              logo_url: t.logo_url,
-              rank: t.rank,
-              value: t.value,
-              isCorrect: false,
-            })),
-          ]);
-
+          recentCategoriesRef.current = [...recentCategoriesRef.current, category.code].slice(
+            -RECENT_CATEGORY_MEMORY
+          );
           if (mountedRef.current) {
             setCurrentQuestion({
               category: category.code,
@@ -188,12 +116,14 @@ export function useGameEngine() {
               correctTeamId: correctTeam.team_id,
               choices,
               mode: activeMode,
+              lowerIsBetter: isLowerBetter(category.code),
             });
             setLoading(false);
           }
           return;
         } catch {
           // API error, try another category
+          failedCodes.push(category.code);
           continue;
         }
       }
@@ -254,6 +184,7 @@ export function useGameEngine() {
       setHighScore(getHighScore(selected));
       setScore(0);
       setQuestionNumber(0);
+      recentCategoriesRef.current = [];
       setGameState("playing");
       setCurrentQuestion(null);
       setSelectedTeamId(null);
@@ -265,6 +196,7 @@ export function useGameEngine() {
     if (autoAdvanceTimer.current) clearTimeout(autoAdvanceTimer.current);
     setScore(0);
     setQuestionNumber(0);
+    recentCategoriesRef.current = [];
     setGameState("playing");
     setCurrentQuestion(null);
     setSelectedTeamId(null);
