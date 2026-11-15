@@ -40,6 +40,7 @@ nba_api (Python — run locally)
                                       GET /api/team/:id/stats
                                       GET /api/team/:id/rankings
                                       GET /api/seasons
+                                      GET /api/data-status
                                       GET /api/audit/games
                                       GET /api/audit/game/:gameId/stats
                                                   │
@@ -293,9 +294,10 @@ If a fetch is missed, the **Data Freshness Check** workflow fails and GitHub ema
 
 ### Seasons
 
-| Method | Endpoint       | Description                                                                          |
-| ------ | -------------- | ------------------------------------------------------------------------------------ |
-| `GET`  | `/api/seasons` | `{ current, available }`: latest stored season and all stored seasons (newest first) |
+| Method | Endpoint           | Description                                                                                                                                                    |
+| ------ | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET`  | `/api/seasons`     | `{ current, available }`: latest stored season and all stored seasons (newest first)                                                                           |
+| `GET`  | `/api/data-status` | `{ season, latestGameDate, lastFetchedAt }`: newest stored game date and when a game was last collected, for the current season (404 if the database is empty) |
 
 Routes that take `?season=` default to the latest stored season when it is omitted (404 if the database is empty). The lookup is cached for 5 minutes.
 

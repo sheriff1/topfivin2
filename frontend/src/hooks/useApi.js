@@ -56,6 +56,26 @@ export function useSeasons() {
   });
 }
 
+// Freshness of the latest season's data: { season, latestGameDate, lastFetchedAt }.
+// A 404 (empty database) resolves to null so callers can show an empty state instead of an error.
+export function useDataStatus() {
+  return useQuery({
+    queryKey: ["dataStatus"],
+    queryFn: async () => {
+      try {
+        const response = await apiClient.get("/data-status");
+        const { season, latestGameDate, lastFetchedAt } = response.data;
+        return { season, latestGameDate, lastFetchedAt };
+      } catch (error) {
+        if (error?.response?.status === 404) return null;
+        throw error;
+      }
+    },
+    staleTime: 1000 * 60 * 5, // 5 minutes
+    retry: 1,
+  });
+}
+
 // Season the whole UI shows: the user's pick if it is still stored, otherwise the latest stored season.
 // Shared by all consumers via the query cache; `data` is the season string.
 export function useCurrentSeason() {

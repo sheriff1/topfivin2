@@ -561,6 +561,49 @@ describe("GET /api/seasons", () => {
   });
 });
 
+describe("GET /api/data-status", () => {
+  it("returns the current season's freshness values", async () => {
+    db.query
+      .mockResolvedValueOnce({ rows: [{ season: "2026" }, { season: "2025" }] })
+      .mockResolvedValueOnce({ rows: [{ latest_game_date: "2026-11-13" }] })
+      .mockResolvedValueOnce({ rows: [{ last_fetched_at: "2026-11-14T09:30:00Z" }] });
+    const res = await request(app).get("/api/data-status");
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({
+      success: true,
+      season: "2026",
+      latestGameDate: "2026-11-13",
+      lastFetchedAt: "2026-11-14T09:30:00Z",
+    });
+    expect(db.query.mock.calls[1][1]).toEqual(["2026"]);
+    expect(db.query.mock.calls[2][1]).toEqual(["2026"]);
+    expect(db.query.mock.calls[2][0]).toMatch(/collected = true/);
+  });
+
+  it("returns nulls when the season has no stored games yet", async () => {
+    db.query
+      .mockResolvedValueOnce({ rows: [{ season: "2026" }] })
+      .mockResolvedValueOnce({ rows: [{ latest_game_date: null }] })
+      .mockResolvedValueOnce({ rows: [{ last_fetched_at: null }] });
+    const res = await request(app).get("/api/data-status");
+    expect(res.status).toBe(200);
+    expect(res.body.latestGameDate).toBeNull();
+    expect(res.body.lastFetchedAt).toBeNull();
+  });
+
+  it("returns 404 for an empty database", async () => {
+    db.query.mockResolvedValueOnce({ rows: [] });
+    const res = await request(app).get("/api/data-status");
+    expect(res.status).toBe(404);
+  });
+
+  it("returns 500 when a lookup fails", async () => {
+    db.query.mockRejectedValueOnce(new Error("db down"));
+    const res = await request(app).get("/api/data-status");
+    expect(res.status).toBe(500);
+  });
+});
+
 describe("default season", () => {
   const originalEnv = process.env.SEASON;
   afterEach(() => {

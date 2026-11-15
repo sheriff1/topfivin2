@@ -30,6 +30,7 @@ const {
   TeamStatsResponseSchema,
   TeamRankingsResponseSchema,
   SeasonsResponseSchema,
+  DataStatusResponseSchema,
   AuditGamesResponseSchema,
   AuditGameStatsResponseSchema,
 } = require("../schemas/responseSchemas");
@@ -346,5 +347,28 @@ describe("GET /api/seasons — contract", () => {
     db.query.mockResolvedValueOnce({ rows: [], rowCount: 0 });
     const res = await request(app).get("/api/seasons");
     assertSchema(SeasonsResponseSchema, res.body);
+  });
+});
+
+// ---------------------------------------------------------------------------
+// GET /api/data-status
+// ---------------------------------------------------------------------------
+describe("GET /api/data-status — contract", () => {
+  it("response matches DataStatusResponseSchema", async () => {
+    db.query
+      .mockResolvedValueOnce({ rows: [{ season: "2026" }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ latest_game_date: "2026-11-13" }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ last_fetched_at: "2026-11-14T09:30:00Z" }], rowCount: 1 });
+    const res = await request(app).get("/api/data-status");
+    assertSchema(DataStatusResponseSchema, res.body);
+  });
+
+  it("matches the schema when the season has no collected games", async () => {
+    db.query
+      .mockResolvedValueOnce({ rows: [{ season: "2026" }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ latest_game_date: null }], rowCount: 1 })
+      .mockResolvedValueOnce({ rows: [{ last_fetched_at: null }], rowCount: 1 });
+    const res = await request(app).get("/api/data-status");
+    assertSchema(DataStatusResponseSchema, res.body);
   });
 });

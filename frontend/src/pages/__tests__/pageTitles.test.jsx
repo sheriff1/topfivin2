@@ -8,6 +8,7 @@ vi.mock("../../hooks/useApi", () => ({
   useTeamStats: vi.fn(() => ({ data: null, isLoading: false })),
   useTeamRankings: vi.fn(() => ({ data: null, isLoading: false })),
   useCategories: vi.fn(() => ({ data: null, isLoading: false })),
+  useDataStatus: vi.fn(() => ({ data: null, isLoading: false, isError: false })),
   useCurrentSeason: vi.fn(() => ({ data: "2025", isLoading: false, error: null })),
 }));
 
