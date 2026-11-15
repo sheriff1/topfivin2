@@ -9,8 +9,8 @@ const CACHE_TTL_SECONDS = 300;
  *  - lastFetchedAt: when a game was last collected, MAX(games.updated_at) WHERE collected,
  *    as an ISO-8601 UTC timestamp. fetch_nba_stats.py sets it per collected game; derive
  *    reruns touch team_stats/stat_rankings instead, so they do not move it. The column is
- *    TIMESTAMP (no zone) filled by CURRENT_TIMESTAMP, which is UTC on Neon and the local
- *    Postgres container, so it is labelled UTC here.
+ *    TIMESTAMP (no zone); fetch_nba_stats.py writes it as UTC explicitly, so it is labelled
+ *    UTC here whatever the database session time zone is.
  * Either value is null when the season has no matching rows. Empty database => null
  * (not cached, so the first stored season is picked up immediately).
  */
