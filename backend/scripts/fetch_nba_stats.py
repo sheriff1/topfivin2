@@ -565,7 +565,8 @@ def mark_game_collected(conn, game_id):
     try:
         cur = conn.cursor()
         cur.execute(
-            "UPDATE games SET collected = true, updated_at = CURRENT_TIMESTAMP WHERE game_id = %s",
+            "UPDATE games SET collected = true, "
+            "updated_at = (CURRENT_TIMESTAMP AT TIME ZONE 'UTC') WHERE game_id = %s",
             (game_id,)
         )
         conn.commit()

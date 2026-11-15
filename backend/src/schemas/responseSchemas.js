@@ -153,6 +153,16 @@ const SeasonsResponseSchema = z.object({
   available: z.array(z.string()),
 });
 
+const DataStatusResponseSchema = z.object({
+  success: z.literal(true),
+  season: z.string(),
+  latestGameDate: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .nullable(),
+  lastFetchedAt: z.string().nullable(),
+});
+
 const AuditGamesResponseSchema = z.object({
   success: z.literal(true),
   stats: z.object({
@@ -188,6 +198,7 @@ module.exports = {
   TeamStatsResponseSchema,
   TeamRankingsResponseSchema,
   SeasonsResponseSchema,
+  DataStatusResponseSchema,
   AuditGamesResponseSchema,
   AuditGameStatsResponseSchema,
 };

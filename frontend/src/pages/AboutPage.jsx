@@ -1,7 +1,69 @@
 import { useEffect } from "react";
-import { useCurrentSeason } from "../hooks/useApi";
+import { useCurrentSeason, useDataStatus } from "../hooks/useApi";
 import { usePageTitle } from "../hooks/usePageTitle";
 import { formatSeasonLabel } from "../utils/season";
+
+// "2026-11-13" -> "Nov 13, 2026". A date-only value has no time zone, so format it as UTC to avoid
+// shifting it a day for visitors behind UTC.
+function formatGameDate(value) {
+  if (!value) return null;
+  const date = new Date(`${value}T00:00:00Z`);
+  if (Number.isNaN(date.getTime())) return null;
+  return date.toLocaleDateString(undefined, {
+    year: "numeric",
+    month: "short",
+    day: "numeric",
+    timeZone: "UTC",
+  });
+}
+
+// ISO timestamp -> date and time in the visitor's local time zone; date only if time formatting fails.
+function formatFetchedAt(value) {
+  if (!value) return null;
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return null;
+  try {
+    return date.toLocaleString(undefined, {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+      hour: "numeric",
+      minute: "2-digit",
+      timeZoneName: "short",
+    });
+  } catch {
+    return date.toLocaleDateString();
+  }
+}
+
+function DataStatus() {
+  const { data, isLoading, isError } = useDataStatus();
+  const dataThrough = formatGameDate(data?.latestGameDate);
+  const lastFetched = formatFetchedAt(data?.lastFetchedAt);
+
+  let body;
+  if (isLoading) {
+    body = <p className="text-sm text-base-content/70">Loading data status…</p>;
+  } else if (isError) {
+    body = <p className="text-sm text-base-content/70">Data status is unavailable right now.</p>;
+  } else if (!dataThrough && !lastFetched) {
+    body = <p className="text-sm text-base-content/70">No game data has been stored yet.</p>;
+  } else {
+    body = (
+      <dl className="text-sm space-y-1" data-testid="data-status">
+        <div>
+          <dt className="inline font-semibold">Data through: </dt>
+          <dd className="inline">{dataThrough ?? "Unknown"}</dd>
+        </div>
+        <div>
+          <dt className="inline font-semibold">Last fetched: </dt>
+          <dd className="inline">{lastFetched ?? "Unknown"}</dd>
+        </div>
+      </dl>
+    );
+  }
+  return <div className="mt-3">{body}</div>;
+}
 
 export function AboutPage() {
   usePageTitle("About");
@@ -89,6 +151,7 @@ export function AboutPage() {
                 Statistics are fetched from the NBA Stats API manually, not on an automatic
                 schedule, so the newest games can lag behind by a few days.
               </p>
+              <DataStatus />
             </div>
 
             <div className="bg-success/10 p-4 rounded-lg border border-success">
