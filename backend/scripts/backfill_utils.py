@@ -18,3 +18,17 @@ def has_data(value):
     if isinstance(value, float) and math.isnan(value):
         return False
     return True
+
+
+def load_endpoint(endpoint_cls, **kwargs):
+    """Construct an nba_api endpoint, returning None if NBA has no payload yet.
+
+    For games whose box score isn't published yet, nba_api's constructor
+    raises AttributeError ('NoneType' object has no attribute 'get') while
+    parsing the empty response. That is "not published yet", not bad data, so
+    callers treat None as waiting and retry on the next run.
+    """
+    try:
+        return endpoint_cls(**kwargs)
+    except AttributeError:
+        return None

@@ -25,7 +25,7 @@ import time
 from datetime import datetime
 import random
 import psycopg2
-from backfill_utils import has_data
+from backfill_utils import has_data, load_endpoint
 
 # ── Header patch ─────────────────────────────────────────────────────────────
 NBA_STATS_HEADERS = {
@@ -93,7 +93,9 @@ def _f(row, col):
 
 def fetch_fourfactors(game_id):
     """Return dict of team_id -> {ft_rate, tm_tov_pct, oreb_pct, ...} or raise."""
-    result = BoxScoreFourFactorsV3(game_id=game_id, timeout=60)
+    result = load_endpoint(BoxScoreFourFactorsV3, game_id=game_id, timeout=60)
+    if result is None:
+        return {}  # not published yet -> caller reports "waiting"
     df = result.get_data_frames()[1]  # DF1 = team-level four factors
     out = {}
     for _, row in df.iterrows():

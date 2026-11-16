@@ -26,7 +26,7 @@ import time
 from datetime import datetime
 import random
 import psycopg2
-from backfill_utils import has_data
+from backfill_utils import has_data, load_endpoint
 
 # ── Header patch (identical to fetch_nba_stats.py) ───────────────────────────
 NBA_STATS_HEADERS = {
@@ -89,7 +89,9 @@ def delay():
 
 def fetch_advanced(game_id):
     """Return dict of team_id -> {ortg, drtg, e_ortg, ...} or raise."""
-    result = BoxScoreAdvancedV3(game_id=game_id, timeout=60)
+    result = load_endpoint(BoxScoreAdvancedV3, game_id=game_id, timeout=60)
+    if result is None:
+        return {}  # not published yet -> caller reports "waiting"
     df = result.get_data_frames()[1]  # DF1 = team-level advanced
     out = {}
     for _, row in df.iterrows():

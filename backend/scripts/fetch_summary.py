@@ -29,7 +29,7 @@ import time
 from datetime import datetime
 import random
 import psycopg2
-from backfill_utils import has_data
+from backfill_utils import has_data, load_endpoint
 
 # ── Header patch ─────────────────────────────────────────────────────────────
 NBA_STATS_HEADERS = {
@@ -139,7 +139,9 @@ def fetch_summary(game_id):
     """
     import pandas as pd
 
-    result = BoxScoreSummaryV3(game_id=game_id, timeout=60)
+    result = load_endpoint(BoxScoreSummaryV3, game_id=game_id, timeout=60)
+    if result is None:
+        return ({}, {})  # not published yet -> caller reports "waiting"
     dfs = result.get_data_frames()
 
     # ── DF0: game-level (attendance, duration) ────────────────────────────────

@@ -28,7 +28,7 @@ import time
 from datetime import datetime
 import random
 import psycopg2
-from backfill_utils import has_data
+from backfill_utils import has_data, load_endpoint
 
 # ── Load .env configuration ───────────────────────────────────────────────────
 def load_env():
@@ -144,7 +144,9 @@ def fetch_starters_bench(game_id):
     Return dict of team_id -> {starters: {...}, bench: {...}, plus_minus: float} or raise.
     Extracts starters/bench group stats from DF1 and team-level plus/minus from DF2.
     """
-    result = BoxScoreTraditionalV3(game_id=game_id, timeout=60)
+    result = load_endpoint(BoxScoreTraditionalV3, game_id=game_id, timeout=60)
+    if result is None:
+        return {}  # not published yet -> caller reports "waiting"
     dfs = result.get_data_frames()
     df1 = dfs[1]  # DF1 = starters/bench split (4 rows: 2 teams × 2 groups)
     df2 = dfs[2]  # DF2 = team totals (has real plusMinusPoints)

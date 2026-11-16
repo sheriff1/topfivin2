@@ -39,7 +39,7 @@ import time
 from datetime import datetime
 import random
 import psycopg2
-from backfill_utils import has_data
+from backfill_utils import has_data, load_endpoint
 
 # ── Load .env configuration ───────────────────────────────────────────────────
 def load_env():
@@ -128,7 +128,9 @@ def _i(row, col):
 
 def fetch_playertrack(game_id):
     """Return dict of team_id -> {distance, reb_chances_off, ...} or raise."""
-    result = BoxScorePlayerTrackV3(game_id=game_id, timeout=60)
+    result = load_endpoint(BoxScorePlayerTrackV3, game_id=game_id, timeout=60)
+    if result is None:
+        return {}  # not published yet -> caller reports "waiting"
     df = result.get_data_frames()[1]  # DF1 = team-level player tracking
     out = {}
     for _, row in df.iterrows():

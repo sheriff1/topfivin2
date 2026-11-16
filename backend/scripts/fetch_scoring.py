@@ -32,7 +32,7 @@ import time
 from datetime import datetime
 import random
 import psycopg2
-from backfill_utils import has_data
+from backfill_utils import has_data, load_endpoint
 
 # ── Load .env configuration ───────────────────────────────────────────────────
 def load_env():
@@ -116,7 +116,9 @@ def _f(row, col):
 
 def fetch_scoring(game_id):
     """Return dict of team_id -> {pct_fga_2pt, pct_pts_2pt, ...} or raise."""
-    result = BoxScoreScoringV3(game_id=game_id, timeout=60)
+    result = load_endpoint(BoxScoreScoringV3, game_id=game_id, timeout=60)
+    if result is None:
+        return {}  # not published yet -> caller reports "waiting"
     df = result.get_data_frames()[1]  # DF1 = team-level scoring breakdown
     out = {}
     for _, row in df.iterrows():
