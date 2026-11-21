@@ -279,17 +279,11 @@ describe("statProcessor", () => {
       });
     });
 
-    it("should include BENCH_PTS as legacy alias for BENCH_PPG", () => {
-      expect(STAT_CATEGORIES).toHaveProperty("BENCH_PTS");
-      expect(STAT_CATEGORIES.BENCH_PTS.label).toBe("Bench Points Per Game");
-      expect(STAT_CATEGORIES.BENCH_PTS.index).toBe("BENCH_PTS");
-      expect(STAT_CATEGORIES.BENCH_PTS.lower).toBe(false);
-    });
-
-    it("should have both BENCH_PPG and BENCH_PTS with matching labels", () => {
+    it("should expose Bench Points Per Game only once, as BENCH_PPG", () => {
       expect(STAT_CATEGORIES).toHaveProperty("BENCH_PPG");
-      expect(STAT_CATEGORIES).toHaveProperty("BENCH_PTS");
-      expect(STAT_CATEGORIES.BENCH_PPG.label).toBe(STAT_CATEGORIES.BENCH_PTS.label);
+      expect(STAT_CATEGORIES).not.toHaveProperty("BENCH_PTS");
+      const labels = Object.values(STAT_CATEGORIES).map((c) => c.label);
+      expect(new Set(labels).size).toBe(labels.length);
     });
   });
 });
