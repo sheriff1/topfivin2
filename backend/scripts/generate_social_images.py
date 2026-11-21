@@ -177,7 +177,6 @@ STAT_LABELS: dict[str, str] = {
     "STARTERS_FTA": "Starter FTA Per Game",
     "STARTERS_TOV": "Starter Turnovers Per Game",
     "STARTERS_PF": "Starter Fouls Per Game",
-    "BENCH_PTS": "Bench Points Per Game",
     "BENCH_FG%": "Bench Field Goal %",
     "BENCH_3P%": "Bench 3-Point %",
     "BENCH_FT%": "Bench Free Throw %",

@@ -77,7 +77,6 @@ export const TIER_2 = [
   "TRB%",
   "STARTERS_PPG",
   "BENCH_PPG",
-  "BENCH_PTS",
   "Q1_PTS",
   "Q2_PTS",
   "Q3_PTS",
